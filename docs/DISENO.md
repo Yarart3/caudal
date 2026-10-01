@@ -152,21 +152,21 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 
 **El fondo monetario de Wise** cuenta como **liquidez** (marcado "fondo monetario"): es dinero disponible para gastar, no una inversión a largo plazo.
 
-> ⚠️ **Los ejemplos usan siempre datos inventados.** Los archivos de `samples/` se hacen copiando un extracto real, dejando 2 o 3 filas y cambiando conceptos, importes, nombres e IDs, **sin tocar el formato**.
+> ⚠️ **Los ejemplos usan siempre datos inventados.** Los archivos de `samples/` se hacen copiando un extracto real, dejando unas pocas filas que cubran los casos de prueba y cambiando conceptos, importes, nombres e IDs, **sin tocar el formato**.
 
 ---
 
 ## 6. Formatos de los extractos bancarios
 
 ### 6.1 imagin
-- **Cómo se descarga:** app/web de imagin → Movimientos → descargar. Archivo `extractDocument_AAAAMMDD.xlsx`.
-- **Formato:** Excel `.xlsx`, una hoja, **cabeceras en la fila 1** (no hay filas que saltar). Del más reciente al más antiguo.
+- **Cómo se descarga:** app/web de imagin → Movimientos → descargar → **Excel** (también ofrece PDF, que no se usa; **no hay CSV**). Archivo `extractDocument_AAAAMMDD.xlsx`.
+- **Formato:** Excel `.xlsx`, una hoja, **cabeceras en la fila 1** (no hay filas que saltar). Del más reciente al más antiguo. **Todas las celdas son texto** (confirmado en la Fase 0).
 
 | Columna | Ejemplo (inventado) | Notas |
 |---|---|---|
-| `Concepto` | `BIZUM ENVIADO A ...` / `BON AREA` / `WWW.AMAZON...` | En mayúsculas |
-| `Fecha` | `30/9/26` | Formato `d/m/aa`. **Por confirmar** si es fecha de Excel o texto: aceptar los dos casos. |
-| `Importe` | `-14,50EUR` / `69,73EUR` | **Texto con la divisa pegada:** quitar `EUR`, quitar los puntos de miles y cambiar la coma decimal por punto. Negativo = gasto. |
+| `Concepto` | `BIZUM ENVIAT` / `BIZUM REBUT` / `BON AREA` / `WWW.AMAZON` / `enviament de dine` | En **catalán** y **no siempre en mayúsculas**. Puede venir **cortado** (`enviament de dine` = transferencia enviada, sin destinatario). |
+| `Fecha` | `29/09/2026` | **Texto** con formato `dd/mm/aaaa`. Por robustez, aceptar también una fecha de Excel si algún día cambia. |
+| `Importe` | `-23,00EUR` / `69,73EUR` | **Texto con la divisa pegada y siempre dos decimales:** quitar `EUR`, quitar los puntos de miles y cambiar la coma decimal por punto. Negativo = gasto. |
 | `Saldo` | `42,46EUR` | Mismo formato. **No se guarda**: se usa para la huella anti-duplicados y para comprobar que no falta ningún movimiento. |
 
 ### 6.2 Wise
@@ -356,7 +356,7 @@ registro_backups
 En imagin, el **saldo** hace que dos compras idénticas el mismo día no se tomen por duplicados. Al importar se informa: *"142 leídos · 120 nuevos · 22 ya existían"*.
 
 ### 9.3 Transferencias internas
-Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir.
+Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir.
 
 ### 9.4 Categorización
 1. **Reglas** "si el concepto contiene X → categoría Y", por prioridad, comparando en mayúsculas y sin acentos.
@@ -367,7 +367,7 @@ Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distinta
 - **Gastos:** Supermercado, Comida fuera, Ocio y salidas, Transporte, Vivienda, Suministros, Suscripciones, Compras online, Ropa, Salud, Educación / Material uni, Regalos, Otros.
 - **Ingresos:** Nómina, Bizum recibido, Transferencias recibidas, Intereses, Otros ingresos.
 
-**Reglas iniciales de ejemplo:** `BON AREA`, `MERCADONA`, `CONSUM` → Supermercado · `MC DONALDS`, `BAR` → Comida fuera · `AMAZON`, `WWW.AMAZ` → Compras online · `REPSOL`, `RENFE` → Transporte · `SPOTIFY`, `NETFLIX` → Suscripciones · `BIZUM ENVIADO` / `BIZUM RECIBIDO` → **revisar**.
+**Reglas iniciales de ejemplo:** `BON AREA`, `MERCADONA`, `CONSUM` → Supermercado · `MC DONALDS`, `BAR` → Comida fuera · `AMAZON`, `WWW.AMAZ` → Compras online · `REPSOL`, `RENFE` → Transporte · `SPOTIFY`, `NETFLIX` → Suscripciones · `BIZUM ENVIAT` / `BIZUM REBUT` (imagin, en catalán) → **revisar**.
 
 ### 9.5 Pagos recurrentes (Fase 2)
 Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → pago recurrente, con el total al mes.
@@ -457,7 +457,7 @@ BACKUP_INTERVAL_MIN=60
 BACKUP_KEEP=30
 BACKUP_MAX_AGE_DAYS=7
 USB_LABEL=Gerard
-ONEDRIVE_DIR=C:\Users\<usuario>\OneDrive - Universitat de Lleida\CaudalBackups
+ONEDRIVE_DIR=C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups
 ```
 
 ---
@@ -571,7 +571,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - [ ] Crear `CaudalBackups/` en OneDrive y anotar su ruta exacta.
 - [ ] Elegir y **apuntar en papel** la contraseña de backup.
 - [ ] Preparar `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**.
-- [ ] Confirmar si la `Fecha` de imagin es fecha de Excel o texto.
+- [x] Confirmar si la `Fecha` de imagin es fecha de Excel o texto → **texto `dd/mm/aaaa`** (sección 6.1).
 - [ ] Mirar qué exportan **Trade Republic** y **Scalable** y guardar ejemplos inventados (no bloquea hasta la Fase 3).
 - **Hecho cuando:** `docker run hello-world` funciona y existen los ejemplos de imagin y Wise.
 
@@ -584,6 +584,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 **1b. Importadores imagin + Wise**
 - Lectura y limpieza, concepto de Wise, huella, deduplicación, ignorar columnas del fondo y transferencias internas.
 - Pantalla de importar con el resumen "leídos / nuevos / ya existían".
+- **Filas que no se pueden leer:** nunca se descartan en silencio. El resumen indica la fila y el dato que ha fallado (*"Fila 5: no se ha podido leer el importe «-23 EUR»"*) y ofrece **añadir ese movimiento a mano** desde la misma pantalla. Si el saldo de imagin no cuadra entre dos filas, avisa de que puede faltar un movimiento.
 - **Hecho cuando:** importar dos veces no duplica, los tests con `samples/` pasan y el saldo calculado cuadra con el extracto.
 
 **1c. Categorización + pestañas Movimientos y Patrimonio**
@@ -633,7 +634,7 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 1. En Windows: **"Cerrar Caudal"** (hace el backup final).
 2. En el Mac: Docker Desktop (con el arranque automático **desactivado**) y Git; clonar o copiar el proyecto.
 3. Copiar el `.env` ajustando:
-   - `ONEDRIVE_DIR=/Users/<usuario>/Library/CloudStorage/OneDrive-<organización>/CaudalBackups` (comprobar el nombre exacto en Finder).
+   - `ONEDRIVE_DIR=/Users/<usuario>/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups` (comprobar el nombre exacto en Finder).
    - El pendrive aparece en `/Volumes/Gerard`.
 4. **"Restaurar backup"** con el último backup.
 5. Abrir con `Caudal.command` (la primera vez, `chmod +x` y permitirlo en *Privacidad y seguridad*).
@@ -645,8 +646,8 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 
 | # | Pendiente | Cuándo |
 |---|---|---|
-| 1 | Ruta exacta de OneDrive | Fase 0 |
-| 2 | ¿La `Fecha` de imagin es fecha o texto? ¿imagin exporta CSV? | Fase 0 |
+| 1 | ~~Ruta exacta de OneDrive~~ → `C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups` | ✅ Fase 0 |
+| 2 | ~~¿La `Fecha` de imagin es fecha o texto? ¿imagin exporta CSV?~~ → texto `dd/mm/aaaa`; solo Excel o PDF | ✅ Fase 0 |
 | 3 | Qué exportan Trade Republic y Scalable + ejemplos inventados | Antes de la Fase 3 |
 | 4 | Ejemplos de CaixaBank y Sabadell | Antes de la Fase 4 |
 | 5 | Confirmar las categorías iniciales | Fase 1c |
