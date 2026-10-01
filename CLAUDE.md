@@ -93,6 +93,7 @@
    - **`CHANGELOG.md`:** una entrada nueva para la fase (sección 9).
    - **`README.md`:** estado del roadmap (⬜ → ✅) y lo que cambie en instalación o uso.
    - **`docs/DISENO.md`:** solo si cambió alguna decisión, con el texto exacto que hay que sustituir.
+   - **`docs/fases/FASE_<n>.md`** (por ejemplo, `FASE_1a.md`): qué se ha hecho y cómo (comandos y archivos), decisiones, problemas encontrados y su solución, **apuntes para aprender** los conceptos nuevos, chuleta de comandos y glosario. Mismo formato que `docs/fases/FASE_0.md`.
 10. Propón el **mensaje de commit** y el comando (`git add -A` + `git commit -m "…"`).
 11. Termina con el **mensaje para empezar la siguiente fase** en un chat nuevo (copia el de la sección 7).
 
@@ -143,7 +144,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
   4. Pendrive: se mantiene su nombre de volumen `Gerard` (exFAT) y se crea la carpeta `CaudalBackups/`.
   5. Carpeta `CaudalBackups/` en OneDrive y su **ruta exacta** (`Get-ChildItem $env:USERPROFILE -Filter "OneDrive*"`).
   6. `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**, sin romper el formato. Comprobar si la `Fecha` de imagin es fecha de Excel o texto.
-  7. (Opcional, no bloquea) Mirar qué exportan Trade Republic y Scalable.
+  7. (Opcional, no bloquea) Mirar qué exportan Trade Republic y Scalable. **Resuelto:** se llevan a mano (sección 6.3 de DISENO).
 - **Hecho cuando:** `docker run hello-world` funciona; el repositorio tiene el primer commit; existen los dos ejemplos; se conoce la ruta de OneDrive.
 - **Mensaje para empezar:** `Empezamos la Fase 0 de Caudal. Sigue CLAUDE.md.`
 
@@ -225,17 +226,17 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 
 ### Fase 3: patrimonio e inversiones
 - **Prerrequisitos:** 2.
-- **Necesito de Gerard:** qué exportan **Trade Republic** y **Scalable** y un ejemplo **inventado** de cada uno (si solo dan PDF: alta manual o plantilla). Opcional: su `cartera.json` de RUMBO **con valores inventados** para probar el importador.
+- **Necesito de Gerard:** la lista de productos que tiene (ISIN o ticker y tipo: ETF o cripto), **sin cantidades**, para probar el buscador y los precios. Opcional: su `cartera.json` de RUMBO **con valores inventados** para probar el importador.
 - **Entregables:**
-  - Modelos `products`, `investment_operations`, `prices`, `manual_valuations`, `goals`; cuentas `mixed` (Trade Republic) e `investment` (Scalable).
+  - Modelos `products`, `investment_operations`, `prices`, `manual_valuations`, `goals`; cuentas `mixed` (Trade Republic) e `investment` (Scalable), las dos con **alta manual** (sin importador).
   - `app/prices/`: clientes de Yahoo, Morningstar y CoinGecko con tiempo de espera, reintentos y caché; histórico; tarea cada `PRICE_REFRESH_MIN`; actualización al abrir si los precios tienen más de `PRICE_MAX_AGE_HOURS`; "último precio conocido" + aviso si está desactualizado. Solo se envían identificadores.
   - Buscador por ISIN, ticker o nombre, que comprueba que hay precio antes de guardar.
   - `app/investments/`: FIFO (lotes), plusvalía latente y realizada, **XIRR** (Newton con bisección de respaldo, o `pyxirr`), rentabilidad por año, peor caída, comparativa con IWDA / SXR8 / XEON repitiendo los flujos, TER anual, aportaciones y racha.
-  - Importadores: plantilla Excel/CSV, Trade Republic, Scalable (si hay formato) y `rumbo.py` (`cartera.json`). Si se copia código de RUMBO: mantener su aviso MIT en `THIRD_PARTY_NOTICES.md`.
+  - Formulario "+ Añadir compra / venta" (vía principal) con **duplicar operación**. Importadores: plantilla Excel/CSV (`plantilla_inversiones.py`, para el historial) y `rumbo.py` (`cartera.json`). **No** hay importadores de Trade Republic ni Scalable. Si se copia código de RUMBO: mantener su aviso MIT en `THIRD_PARTY_NOTICES.md`.
   - **Pestaña Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, entidades con invertido + efectivo, reparto por tipo).
   - Tests: FIFO con ventas parciales, XIRR contra casos calculados a mano (y contra `XIRR` de Excel), dividendos, precio desactualizado, divisas.
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día; los tests de FIFO y XIRR pasan; la pestaña se parece a la maqueta.
-- **Mensaje para empezar:** `Empezamos la Fase 3 de Caudal (patrimonio e inversiones). Te adjunto los ejemplos inventados que tenga. Sigue CLAUDE.md.`
+- **Mensaje para empezar:** `Empezamos la Fase 3 de Caudal (patrimonio e inversiones). Te paso la lista de productos que tengo (sin cantidades). Sigue CLAUDE.md.`
 
 ---
 
@@ -297,7 +298,7 @@ El proyecto se da por **terminado** (v1.0) cuando:
 - Decisiones o pendientes que salen de esta fase.
 ```
 
-Versiones: Fase 1a = `0.1.0`, 1b = `0.2.0`, 1c = `0.3.0`, 1d = `0.4.0`, 2 = `0.5.0`, 3 = `0.6.0`, 4 = `0.7.0`, 5 = `0.8.0`, proyecto terminado = `1.0.0`.
+Versiones: Fase 0 = `0.0.1`, Fase 1a = `0.1.0`, 1b = `0.2.0`, 1c = `0.3.0`, 1d = `0.4.0`, 2 = `0.5.0`, 3 = `0.6.0`, 4 = `0.7.0`, 5 = `0.8.0`, proyecto terminado = `1.0.0`.
 
 ## 10. Reglas que no se rompen nunca
 

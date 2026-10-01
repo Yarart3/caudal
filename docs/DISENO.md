@@ -61,7 +61,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Usuarios | Inicio de sesión con usuario y contraseña. Dos usuarios: `gerard` (admin) y `padres`. Se pueden añadir más. |
 | Privacidad entre usuarios | **Cada uno ve solo lo suyo.** No hay vista conjunta. |
 | Pestañas | **1. Patrimonio** (portada) · **2. Movimientos** · **3. Inversiones** |
-| Cuentas de Gerard | **imagin** y **Wise** (gasto) · **Trade Republic** (efectivo + inversiones + tarjeta) · **Scalable Capital** (inversiones) |
+| Cuentas de Gerard | **imagin** y **Wise** (gasto) · **Trade Republic** (efectivo remunerado + ETFs + cripto) · **Scalable Capital** (ETFs). Los dos se llevan **a mano** |
 | Cuentas de los padres | **CaixaBank** y **Sabadell** (formatos pendientes) |
 | Datos visibles por movimiento | **Cuenta, Concepto, Fecha, Importe** (+ Categoría, asignada automáticamente) |
 | Gasto o ingreso | Lo deduce la app por el **signo del importe** |
@@ -140,15 +140,15 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 |---|---|---|---|---|
 | gerard | imagin | Gasto | Movimientos + Patrimonio (liquidez) | ✅ conocido |
 | gerard | Wise | Gasto + saldo en fondo monetario | Movimientos + Patrimonio (liquidez, "fondo monetario") | ✅ conocido |
-| gerard | Trade Republic | **Mixta**: efectivo remunerado + tarjeta + cartera | Movimientos (tarjeta y efectivo) + Inversiones (cartera) + Patrimonio | ⏳ falta un ejemplo |
-| gerard | Scalable Capital | Inversión (+ algo de efectivo) | Inversiones + Patrimonio | ⏳ falta un ejemplo |
+| gerard | Trade Republic | **Mixta**: efectivo remunerado + cartera (ETFs y cripto). La tarjeta casi no se usa | Movimientos (efectivo) + Inversiones (cartera) + Patrimonio | ✍️ **a mano** (sección 6.3) |
+| gerard | Scalable Capital | Inversión (ETFs) | Inversiones + Patrimonio | ✍️ **a mano** (sección 6.3) |
 | padres | CaixaBank | Gasto | Movimientos + Patrimonio | ⏳ falta un ejemplo |
 | padres | Sabadell | Gasto / ahorro | Movimientos + Patrimonio | ⏳ falta un ejemplo |
 
 **Tipos de cuenta en la app:**
 - **gasto:** sus movimientos van a la pestaña Movimientos; su saldo cuenta como liquidez.
 - **inversión:** sus operaciones van a Inversiones; su efectivo cuenta como liquidez.
-- **mixta** (Trade Republic): los pagos con tarjeta, los ingresos y los intereses van a Movimientos; las compras y ventas de valores, a Inversiones.
+- **mixta** (Trade Republic): los ingresos, las retiradas y los intereses del efectivo van a Movimientos; las compras y ventas de valores, a Inversiones. En Trade Republic todo se apunta **a mano**.
 
 **El fondo monetario de Wise** cuenta como **liquidez** (marcado "fondo monetario"): es dinero disponible para gastar, no una inversión a largo plazo.
 
@@ -205,10 +205,13 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 
 > Cada pago con tarjeta de Wise **vende participaciones del fondo monetario** para cubrir el pago. Eso es solo la mecánica de Wise y **no es un gasto aparte**. En el extracto, la venta aparece **en la misma fila** que el pago (columnas del fondo rellenas, `Tipo de negociación` = `SELL`), no en una fila propia: se ignoran esas columnas y la fila es un gasto normal. Si aparecen filas propias de intereses o de compra/venta del fondo, se marcan como **rendimiento** o **transferencia interna**.
 
-### 6.3 Trade Republic y Scalable Capital
-- **Pendiente:** ver qué permite exportar cada uno (CSV/Excel de transacciones o solo PDFs) y conseguir un ejemplo con **datos inventados**.
-- **Trade Republic** genera dos tipos de filas: **movimientos de efectivo** (tarjeta, ingresos, intereses → Movimientos) y **operaciones de valores** (compras, ventas, planes de inversión, dividendos → Inversiones). El importador tiene que separarlas.
-- Si alguno solo ofrece PDFs: introducción **manual** o con la **plantilla de Excel** (sección 7.4).
+### 6.3 Trade Republic y Scalable Capital: se llevan a mano
+- **Decisión (Fase 0):** **no hay importadores** para estos dos brokers. Los extractos que dan a Gerard no incluyen las inversiones, y el volumen es pequeño (compras puntuales, sin planes de inversión periódicos), así que es más sencillo y fiable apuntarlo a mano.
+- **Trade Republic, efectivo remunerado:** cada movimiento se apunta a mano en **Movimientos**, como en una cuenta de gasto: ingresos (por ejemplo, desde imagin), retiradas e **intereses de cada mes** (categoría *Intereses*). La tarjeta de Trade Republic casi no se usa; si algún día se usa, el gasto se apunta igual.
+- **Trade Republic, cartera:** ETFs y **cripto** (precio de CoinGecko), con el formulario de compra / venta (sección 7.4).
+- **Scalable Capital:** solo ETFs, con el mismo formulario.
+- **Para cargar el historial de golpe** (las compras anteriores a empezar a usar Caudal) se puede usar la **plantilla de Excel/CSV** propia (sección 7.4).
+- Si algún día se quiere un importador, el formato está documentado públicamente: Trade Republic tiene una exportación en CSV desde 2026 y Scalable la ofrece en los planes PRIME. Se haría con un ejemplo inventado, como con imagin y Wise.
 
 ### 6.4 CaixaBank y Sabadell (padres)
 - **Pendiente:** un ejemplo de cada uno con datos inventados (cabeceras + 2 o 3 filas, tal cual). Anotar cuántas filas hay antes de las cabeceras.
@@ -242,9 +245,9 @@ ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro�
 - **Privacidad:** en las consultas solo viajan identificadores (ISIN o ticker), **nunca cantidades ni importes**.
 
 ### 7.4 Cómo entran los datos
-1. **A mano:** formulario "+ Añadir compra / venta".
-2. **Importador** del CSV de Trade Republic / Scalable (cuando se conozca su formato).
-3. **Plantilla de Excel/CSV** propia: `fecha; identificador; nombre; tipo_producto; tipo_movimiento; unidades; importe; moneda; comision; nota`.
+1. **A mano (vía principal):** formulario "+ Añadir compra / venta" con fecha, cuenta, producto (buscador por ISIN, ticker o nombre), participaciones, importe total en euros y comisión. Se puede **duplicar una operación anterior** para repetir una compra habitual cambiando solo la fecha y las cifras.
+2. **Plantilla de Excel/CSV** propia, sobre todo para cargar el historial de golpe: `fecha; identificador; nombre; tipo_producto; tipo_movimiento; unidades; importe; moneda; comision; nota`.
+3. **Posición inicial:** si no se recuerda cada compra antigua, se puede apuntar **una sola operación por producto** con el total de participaciones y el total invertido (o el precio medio del broker) a una fecha. El valor actual y la plusvalía salen exactos; la TIR, aproximada.
 4. **Importar desde RUMBO:** si se ha usado RUMBO mientras tanto, se importa su `mis_datos/cartera.json` (productos y movimientos) para no perder nada.
 
 ### 7.5 Cálculos
@@ -361,12 +364,12 @@ registro_backups
 | Wise | `Documento de identidad` (ID único) |
 | imagin | `sha256(cuenta | fecha | importe | concepto normalizado | saldo del extracto)` |
 | Genérico | `sha256(cuenta | fecha | importe | concepto normalizado | nº de aparición en el archivo)` |
-| Brokers | ID de la operación si existe; si no, `sha256(cuenta | fecha | producto | tipo | participaciones | importe)` |
+| Plantilla de inversiones | `sha256(cuenta | fecha | producto | tipo | participaciones | importe)` (las operaciones a mano no la necesitan) |
 
 En imagin, el **saldo** hace que dos compras idénticas el mismo día no se tomen por duplicados. Al importar se informa: *"142 leídos · 120 nuevos · 22 ya existían"*.
 
 ### 9.3 Transferencias internas
-Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. En Wise, el ingreso correspondiente lleva `Referencia del pago` con `imaginBank`, lo que confirma la pareja. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir.
+Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. En Wise, el ingreso correspondiente lleva `Referencia del pago` con `imaginBank`, lo que confirma la pareja. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir. En Trade Republic el ingreso se apunta a mano, y se empareja igual con la salida de imagin.
 
 ### 9.4 Categorización
 1. **Reglas** "si el concepto contiene X → categoría Y", por prioridad, comparando en mayúsculas y sin acentos.
@@ -423,6 +426,7 @@ caudal/
 ├── INSTRUCCIONES_PROYECTO_CLAUDE.md
 ├── docs/DISENO.md              ← este documento
 ├── docs/capturas/
+├── docs/fases/                 ← FASE_0.md, FASE_1a.md…: qué se hizo en cada fase, cómo y apuntes
 ├── maqueta/caudal-maqueta.html
 ├── docker-compose.yml
 ├── .env.example                ← el .env real NUNCA se sube a git
@@ -434,7 +438,7 @@ caudal/
 │   └── app/
 │       ├── main.py
 │       ├── auth/               ← login, sesiones, usuarios
-│       ├── importers/          ← imagin.py, wise.py, trade_republic.py, scalable.py, caixabank.py, sabadell.py, generico.py, rumbo.py
+│       ├── importers/          ← imagin.py, wise.py, caixabank.py, sabadell.py, generico.py, plantilla_inversiones.py, rumbo.py
 │       ├── categorization/
 │       ├── transfers/
 │       ├── investments/        ← productos, operaciones, FIFO, XIRR, comparativa
@@ -575,14 +579,14 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 > **Una fase o bloque por conversación** dentro del proyecto de Claude. Una fase está terminada cuando se cumplen sus criterios de "hecho". El detalle de cada fase (entregables, pasos, tests y cierre) está en `CLAUDE.md`.
 
 ### Fase 0: preparar el entorno (sin programar)
-- [ ] Instalar **Docker Desktop** (Windows, WSL2) y **desactivar el arranque automático**.
-- [ ] Instalar **Git** y **VS Code**. Repositorio **privado** en GitHub (opcional; nunca con datos).
-- [ ] Mantener el nombre de volumen actual del pendrive, **`Gerard`** (exFAT, 250 GB), y crear `CaudalBackups/` en él. Ningún otro pendrive debe llamarse igual, o la app podría guardar el backup en el que no toca.
-- [ ] Crear `CaudalBackups/` en OneDrive y anotar su ruta exacta.
-- [ ] Elegir y **apuntar en papel** la contraseña de backup.
-- [ ] Preparar `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**.
+- [x] Instalar **Docker Desktop** (Windows, WSL2) y **desactivar el arranque automático**. Hecho en el portátil y en el PC de casa, con WSL limitado a 4 GB.
+- [x] Instalar **Git** y **VS Code**. Repositorio **privado** en GitHub (opcional; nunca con datos).
+- [x] Mantener el nombre de volumen actual del pendrive, **`Gerard`** (exFAT, 250 GB), y crear `CaudalBackups/` en él. Ningún otro pendrive debe llamarse igual, o la app podría guardar el backup en el que no toca.
+- [x] Crear `CaudalBackups/` en OneDrive y anotar su ruta exacta → `C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups`.
+- [ ] Elegir y **apuntar en papel** la contraseña de backup (solo letras sin acentos, números y guiones). **Imprescindible antes de la Fase 1d.**
+- [x] Preparar `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**.
 - [x] Confirmar si la `Fecha` de imagin es fecha de Excel o texto → **texto `dd/mm/aaaa`** (sección 6.1).
-- [ ] Mirar qué exportan **Trade Republic** y **Scalable** y guardar ejemplos inventados (no bloquea hasta la Fase 3).
+- [x] Mirar qué exportan **Trade Republic** y **Scalable** → sus extractos no incluyen las inversiones: **se llevan a mano** (sección 6.3).
 - **Hecho cuando:** `docker run hello-world` funciona y existen los ejemplos de imagin y Wise.
 
 ### Fase 1: MVP útil (Gerard)
@@ -614,7 +618,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 ### Fase 3: patrimonio e inversiones (Gerard)
 - Tablas de inversiones (sección 8.4), cuentas **mixtas** (Trade Republic) y de **inversión** (Scalable).
 - Buscador de productos y **servicio de precios** (Yahoo, Morningstar, CoinGecko) con caché, histórico, avisos de precio desactualizado y actualización cada 15 min.
-- Alta manual de operaciones, **plantilla de Excel**, importadores de **Trade Republic** y **Scalable** (si exportan CSV) e **importación de RUMBO**.
+- **Alta manual** de operaciones (vía principal, con "duplicar operación"), **plantilla de Excel** para el historial e **importación de RUMBO**. Sin importadores de Trade Republic ni Scalable (sección 6.3).
 - Cálculos: valor, FIFO, plusvalía latente y realizada, **XIRR**, rentabilidad anual, peor caída, comparativa con indexado, comisiones (TER), aportaciones y racha.
 - Pestaña **Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, por entidad, reparto por tipo).
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día, y los tests de FIFO y XIRR pasan con casos calculados a mano.
@@ -658,7 +662,7 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 |---|---|---|
 | 1 | ~~Ruta exacta de OneDrive~~ → `C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups` | ✅ Fase 0 |
 | 2 | ~~¿La `Fecha` de imagin es fecha o texto? ¿imagin exporta CSV?~~ → texto `dd/mm/aaaa`; solo Excel o PDF | ✅ Fase 0 |
-| 3 | Qué exportan Trade Republic y Scalable + ejemplos inventados | Antes de la Fase 3 |
+| 3 | ~~Qué exportan Trade Republic y Scalable~~ → se llevan a mano (sección 6.3) | ✅ Fase 0 |
 | 4 | Ejemplos de CaixaBank y Sabadell | Antes de la Fase 4 |
 | 5 | Confirmar las categorías iniciales | Fase 1c |
 | 6 | Objetivo de patrimonio de cada usuario | Fase 2 |

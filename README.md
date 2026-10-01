@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: en diseño.** El diseño y el roadmap están cerrados y el código empieza en la Fase 0. Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 0 terminada** (entorno preparado). El código empieza en la Fase 1a. Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -33,7 +33,7 @@ Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en
 Caudal reúne en una sola app todo el dinero de una familia:
 
 - **Cuentas del día a día** (imagin, Wise, CaixaBank, Sabadell…): se **importan los extractos** del banco y la app detecta sola qué es gasto y qué es ingreso, los **categoriza** y aprende de tus correcciones.
-- **Inversiones** (Trade Republic, Scalable Capital…): ETFs, acciones, cripto y fondos, con **precios que se actualizan solos**, plusvalías, rentabilidad real (TIR) y comparativa con un indexado.
+- **Inversiones** (Trade Republic, Scalable Capital…): ETFs, acciones, cripto y fondos. Las compras y ventas **se apuntan a mano** en un formulario rápido, y los **precios se actualizan solos**, con plusvalías, rentabilidad real (TIR) y comparativa con un indexado.
 - **Patrimonio:** la suma de todo y cómo evoluciona mes a mes.
 
 Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **solo ve lo suyo**.
@@ -257,7 +257,7 @@ Si `git push` dice `rejected`, es que otro equipo subió algo antes: haz `git pu
 1. Doble clic en **Caudal** → eliges tu usuario → contraseña.
 2. **Movimientos → Importar extracto:** eliges la cuenta y arrastras el Excel/CSV del banco.
 3. Revisas los movimientos marcados **"Revisar"**. Lo que corrijas, la app lo aprende.
-4. **Inversiones:** los precios se actualizan solos; añades tus compras o importas el historial del broker.
+4. **Inversiones:** apuntas cada compra o venta en **+ Añadir compra / venta** (puedes duplicar una anterior); los precios se actualizan solos. El historial antiguo se puede cargar de golpe con la plantilla de Excel.
 5. Al terminar, doble clic en **Cerrar Caudal**: hace un backup y apaga todo.
 
 ## Copias de seguridad
@@ -286,6 +286,7 @@ caudal/
 ├── INSTRUCCIONES_PROYECTO_CLAUDE.md← cómo montar el proyecto en Claude
 ├── docs/
 │   ├── DISENO.md                   ← decisiones, modelo de datos y roadmap detallado
+│   ├── fases/                      ← qué se hizo en cada fase, cómo y apuntes
 │   └── capturas/
 ├── maqueta/caudal-maqueta.html     ← diseño de referencia (datos inventados)
 ├── backend/                        ← Python (FastAPI)          [Fase 1a]
@@ -300,13 +301,13 @@ caudal/
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 0 | Preparar el entorno (Docker, Git, pendrive, OneDrive, ejemplos) | ⏳ |
+| 0 | Preparar el entorno (Docker, Git, pendrive, OneDrive, ejemplos) | ✅ |
 | 1a | Base del proyecto + inicio de sesión | ⬜ |
 | 1b | Importadores de imagin y Wise | ⬜ |
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ⬜ |
 | 1d | Backups + accesos directos | ⬜ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ⬜ |
-| 3 | Patrimonio e inversiones (Trade Republic, Scalable, precios, FIFO, TIR) | ⬜ |
+| 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ⬜ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
 | 6 | Migración a Mac | ⬜ |
@@ -318,6 +319,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 
