@@ -112,7 +112,7 @@
 | 1a | `GET /api/auth/users` | Tarjetas de "¿Quién entra?" (solo nombre visible, inicial y color) |
 | 1a | `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sesión |
 | 1a | `GET/POST/PATCH /api/accounts` | Cuentas del usuario |
-| 1b | `POST /api/imports` (multipart: `account_id` + archivo) | Importar extracto → `{read, new, duplicates, review, internal}` |
+| 1b | `POST /api/imports` (multipart: `account_id` + archivo) | Importar extracto → `{read, new, duplicates, review, internal, errors}` (`errors`: lista de `{row, field, value, message}`) |
 | 1c | `GET /api/transactions?month=&q=&category=&status=` · `POST` · `PATCH /{id}` · `DELETE /{id}` | Movimientos |
 | 1c | `GET/POST/PATCH/DELETE /api/categories` · `/api/rules` · `POST /api/rules/apply` | Categorías y reglas |
 | 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos |
@@ -156,7 +156,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Entregables:**
   - `docker-compose.yml` (`app` + `db`, volumen `pgdata`, puerto `APP_PORT`, healthcheck de la BD), `.env.example`, `.gitignore` (sección 13 de DISENO), `.dockerignore`.
   - `.gitattributes` con los finales de línea correctos: `*.bat` y `*.cmd` → `eol=crlf`; `*.sh`, `*.command` y `*.py` → `eol=lf`. Así los scripts funcionan en Windows y en Mac.
-  - Rutas con espacios (por ejemplo, `OneDrive - Universitat de Lleida`) **siempre entre comillas** en `.env`, `docker-compose.yml` y los scripts.
+  - Rutas con espacios (por ejemplo, `OneDrive - udl.cat`) **siempre entre comillas** en `.env`, `docker-compose.yml` y los scripts.
   - `backend/`: `Dockerfile` multietapa (construye el frontend con Node y lo sirve FastAPI como estáticos), `pyproject.toml`, `app/main.py`, `app/config.py` (pydantic-settings), `app/db.py`, modelos `users`, `accounts`, `categories`, `transactions`, `rules`, `backup_log`, migración inicial de Alembic, `app/auth/` (hash Argon2, sesiones en BD o firmadas, caducidad por inactividad, bloqueo tras 5 intentos), endpoints de setup, auth y accounts.
   - `frontend/`: Vite + React + TS, estilos según la maqueta (variables CSS de la sección 14 de DISENO, fuentes Space Grotesk y Manrope), pantallas **Asistente de primer arranque**, **"¿Quién entra?"**, **Contraseña** y un **panel vacío** con la barra lateral, el usuario y "Cerrar sesión".
   - `tests/`: login correcto e incorrecto, bloqueo, caducidad y **aislamiento** (el usuario A recibe 404 al pedir recursos de B).
@@ -171,12 +171,12 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Necesito de Gerard:** **los dos archivos de ejemplo adjuntos** (inventados). **No escribas el importador sin verlos.**
 - **Entregables:**
   - `backend/app/importers/base.py` (interfaz común: `detect(file) -> bool`, `parse(file) -> list[ParsedTransaction]`), `imagin.py`, `wise.py` y un registro de importadores.
-  - Normalización: importes `-14,50EUR` → `Decimal('-14.50')`; fechas como fecha de Excel o texto `d/m/aa`; concepto de Wise (Comercio → beneficiario o pagador → Descripción); columnas ignoradas.
+  - Normalización: importes `-14,50EUR` → `Decimal('-14.50')`; fechas como texto `dd/mm/aaaa` (aceptar también fecha de Excel); conceptos de imagin en catalán y a veces en minúsculas (`BIZUM ENVIAT`, `enviament de dine`); concepto de Wise (Comercio → beneficiario o pagador → Descripción); columnas ignoradas.
   - `fingerprint` según la sección 9.2 de DISENO; inserción con `ON CONFLICT DO NOTHING` sobre `(account_id, fingerprint)`.
   - `app/transfers/`: emparejar transferencias internas (sección 9.3), dentro del mismo usuario.
   - Comprobación del saldo: el saldo calculado frente al último `Saldo` del extracto (avisar si no cuadra).
-  - `POST /api/imports` y pantalla **Importar** (elegir cuenta, arrastrar archivo, resumen "leídos / nuevos / ya existían / por revisar / internos").
-  - Tests con `samples/`: lectura, signos, duplicados (importar dos veces = 0 nuevos), dos compras iguales el mismo día **no** se toman por duplicado (imagin) y emparejado de transferencias.
+  - `POST /api/imports` y pantalla **Importar** (elegir cuenta, arrastrar archivo, resumen "leídos / nuevos / ya existían / por revisar / internos / con error"). Las filas que no se pueden leer se listan con la fila y el dato que ha fallado, y se pueden **añadir a mano** desde esa pantalla.
+  - Tests con `samples/`: lectura, signos, duplicados (importar dos veces = 0 nuevos), dos compras iguales el mismo día **no** se toman por duplicado (imagin) y emparejado de transferencias, y que una fila con un importe ilegible aparece en `errors` sin abortar el resto.
 - **Hecho cuando:** importar dos veces el mismo archivo da 0 nuevos; el saldo cuadra con el extracto; una recarga imagin → Wise queda marcada como interna; los tests pasan.
 - **Mensaje para empezar:** `Empezamos la Fase 1b de Caudal (importadores imagin + Wise). Te adjunto los ejemplos inventados. Sigue CLAUDE.md.`
 
