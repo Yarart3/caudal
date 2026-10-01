@@ -158,6 +158,14 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 
 ## 6. Formatos de los extractos bancarios
 
+### 6.0 Cómo se importa y cómo se reconoce cada archivo
+- **El extracto se sube tal cual lo da el banco.** No hay que borrar columnas ni filas, ni editarlo en Excel. Solo se editan los ejemplos de `samples/`, porque van al repositorio y tienen que ser inventados.
+- **Las columnas se leen por el nombre de la cabecera, no por su posición.** Se usan las que indica cada sección y las demás se ignoran. Si el banco añade o reordena columnas, sigue funcionando. Si falta una columna necesaria, la importación se detiene con un mensaje claro (*"No se encuentra la columna «Importe»"*).
+- **Al importar, el usuario elige la cuenta** (cada cuenta sabe de qué banco es) y la app **comprueba que el archivo es de ese banco** antes de leer nada:
+  - **imagin:** una sola hoja con las cabeceras `Concepto`, `Fecha`, `Importe` y `Saldo` en la fila 1.
+  - **Wise:** hoja `All transactions` con, al menos, `Documento de identidad`, `Fecha`, `Cantidad` y `Divisa`.
+  - Si no coincide, avisa sin importar nada: *"Este archivo parece de Wise, pero has elegido la cuenta imagin"*.
+
 ### 6.1 imagin
 - **Cómo se descarga:** app/web de imagin → Movimientos → descargar → **Excel** (también ofrece PDF, que no se usa; **no hay CSV**). Archivo `extractDocument_AAAAMMDD.xlsx`.
 - **Formato:** Excel `.xlsx`, una hoja, **cabeceras en la fila 1** (no hay filas que saltar). Del más reciente al más antiguo. **Todas las celdas son texto** (confirmado en la Fase 0).
