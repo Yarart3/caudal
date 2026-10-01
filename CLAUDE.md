@@ -66,7 +66,7 @@
 - **Migraciones:** todo cambio de esquema va con una migración de Alembic. Nunca `create_all` en producción.
 - **Configuración:** solo por `.env`. Nada escrito a fuego (rutas, contraseñas, puertos).
 - **Calidad:** `ruff check` + `ruff format`, `pytest`, `npm run lint`, `npm run build` sin errores antes de dar una fase por buena.
-- **Commits:** en castellano, con el estilo `feat: …`, `fix: …`, `docs: …`, `test: …`, `chore: …`.
+- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits: `feat: …`, `fix: …`, `docs: …`, `test: …`, `chore: …` (por ejemplo, `docs: keep USB volume label Gerard`).
 
 ## 4. Protocolo de cada conversación
 
