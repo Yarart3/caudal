@@ -456,7 +456,7 @@ BACKUP_PASSWORD=<la eliges tú y la apuntas en papel>
 BACKUP_INTERVAL_MIN=60
 BACKUP_KEEP=30
 BACKUP_MAX_AGE_DAYS=7
-USB_LABEL=CAUDAL_BK
+USB_LABEL=Gerard
 ONEDRIVE_DIR=C:\Users\<usuario>\OneDrive - Universitat de Lleida\CaudalBackups
 ```
 
@@ -496,7 +496,7 @@ ONEDRIVE_DIR=C:\Users\<usuario>\OneDrive - Universitat de Lleida\CaudalBackups
 > **¿Por qué no "en tiempo real"?** Los datos solo cambian con la app abierta, y con estos cuatro momentos como mucho se perderían minutos de trabajo. Un backup continuo complicaría el sistema sin aportar nada.
 
 ### Dónde
-1. **Pendrive** (siempre conectado, 250 GB), detectado por **nombre de volumen** → carpeta `CaudalBackups/`.
+1. **Pendrive** (siempre conectado, 250 GB), detectado por **nombre de volumen** (`USB_LABEL`, ahora `Gerard`) → carpeta `CaudalBackups/`. El pendrive puede tener más archivos: Caudal solo escribe en esa carpeta.
 2. **OneDrive** (cuenta de la universidad) → carpeta sincronizada `CaudalBackups/`.
 
 Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
@@ -567,7 +567,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 ### Fase 0: preparar el entorno (sin programar)
 - [ ] Instalar **Docker Desktop** (Windows, WSL2) y **desactivar el arranque automático**.
 - [ ] Instalar **Git** y **VS Code**. Repositorio **privado** en GitHub (opcional; nunca con datos).
-- [ ] Poner al pendrive el nombre de volumen **`CAUDAL_BK`** y crear `CaudalBackups/` en él.
+- [ ] Mantener el nombre de volumen actual del pendrive, **`Gerard`** (exFAT, 250 GB), y crear `CaudalBackups/` en él. Ningún otro pendrive debe llamarse igual, o la app podría guardar el backup en el que no toca.
 - [ ] Crear `CaudalBackups/` en OneDrive y anotar su ruta exacta.
 - [ ] Elegir y **apuntar en papel** la contraseña de backup.
 - [ ] Preparar `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**.
@@ -634,7 +634,7 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 2. En el Mac: Docker Desktop (con el arranque automático **desactivado**) y Git; clonar o copiar el proyecto.
 3. Copiar el `.env` ajustando:
    - `ONEDRIVE_DIR=/Users/<usuario>/Library/CloudStorage/OneDrive-<organización>/CaudalBackups` (comprobar el nombre exacto en Finder).
-   - El pendrive aparece en `/Volumes/CAUDAL_BK`.
+   - El pendrive aparece en `/Volumes/Gerard`.
 4. **"Restaurar backup"** con el último backup.
 5. Abrir con `Caudal.command` (la primera vez, `chmod +x` y permitirlo en *Privacidad y seguridad*).
 6. Comprobar que los totales coinciden con los del PC.

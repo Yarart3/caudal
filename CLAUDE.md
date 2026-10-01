@@ -140,7 +140,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
   1. Comprobar que la **virtualización** está activada (Administrador de tareas → Rendimiento → CPU → "Virtualización: habilitada"; si no, activarla en la BIOS). Instalar **WSL2** (`wsl --install`) y **Docker Desktop**, y desactivar *"Start Docker Desktop when you sign in"*. Limitar la memoria de WSL con `%UserProfile%\.wslconfig` (`[wsl2]` + `memory=4GB`), para que Docker no le quite RAM al resto del PC. Comprobar con `docker run hello-world`.
   2. Instalar Git y VS Code (extensiones: Python, Pylance, Ruff, ESLint, Prettier, Docker). Configurar `git config --global user.name/user.email`.
   3. Crear la carpeta `caudal/` con README, CLAUDE.md, CHANGELOG.md, INSTRUCCIONES, `docs/` y `maqueta/`. `git init`, primer commit. Repositorio **privado** en GitHub (opcional).
-  4. Nombre de volumen del pendrive `CAUDAL_BK` y carpeta `CaudalBackups/`.
+  4. Pendrive: se mantiene su nombre de volumen `Gerard` (exFAT) y se crea la carpeta `CaudalBackups/`.
   5. Carpeta `CaudalBackups/` en OneDrive y su **ruta exacta** (`Get-ChildItem $env:USERPROFILE -Filter "OneDrive*"`).
   6. `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx` con **datos inventados**, sin romper el formato. Comprobar si la `Fecha` de imagin es fecha de Excel o texto.
   7. (Opcional, no bloquea) Mirar qué exportan Trade Republic y Scalable.
@@ -201,7 +201,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 
 ### Fase 1d: backups + accesos directos
 - **Objetivo:** no perder nunca datos y abrir o cerrar la app con doble clic.
-- **Prerrequisitos:** 1c. El pendrive `CAUDAL_BK` y la carpeta de OneDrive creados.
+- **Prerrequisitos:** 1c. El pendrive `Gerard` con `CaudalBackups/` y la carpeta de OneDrive creados.
 - **Necesito de Gerard:** la contraseña de backup en su `.env` (**nunca** en el chat).
 - **Entregables:**
   - `app/backup/`: `pg_dump -Fc` → AES-256-GCM (clave por scrypt con sal aleatoria guardada en la cabecera del archivo) → `caudal_AAAA-MM-DD_HHMM.dump.enc`; rotación de 30; `backup_log`; los 4 disparadores (tras importar, cada 60 min si hubo cambios, al cerrar y al arrancar si hay más de 7 días).
@@ -258,7 +258,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 
 ### Fase 6: migración a Mac
 - **Prerrequisitos:** 1d como mínimo, y tener el Mac.
-- **Pasos:** sección 16 de DISENO. Comprobar los scripts `.command`, la ruta de OneDrive en el Mac, `/Volumes/CAUDAL_BK` y que las imágenes de Docker funcionan en ARM.
+- **Pasos:** sección 16 de DISENO. Comprobar los scripts `.command`, la ruta de OneDrive en el Mac, `/Volumes/Gerard` y que las imágenes de Docker funcionan en ARM.
 - **Hecho cuando:** se restaura el último backup en el Mac y los totales coinciden con los del PC.
 - **Mensaje para empezar:** `Empezamos la Fase 6 de Caudal (migración a Mac). Sigue CLAUDE.md.`
 

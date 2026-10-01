@@ -101,7 +101,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 
 1. Instalar **Docker Desktop** y desactivar *"Start Docker Desktop when you sign in"*.
 2. Descargar o clonar este repositorio.
-3. Copiar `.env.example` a `.env` y rellenar la ruta de OneDrive, el nombre del pendrive (`CAUDAL_BK`) y la contraseña de backup.
+3. Copiar `.env.example` a `.env` y rellenar la ruta de OneDrive, el nombre del pendrive (`Gerard`) y la contraseña de backup.
 4. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`).
 5. La primera vez, un asistente crea los usuarios y sus contraseñas.
 
