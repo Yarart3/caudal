@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caudal · Maqueta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#F3F4F1;--card:#FFFFFF;--line:#E3E5E0;--line2:#CDD1CA;--soft:#EEF0EC;--ink:#15181C;--muted:#5B616B;--accent:#0E6B58;--exp:#C2581B;--bad:#B42318;--inv:#3555A0;--liq:#9DB8AE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif}
+h1,h2,.num{font-family:'Space Grotesk',sans-serif}
+h1,h2{margin:0}
+h2{font-size:18px}
+button,input,select{font:inherit}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.muted{color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.btn{border:1px solid var(--line2);background:#fff;color:var(--ink);border-radius:10px;padding:10px 16px;min-height:44px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;border:0;font-weight:700}
+.btn-sm{min-height:36px;padding:6px 12px;font-size:13px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.field input,.field select{padding:10px 12px;min-height:44px;border:1px solid var(--line2);border-radius:8px;background:#fff}
+.badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.avatar{width:44px;height:44px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login{width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px;display:flex;flex-direction:column;gap:22px}
+.user-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1px solid var(--line2);border-radius:14px;padding:16px;min-height:76px;cursor:pointer;color:var(--ink)}
+.user-btn:hover{border-color:var(--accent)}
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:var(--ink);color:#E9EAE6;padding:24px 16px;display:flex;flex-direction:column;gap:28px;position:sticky;top:0;height:100vh}
+.sidenav{display:flex;flex-direction:column;gap:4px}
+.sidenav button{text-align:left;border:0;cursor:pointer;color:#C9CCC5;background:transparent;padding:10px 12px;min-height:44px;border-radius:8px;font-weight:600;white-space:nowrap}
+.sidenav button.on{color:#fff;background:#2A2F35}
+.sidefoot{margin-top:auto;padding:12px;border:1px solid #2F343A;border-radius:10px;font-size:13px;color:#C9CCC5;display:flex;flex-direction:column;gap:6px}
+main{padding:28px 32px 48px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.tabs{display:flex;gap:4px;background:#E6E8E3;padding:4px;border-radius:12px;align-self:flex-start;flex-wrap:wrap}
+.tabs button{border:0;cursor:pointer;font-weight:700;font-size:15px;padding:10px 18px;min-height:44px;border-radius:9px;background:transparent;color:#4A5059}
+.tabs button.on{background:#fff;color:var(--ink)}
+.stack{display:flex;flex-direction:column;gap:20px}
+.k4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.r2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+.r2e{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.kpi{gap:8px;padding:18px}
+.kpi .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.bars{display:flex;align-items:flex-end;gap:6px;overflow-x:auto}
+.bar-col{flex:1 1 0;min-width:28px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.bar-pair{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:190px;width:100%;border-bottom:1px solid var(--line)}
+.bar-pair div{width:40%;max-width:16px;border-radius:3px 3px 0 0}
+.stackbar{display:flex;flex-direction:column;justify-content:flex-end;height:200px;width:70%;max-width:30px;border-bottom:1px solid var(--line)}
+.donut{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.donut-in{border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.track{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;display:flex}
+.track div{height:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-size:12px;font-weight:600;padding:8px 6px}
+td{padding:10px 6px;border-top:1px solid var(--soft)}
+.r{text-align:right}
+.tnum{font-variant-numeric:tabular-nums}
+.list-row{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:8px 0;border-top:1px solid var(--soft)}
+.drop{border:2px dashed var(--line2);border-radius:12px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;background:#FAFBF9}
+.toggle{flex:1 1 0;min-height:44px;border-radius:8px;cursor:pointer;font-weight:600;border:1px solid var(--line2);background:#fff;color:var(--ink)}
+.toggle.on-g{background:#FBEBDD;border-color:var(--exp)}
+.toggle.on-i{background:#E3F0EA;border-color:var(--accent)}
+.err{font-size:13px;color:var(--bad);font-weight:600}
+.note{background:#FFF8E6;border:1px solid #F0DDA8;color:#5C4A12;border-radius:10px;padding:10px 14px;font-size:13px}
+.infobar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted)}
+@media (max-width:1180px){.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.r2,.r2e,.r3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.shell{grid-template-columns:minmax(0,1fr)}.side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto}.sidenav{flex-direction:row}.sidefoot{display:none}.k4{grid-template-columns:minmax(0,1fr)}main{padding:20px 16px 40px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* =========================================================
+   CAUDAL · MAQUETA DE REFERENCIA
+   Todos los datos son INVENTADOS. Solo sirve para ver el diseño
+   y la navegación. La app real se construye por fases (README).
+   ========================================================= */
+const LOGO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>';
+const MONTHS = ['Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep'];
+const COLORS = ['#0E6B58','#C2581B','#3555A0','#B08A12','#7E3F7C','#8A9099'];
+const USERS = {
+  gerard: { name: 'Gerard', initial: 'G', color: '#0E6B58', banks: 'imagin · Wise · Trade Republic · Scalable', spend: ['imagin','Wise','Trade Republic'] },
+  padres: { name: 'Padres', initial: 'P', color: '#3555A0', banks: 'CaixaBank · Sabadell', spend: ['CaixaBank','Sabadell'] }
+};
+const MOV = {
+  gerard: { inc: [620,640,700,620,650,640,650,700,1150,1200,1180,650], exp: [450,430,610,520,410,470,450,520,610,720,690,488],
+    cats: [['Ocio y salidas',140,150],['Transporte',95,110],['Comida fuera',88,80],['Material uni',58,80],['Suscripciones',32,35],['Otros',75,100]] },
+  padres: { inc: [3850,3850,4900,3850,3900,3900,3900,3900,5200,3900,3900,3950], exp: [3050,3020,3600,3150,2980,3100,3020,3180,3400,3750,3900,3115],
+    cats: [['Vivienda',850,850],['Supermercado',690,600],['Transporte',330,350],['Suministros',285,300],['Ocio y salidas',260,300],['Otros',700,750]] }
+};
+const PAT = {
+  gerard: {
+    cash: [['imagin','Cuenta de gasto',420],['Wise','Fondo monetario',670],['Trade Republic','Efectivo remunerado',1250],['Scalable Capital','Efectivo',80]],
+    pos: [
+      ['ETF MSCI World','IE00B4L5Y983','Scalable Capital','ETF',38,92.10,104.35,'delay'],
+      ['ETF Mercados Emergentes','IE00BKM4GZ66','Scalable Capital','ETF',40,31.20,33.80,'delay'],
+      ['ETF S&P 500','IE00B5BMR087','Trade Republic','ETF',3,498.00,560.20,'delay'],
+      ['Bitcoin','BTC','Trade Republic','Cripto',0.0062,78000,95300,'live']
+    ],
+    invHist: [3900,4210,4380,4650,4920,5080,5350,5610,6020,6480,7010],
+    cashHist: [2900,2750,2600,2450,2380,2300,2250,2400,2650,2700,2550],
+    aport: [300,300,250,300,300,250,300,300,400,400,450,350],
+    income: [['Intereses Trade Republic','septiembre',2.08],['Intereses Wise (fondo)','septiembre',1.15],['Dividendos','últimos 12 meses',0]],
+    tir: '11,4 %', goal: 15000
+  },
+  padres: {
+    cash: [['CaixaBank','Cuenta corriente',12400],['Sabadell','Cuenta de ahorro',6350]], pos: [],
+    invHist: [0,0,0,0,0,0,0,0,0,0,0], cashHist: [15200,15600,16300,16100,16500,16900,17200,17000,17800,17950,18100],
+    aport: [0,0,0,0,0,0,0,0,0,0,0,0], income: [], tir: '—', goal: 25000
+  }
+};
+const TXS = [
+  ['28 sep','CaixaBank','SUPERMERCADO EJEMPLO','Supermercado',-86.40,'padres','auto'],
+  ['27 sep','Sabadell','NÓMINA SEPTIEMBRE','Nómina',2150,'padres','auto'],
+  ['26 sep','imagin','BIZUM RECIBIDO','Sin categoría',15,'gerard','review'],
+  ['25 sep','Wise','SPOTIFY','Suscripciones',-10.99,'gerard','auto'],
+  ['24 sep','CaixaBank','GASOLINERA EJEMPLO','Transporte',-52.30,'padres','auto'],
+  ['24 sep','Trade Republic','TIENDA EJEMPLO','Otros',-19.90,'gerard','auto'],
+  ['23 sep','Sabadell','COMPAÑÍA ELÉCTRICA','Suministros',-96.12,'padres','auto'],
+  ['22 sep','imagin','WWW.AMAZON','Otros',-34.99,'gerard','review'],
+  ['21 sep','imagin','RECARGA A WISE','Transferencia interna',-100,'gerard','internal'],
+  ['20 sep','Wise','RENFE VIAJEROS','Transporte',-18.40,'gerard','auto'],
+  ['19 sep','CaixaBank','CUOTA HIPOTECA','Vivienda',-850,'padres','auto'],
+  ['18 sep','Wise','BAR EJEMPLO','Comida fuera',-23.50,'gerard','auto']
+];
+const SUBS = [['Spotify','día 25',10.99,'gerard'],['Gimnasio','día 1',34.90,'gerard'],['Plataforma de series','día 12',13.99,'padres'],['Fibra + móvil','día 5',62.00,'padres'],['Seguro hogar','día 15',28.50,'padres']];
+const CAT_OPTIONS = ['Supermercado','Vivienda','Transporte','Suministros','Ocio y salidas','Comida fuera','Material uni','Suscripciones','Otros'];
+const BADGES = { auto: ['Auto','#E3F0EA','#0B5747'], review: ['Revisar','#FBEBDD','#8A3A0C'], manual: ['Manual','#EEE6F0','#62305F'], internal: ['Interna','#EEF0EC','#4A5059'] };
+const TAGS = { delay: ['~15 min','#EEF0EC','#4A5059'], live: ['En vivo','#E3F0EA','#0B5747'], close: ['Cierre','#E4E9F5','#28437F'] };
+const VIEWS = [['pat','Patrimonio'],['mov','Movimientos'],['inv','Inversiones']];
+
+const state = { screen: 'login', picked: null, loginError: '', user: 'gerard', view: 'pat', extra: [], kind: 'gasto', error: '' };
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+function fmt(n, d) {
+  const p = Math.abs(n).toFixed(d == null ? 0 : d).split('.');
+  p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (n < 0 ? '−' : '') + p.join(',') + ' €';
+}
+const sign = (n, d) => (n >= 0 ? '+' : '') + fmt(n, d);
+const pct = (x) => (x >= 0 ? '+' : '') + x.toFixed(1).replace('.', ',') + ' %';
+const conic = (parts) => { const t = parts.reduce((a, p) => a + p[1], 0) || 1; let acc = 0;
+  return parts.map((p) => { const f = acc / t * 100; acc += p[1]; return `${p[2]} ${f.toFixed(2)}% ${(acc / t * 100).toFixed(2)}%`; }).join(','); };
+const kpiCard = (k) => `<div class="card kpi"><span class="muted" style="font-size:13px;font-weight:600">${k[0]}</span><span class="num v" style="color:${k[3]}">${k[1]}</span><span class="muted" style="font-size:13px">${k[2]}</span></div>`;
+
+/* ---------- cálculos ---------- */
+function compute() {
+  const u = state.user, m = MOV[u], p = PAT[u];
+  const extra = state.extra.filter((t) => t[5] === u);
+  const addInc = extra.filter((t) => t[4] > 0).reduce((a, t) => a + t[4], 0);
+  const addExp = extra.filter((t) => t[4] < 0).reduce((a, t) => a - t[4], 0);
+  const inc = m.inc.slice(), exp = m.exp.slice(), n = inc.length;
+  inc[n - 1] += addInc; exp[n - 1] += addExp;
+  const cats = m.cats.map((c) => [c[0], c[1] + extra.filter((t) => t[4] < 0 && t[3] === c[0]).reduce((a, t) => a - t[4], 0), c[2]]);
+  const known = cats.map((c) => c[0]);
+  cats[cats.length - 1][1] += extra.filter((t) => t[4] < 0 && known.indexOf(t[3]) < 0).reduce((a, t) => a - t[4], 0);
+  const pos = p.pos.map((r) => ({ r, value: r[4] * r[6], cost: r[4] * r[5] }));
+  const invTotal = pos.reduce((a, x) => a + x.value, 0), invCost = pos.reduce((a, x) => a + x.cost, 0);
+  const cashTotal = p.cash.reduce((a, c) => a + c[2], 0) + addInc - addExp;
+  return { m, p, extra, inc, exp, n, cats, pos, invTotal, invCost, cashTotal, pat: invTotal + cashTotal };
+}
+
+/* ---------- pantalla de acceso ---------- */
+function loginView() {
+  const u = state.picked && USERS[state.picked];
+  const head = `<div class="row"><div class="logo">${LOGO}</div><span class="num" style="font-weight:700;font-size:20px">Caudal</span></div>`;
+  const body = !u
+    ? `<h1 style="font-size:26px">¿Quién entra?</h1>` + Object.keys(USERS).map((id) => `
+        <button type="button" class="user-btn" data-action="pick" data-id="${id}">
+          <span class="avatar" style="background:${USERS[id].color}">${USERS[id].initial}</span>
+          <span style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:17px">${USERS[id].name}</strong><span class="muted" style="font-size:13px">${USERS[id].banks}</span></span>
+        </button>`).join('')
+    : `<div class="row"><span class="avatar" style="background:${u.color}">${u.initial}</span>
+         <div style="display:flex;flex-direction:column"><strong style="font-size:18px">Hola, ${u.name}</strong><span class="muted" style="font-size:13px">Introduce tu contraseña</span></div></div>
+       <div class="field"><label for="pwd">Contraseña</label><input id="pwd" type="password" autocomplete="current-password"></div>
+       ${state.loginError ? `<span class="err" role="alert">${esc(state.loginError)}</span>` : ''}
+       <button type="button" class="btn btn-primary" data-action="login" style="min-height:48px">Entrar</button>
+       <button type="button" data-action="unpick" style="border:0;background:transparent;color:var(--accent);font-weight:600;min-height:44px;cursor:pointer">← Cambiar de usuario</button>`;
+  return `<div class="login-wrap"><div class="login">${head}<div style="display:flex;flex-direction:column;gap:14px">${body}</div>
+    <span class="muted" style="font-size:12px;border-top:1px solid var(--soft);padding-top:14px">Maqueta: cualquier contraseña sirve. En la app real se bloquea tras 5 intentos fallidos y la sesión caduca a los 30 min.</span></div></div>`;
+}
+
+/* ---------- pestaña 1: Patrimonio ---------- */
+function patView(c) {
+  const p = c.p, n = c.n;
+  const invHist = p.invHist.concat([c.invTotal]), cashHist = p.cashHist.concat([c.cashTotal]);
+  const maxPat = Math.max.apply(null, invHist.map((v, i) => v + cashHist[i])) || 1;
+  const ents = {};
+  p.cash.forEach((x) => { ents[x[0]] = ents[x[0]] || { liq: 0, inv: 0, subs: [] }; ents[x[0]].liq += x[2]; ents[x[0]].subs.push(x[1]); });
+  c.pos.forEach((x) => { const b = x.r[2]; ents[b] = ents[b] || { liq: 0, inv: 0, subs: [] }; ents[b].inv += x.value; });
+  const entList = Object.keys(ents).map((k) => ({ k, liq: ents[k].liq, inv: ents[k].inv, t: ents[k].liq + ents[k].inv,
+    sub: ents[k].inv > 0 ? (ents[k].liq > 0 ? 'Inversión + efectivo' : 'Inversión') : ents[k].subs.join(', ') }));
+  const maxEnt = Math.max.apply(null, entList.map((e) => e.t)) || 1;
+  const byType = { 'ETFs': 0, 'Cripto': 0, 'Fondo monetario': 0, 'Efectivo': 0 };
+  c.pos.forEach((x) => { byType[x.r[3] === 'Cripto' ? 'Cripto' : 'ETFs'] += x.value; });
+  p.cash.forEach((x) => { byType[x[1] === 'Fondo monetario' ? 'Fondo monetario' : 'Efectivo'] += x[2]; });
+  const TC = { 'ETFs': '#3555A0', 'Cripto': '#B08A12', 'Fondo monetario': '#0E6B58', 'Efectivo': '#9DB8AE' };
+  const types = Object.keys(byType).filter((k) => byType[k] > 0).map((k) => [k, byType[k], TC[k]]);
+  const ahorro = c.inc[n - 1] - c.exp[n - 1];
+  const pl = c.invTotal - c.invCost;
+  const goalPct = Math.min(100, Math.round(c.pat / p.goal * 100));
+  return `<div class="stack">
+    <section class="k4">${[
+      ['Patrimonio neto', fmt(c.pat), 'Todo lo que tienes, sumado', 'var(--ink)'],
+      ['Liquidez', fmt(c.cashTotal), p.cash.length + ' cuentas con dinero disponible', '#0B5747'],
+      ['Inversiones', fmt(c.invTotal), c.pos.length ? sign(pl) + ' de plusvalía' : 'Sin inversiones todavía', '#28437F'],
+      ['Ahorro este mes', sign(ahorro), 'Ingresos − gastos de septiembre', ahorro >= 0 ? '#0B5747' : 'var(--bad)']
+    ].map(kpiCard).join('')}</section>
+    <section class="r2">
+      <div class="card">
+        <div class="between"><h2>Evolución del patrimonio · 12 meses</h2>
+          <div class="row muted" style="font-size:13px;gap:16px"><span class="row" style="gap:6px"><span class="dot" style="background:var(--inv)"></span>Inversiones</span><span class="row" style="gap:6px"><span class="dot" style="background:var(--liq)"></span>Liquidez</span></div></div>
+        <div class="bars" style="gap:8px">${MONTHS.map((mo, i) => `
+          <div class="bar-col" title="${mo}: inversiones ${fmt(invHist[i])} · liquidez ${fmt(cashHist[i])}">
+            <div class="stackbar"><div style="height:${Math.round(invHist[i] / maxPat * 190)}px;background:var(--inv);border-radius:3px 3px 0 0"></div><div style="height:${Math.round(cashHist[i] / maxPat * 190)}px;background:var(--liq)"></div></div>
+            <span class="muted" style="font-size:12px;font-weight:600">${mo}</span></div>`).join('')}</div>
+      </div>
+      <div class="card"><h2>Patrimonio por entidad</h2>
+        ${entList.map((e) => `<div style="display:flex;flex-direction:column;gap:6px">
+          <div class="between" style="font-size:14px;gap:8px"><span><strong>${esc(e.k)}</strong> <span class="muted">· ${esc(e.sub)}</span></span><strong class="tnum">${fmt(e.t)}</strong></div>
+          <div class="track" style="height:10px"><div style="width:${(e.inv / maxEnt * 100).toFixed(1)}%;background:var(--inv)"></div><div style="width:${(e.liq / maxEnt * 100).toFixed(1)}%;background:var(--liq)"></div></div></div>`).join('')}
+        <span class="muted" style="font-size:12px">Azul = invertido · Verde = efectivo / disponible</span>
+      </div>
+    </section>
+    <section class="r2e">
+      <div class="card"><h2>Reparto por tipo</h2>
+        <div class="row" style="flex-wrap:wrap;gap:18px">
+          <div class="donut" role="img" aria-label="Reparto del patrimonio por tipo de activo" style="width:140px;height:140px;background:conic-gradient(${conic(types)})"><div class="donut-in" style="width:86px;height:86px"></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 120px">${types.map((t) => `
+            <div class="row" style="gap:8px;font-size:14px"><span class="dot" style="background:${t[2]}"></span><span style="flex:1">${t[0]}</span><span class="muted">${Math.round(t[1] / c.pat * 100)} %</span></div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="between"><h2>Objetivo de patrimonio</h2><span class="muted" style="font-size:13px">Meta: <strong style="color:var(--ink)">${fmt(p.goal)}</strong></span></div>
+        <div class="track" style="height:14px"><div style="width:${goalPct}%;background:var(--accent);border-radius:99px"></div></div>
+        <span style="font-size:14px">${goalPct} % conseguido · faltan ${fmt(Math.max(0, p.goal - c.pat))}</span>
+        <span class="muted" style="font-size:13px">Siguientes hitos: 25.000 € · 50.000 € · 100.000 €</span>
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ---------- pestaña 2: Movimientos ---------- */
+function movView(c) {
+  const u = USERS[state.user], n = c.n;
+  const max = Math.max.apply(null, c.inc.concat(c.exp)) || 1;
+  const change = Math.round((c.exp[n - 1] - c.exp[n - 2]) / c.exp[n - 2] * 100);
+  const rate = c.inc[n - 1] ? Math.round((c.inc[n - 1] - c.exp[n - 1]) / c.inc[n - 1] * 100) : 0;
+  const total = c.cats.reduce((a, x) => a + x[1], 0) || 1;
+  const cats = c.cats.map((x, i) => { const r = x[1] / x[2], over = r > 1, near = r >= 0.9;
+    return { name: x[0], spent: x[1], budget: x[2], color: COLORS[i], over: x[1] - x[2], w: Math.min(100, Math.round(r * 100)),
+      st: over ? 'Superado' : near ? 'Al límite' : 'OK', stC: over ? '#B42318' : near ? '#8A3A0C' : '#0B5747', barC: over ? '#B42318' : near ? '#C2581B' : '#0E6B58' }; });
+  const subs = SUBS.filter((s) => s[3] === state.user), subsSum = subs.reduce((a, s) => a + s[2], 0);
+  const alerts = cats.filter((x) => x.over > 0).map((x) => ['Presupuesto', '#FCEDEB', '#B42318', `Has superado ${x.name} en ${fmt(x.over)}.`]);
+  alerts.push([change > 0 ? 'Gasto ↑' : 'Gasto ↓', '#FBF3E9', '#8A3A0C', `Gastos ${change > 0 ? '+' : ''}${change} % respecto a agosto.`]);
+  alerts.push(['Recurrentes', '#EEF2FA', '#28437F', `${subs.length} pagos recurrentes suman ${fmt(subsSum, 2)} al mes.`]);
+  const txs = c.extra.concat(TXS.filter((t) => t[5] === state.user)).slice(0, 10);
+  return `<div class="stack">
+    <section class="k4">${[
+      ['Dinero en cuentas', fmt(c.cashTotal), 'Liquidez disponible', 'var(--ink)'],
+      ['Ingresos del mes', fmt(c.inc[n - 1]), 'Nóminas, Bizum, transferencias', '#0B5747'],
+      ['Gastos del mes', fmt(c.exp[n - 1]), `${change > 0 ? '+' : ''}${change} % vs agosto`, '#A84A15'],
+      ['Tasa de ahorro', rate + ' %', 'Ahorrado: ' + fmt(c.inc[n - 1] - c.exp[n - 1]), 'var(--ink)']
+    ].map(kpiCard).join('')}</section>
+    <section class="r2">
+      <div class="card">
+        <div class="between"><h2>Ingresos vs gastos · 12 meses</h2>
+          <div class="row muted" style="font-size:13px;gap:16px"><span class="row" style="gap:6px"><span class="dot" style="background:var(--accent)"></span>Ingresos</span><span class="row" style="gap:6px"><span class="dot" style="background:var(--exp)"></span>Gastos</span></div></div>
+        <div class="bars">${MONTHS.map((mo, i) => `
+          <div class="bar-col" title="${mo}: ingresos ${fmt(c.inc[i])} · gastos ${fmt(c.exp[i])}">
+            <div class="bar-pair"><div style="height:${Math.max(2, Math.round(c.inc[i] / max * 180))}px;background:var(--accent)"></div><div style="height:${Math.max(2, Math.round(c.exp[i] / max * 180))}px;background:var(--exp)"></div></div>
+            <span style="font-size:12px;font-weight:600;color:${i === n - 1 ? 'var(--ink)' : 'var(--muted)'}">${mo}</span></div>`).join('')}</div>
+      </div>
+      <div class="card"><h2>Gasto por categoría</h2>
+        <div class="row" style="flex-wrap:wrap;gap:20px">
+          <div class="donut" role="img" aria-label="Gasto por categoría" style="width:168px;height:168px;background:conic-gradient(${conic(cats.map((x) => [x.name, x.spent, x.color]))})">
+            <div class="donut-in" style="width:104px;height:104px"><span class="muted" style="font-size:12px">Total</span><span class="num" style="font-weight:700;font-size:18px">${fmt(total)}</span></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 160px">${cats.map((x) => `
+            <div class="row" style="gap:8px;font-size:14px"><span class="dot" style="background:${x.color}"></span><span style="flex:1">${x.name}</span><span class="muted">${Math.round(x.spent / total * 100)} %</span></div>`).join('')}</div>
+        </div>
+      </div>
+    </section>
+    <section class="r2e">
+      <div class="card">
+        <div class="between"><h2>Presupuestos del mes</h2><button type="button" class="btn btn-sm">Editar</button></div>
+        ${cats.map((x) => `<div style="display:flex;flex-direction:column;gap:6px">
+          <div class="between" style="font-size:14px;gap:8px"><span style="font-weight:600">${x.name}</span><span class="muted">${fmt(x.spent)} / ${fmt(x.budget)} · <strong style="color:${x.stC}">${x.st}</strong></span></div>
+          <div class="track"><div style="width:${x.w}%;background:${x.barC};border-radius:99px"></div></div></div>`).join('')}
+      </div>
+      <div class="card"><h2>Avisos</h2>${alerts.map((a) => `
+        <div style="display:flex;gap:10px;font-size:14px;padding:10px 12px;border-radius:10px;background:${a[1]}"><strong style="color:${a[2]};white-space:nowrap">${a[0]}</strong><span>${esc(a[3])}</span></div>`).join('')}</div>
+    </section>
+    <section class="r2">
+      <div class="card">
+        <div class="between"><h2>Últimos movimientos</h2>
+          <div class="row"><label for="buscar" class="muted" style="font-size:13px">Buscar</label><input id="buscar" type="search" placeholder="Concepto, categoría…" style="padding:8px 12px;min-height:40px;border:1px solid var(--line2);border-radius:8px;width:200px"></div></div>
+        <div style="overflow-x:auto"><table style="min-width:620px">
+          <thead><tr><th>Fecha</th><th>Cuenta</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th></tr></thead>
+          <tbody>${txs.map((t) => { const b = BADGES[t[6]]; return `<tr>
+            <td class="muted" style="white-space:nowrap">${esc(t[0])}</td><td class="muted">${esc(t[1])}</td><td style="font-weight:600">${esc(t[2])}</td>
+            <td><span class="row" style="gap:6px;display:inline-flex">${esc(t[3])}<span class="badge" style="background:${b[1]};color:${b[2]}">${b[0]}</span></span></td>
+            <td class="r tnum" style="font-weight:700;white-space:nowrap;color:${t[6] === 'internal' ? 'var(--muted)' : t[4] > 0 ? '#0B5747' : 'var(--ink)'}">${t[4] > 0 ? '+' : ''}${fmt(t[4], 2)}</td></tr>`; }).join('')}</tbody>
+        </table></div>
+      </div>
+      <div class="card" style="gap:10px">
+        <div class="between"><h2>Pagos recurrentes</h2><span class="muted" style="font-size:13px">${fmt(subsSum, 2)}/mes</span></div>
+        <span class="muted" style="font-size:13px">Detectados automáticamente en tus extractos</span>
+        ${subs.map((s) => `<div class="list-row"><span><strong>${s[0]}</strong> <span class="muted">· ${s[1]}</span></span><span style="font-weight:600">${fmt(s[2], 2)}</span></div>`).join('')}
+      </div>
+    </section>
+    <section class="r2e" id="importar">
+      <div class="card"><h2>Importar extracto bancario</h2>
+        <div class="field"><label for="cuenta">Cuenta</label><select id="cuenta">${u.spend.map((a) => `<option>${a}</option>`).join('')}</select></div>
+        <label for="fichero" class="drop">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B616B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
+          <strong style="font-size:15px">Arrastra aquí tu CSV o Excel</strong><span class="muted" style="font-size:13px">o haz clic para seleccionarlo · .csv, .xls, .xlsx</span>
+          <input id="fichero" type="file" accept=".csv,.xls,.xlsx" style="position:absolute;width:1px;height:1px;opacity:0">
+        </label>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:10px;background:#EEF5F2;font-size:14px">
+          <strong>Última importación · ${u.spend[0]} · 142 movimientos</strong>
+          <div class="track" style="background:#D5E6DF"><div style="width:90%;background:var(--accent)"></div></div>
+          <span style="color:#3F454D">120 nuevos · 22 ya existían · 108 categorizados automáticamente · 12 por revisar</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="between"><h2>Añadir movimiento manual</h2><span class="muted" style="font-size:12px">Pruébalo: actualiza el panel</span></div>
+        <div class="row" role="group" aria-label="Tipo de movimiento" style="gap:8px">
+          <button type="button" class="toggle ${state.kind === 'gasto' ? 'on-g' : ''}" data-action="kind" data-kind="gasto" aria-pressed="${state.kind === 'gasto'}">Gasto</button>
+          <button type="button" class="toggle ${state.kind === 'ingreso' ? 'on-i' : ''}" data-action="kind" data-kind="ingreso" aria-pressed="${state.kind === 'ingreso'}">Ingreso</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+          <div class="field" style="grid-column:span 2"><label for="concepto">Concepto</label><input id="concepto" type="text" placeholder="Ej. Cena con amigos"></div>
+          <div class="field"><label for="importe">Importe (€)</label><input id="importe" type="text" inputmode="decimal" placeholder="0,00"></div>
+          <div class="field"><label for="categoria">Categoría</label><select id="categoria">${CAT_OPTIONS.map((x) => `<option>${x}</option>`).join('')}</select></div>
+          <div class="field" style="grid-column:span 2"><label for="cuenta-m">Cuenta</label><select id="cuenta-m">${u.spend.map((a) => `<option>${a}</option>`).join('')}</select></div>
+        </div>
+        ${state.error ? `<span class="err" role="alert">${esc(state.error)}</span>` : ''}
+        <button type="button" class="btn btn-primary" data-action="save" style="min-height:48px">Guardar movimiento</button>
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ---------- pestaña 3: Inversiones ---------- */
+function invView(c) {
+  const p = c.p;
+  if (!c.pos.length) {
+    return `<div class="card" style="align-items:center;text-align:center;padding:40px 24px;gap:10px">
+      <h2 style="font-size:20px">Todavía no hay inversiones</h2>
+      <span class="muted" style="font-size:14px;max-width:420px">Añade una cuenta de broker o un producto (fondo, ETF, plan de pensiones…) para ver aquí tu cartera.</span>
+      <button type="button" class="btn btn-primary">Añadir cuenta de inversión</button></div>`;
+  }
+  const pl = c.invTotal - c.invCost;
+  const maxA = Math.max.apply(null, p.aport) || 1, aSum = p.aport.reduce((a, v) => a + v, 0);
+  const bench = [['Mi cartera', c.invTotal], ['MSCI World', c.invTotal * 1.016], ['S&P 500', c.invTotal * 1.041], ['Sin riesgo (monetario)', c.invCost * 1.028]];
+  const unitsFmt = (x) => x < 1 ? String(x).replace('.', ',') : fmt(x, 0).replace(' €', '');
+  return `<div class="stack">
+    <div class="infobar"><span><strong style="color:var(--ink)">Precios actualizados hoy 15:08</strong> · ETFs y acciones con ~15 min de retraso · fondos al cierre del día anterior · cripto en vivo</span>
+      <button type="button" class="btn btn-sm">↻ Actualizar precios</button></div>
+    <section class="k4">${[
+      ['Valor de las inversiones', fmt(c.invTotal), 'Aportado: ' + fmt(c.invCost), '#28437F'],
+      ['Plusvalía', sign(pl), pct(pl / c.invCost * 100) + ' sobre lo aportado', pl >= 0 ? '#0B5747' : 'var(--bad)'],
+      ['Rentabilidad anual (TIR)', p.tir, 'Tiene en cuenta cuándo aportaste', 'var(--ink)'],
+      ['Aportado este año', fmt(aSum), 'Últimos 12 meses', 'var(--ink)']
+    ].map(kpiCard).join('')}</section>
+    <section class="card">
+      <div class="between"><h2>Mis posiciones</h2><button type="button" class="btn btn-sm" style="min-height:40px">+ Añadir compra / venta</button></div>
+      <div style="overflow-x:auto"><table style="min-width:860px">
+        <thead><tr><th>Producto</th><th>Broker</th><th class="r">Participaciones</th><th class="r">Precio medio</th><th class="r">Precio actual</th><th class="r">Valor</th><th class="r">Plusvalía</th><th class="r">Peso</th></tr></thead>
+        <tbody>${c.pos.map((x) => { const r = x.r, d = x.value - x.cost, t = TAGS[r[7]]; return `<tr>
+          <td><div style="display:flex;flex-direction:column"><strong>${esc(r[0])}</strong><span class="muted" style="font-size:12px">${esc(r[1])} · ${esc(r[3])}</span></div></td>
+          <td class="muted">${esc(r[2])}</td><td class="r tnum">${unitsFmt(r[4])}</td><td class="r tnum muted">${fmt(r[5], 2)}</td>
+          <td class="r" style="white-space:nowrap"><span class="tnum">${fmt(r[6], 2)}</span> <span class="badge" style="background:${t[1]};color:${t[2]}">${t[0]}</span></td>
+          <td class="r tnum" style="font-weight:700">${fmt(x.value, 2)}</td>
+          <td class="r tnum" style="font-weight:700;white-space:nowrap;color:${d >= 0 ? '#0B5747' : 'var(--bad)'}">${sign(d, 2)} · ${pct(d / x.cost * 100)}</td>
+          <td class="r muted">${Math.round(x.value / c.invTotal * 100)} %</td></tr>`; }).join('')}</tbody>
+      </table></div>
+    </section>
+    <section class="r3">
+      <div class="card">
+        <div class="between"><h2>Aportaciones</h2><span class="muted" style="font-size:13px">${fmt(aSum)} en 12 meses</span></div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:130px;border-bottom:1px solid var(--line)">${p.aport.map((v, i) => `<div title="${MONTHS[i]}: ${fmt(v)}" style="flex:1 1 0;height:${Math.round(v / maxA * 120)}px;background:var(--accent);border-radius:3px 3px 0 0"></div>`).join('')}</div>
+        <div class="between muted" style="font-size:12px"><span>Oct 25</span><span>Sep 26</span></div>
+        <span class="muted" style="font-size:13px">Racha: <strong style="color:var(--ink)">12 meses seguidos</strong> aportando</span>
+      </div>
+      <div class="card" style="gap:12px"><h2>¿Y si todo fuera a un indexado?</h2><span class="muted" style="font-size:13px">Mismas aportaciones, mismas fechas</span>
+        ${bench.map((b, i) => { const d = b[1] - c.invTotal; return `<div class="list-row"><span style="font-weight:${i === 0 ? 700 : 500}">${b[0]}</span>
+          <span class="tnum"><strong>${fmt(b[1])}</strong> <span style="font-size:13px;color:${d > 0 ? '#8A3A0C' : '#0B5747'}">${i === 0 ? '' : sign(d)}</span></span></div>`; }).join('')}
+      </div>
+      <div class="card" style="gap:10px"><h2>Intereses y dividendos</h2>
+        ${p.income.map((r) => `<div class="list-row"><span><strong>${r[0]}</strong> <span class="muted">· ${r[1]}</span></span><span class="tnum" style="font-weight:700;color:#0B5747;white-space:nowrap">+${fmt(r[2], 2)}</span></div>`).join('')}
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ---------- estructura ---------- */
+function shellView() {
+  const u = USERS[state.user], c = compute();
+  const title = { pat: 'Patrimonio', mov: 'Movimientos', inv: 'Inversiones' }[state.view];
+  const body = state.view === 'pat' ? patView(c) : state.view === 'mov' ? movView(c) : invView(c);
+  return `<div class="shell">
+  <aside class="side">
+    <div class="row" style="padding:0 8px"><div class="logo">${LOGO}</div><span class="num" style="font-weight:700;font-size:18px">Caudal</span></div>
+    <nav class="sidenav" aria-label="Secciones">${VIEWS.map((v) => `<button type="button" class="${state.view === v[0] ? 'on' : ''}" data-action="view" data-view="${v[0]}">${v[1]}</button>`).join('')}<button type="button">Ajustes</button></nav>
+    <div class="sidefoot"><strong style="color:#fff">Datos de ejemplo</strong><span>Todas las cifras son inventadas.</span></div>
+  </aside>
+  <main>
+    <div class="note">Maqueta de referencia de Caudal con datos inventados. La app real se construye por fases (ver README).</div>
+    <header class="between">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h1 style="font-size:30px">${title} · Septiembre 2026</h1>
+        <span class="muted" style="font-size:14px">Última importación hace 2 días · Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓</span>
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:12px">
+        <button type="button" class="btn">Sep 2026 ▾</button>
+        <button type="button" class="btn btn-primary" data-action="view" data-view="mov" data-scroll="importar">Importar extracto</button>
+        <div class="row" style="background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 6px 4px 4px">
+          <span class="avatar" style="width:36px;height:36px;font-size:15px;background:${u.color}">${u.initial}</span>
+          <strong style="font-size:14px">${u.name}</strong>
+          <button type="button" data-action="logout" style="border:0;background:var(--soft);border-radius:99px;padding:8px 12px;min-height:36px;font-size:13px;font-weight:600;cursor:pointer">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+    <div class="tabs" role="group" aria-label="Pestañas">${VIEWS.map((v) => `<button type="button" class="${state.view === v[0] ? 'on' : ''}" aria-pressed="${state.view === v[0]}" data-action="view" data-view="${v[0]}">${v[1]}</button>`).join('')}</div>
+    ${body}
+  </main>
+</div>`;
+}
+
+function render() {
+  document.getElementById('app').innerHTML = state.screen === 'login' ? loginView() : shellView();
+  const pwd = document.getElementById('pwd');
+  if (pwd) { pwd.focus(); pwd.addEventListener('keydown', (e) => { if (e.key === 'Enter') act('login'); }); }
+}
+
+function act(action, el) {
+  if (action === 'pick') { state.picked = el.dataset.id; state.loginError = ''; }
+  else if (action === 'unpick') { state.picked = null; state.loginError = ''; }
+  else if (action === 'login') {
+    if (!document.getElementById('pwd').value) state.loginError = 'Introduce la contraseña.';
+    else { state.screen = 'dash'; state.user = state.picked; state.view = 'pat'; state.loginError = ''; state.error = ''; window.scrollTo(0, 0); }
+  }
+  else if (action === 'logout') { state.screen = 'login'; state.picked = null; }
+  else if (action === 'view') { state.view = el.dataset.view; }
+  else if (action === 'kind') { state.kind = el.dataset.kind; }
+  else if (action === 'save') {
+    const concept = document.getElementById('concepto').value.trim();
+    const value = parseFloat(document.getElementById('importe').value.replace(/\./g, '').replace(',', '.'));
+    if (!concept) state.error = 'Escribe un concepto.';
+    else if (!isFinite(value) || value <= 0) state.error = 'Introduce un importe mayor que 0 (ej. 12,50).';
+    else if (value > 1000000) state.error = 'El importe parece demasiado alto.';
+    else {
+      const amt = state.kind === 'gasto' ? -value : value;
+      const cat = state.kind === 'ingreso' ? 'Otros ingresos' : document.getElementById('categoria').value;
+      state.extra.unshift(['Hoy', document.getElementById('cuenta-m').value, concept.toUpperCase(), cat, amt, state.user, 'manual']);
+      state.error = '';
+    }
+  }
+  render();
+  if (el && el.dataset.scroll) { const t = document.getElementById(el.dataset.scroll); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
+  else if (action === 'view') window.scrollTo(0, 0);
+}
+
+document.getElementById('app').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (el) act(el.dataset.action, el);
+});
+render();
+</script>
+</body>
+</html>
