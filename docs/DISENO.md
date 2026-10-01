@@ -179,7 +179,7 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 
 ### 6.2 Wise
 - **Cómo se descarga:** web de Wise → Estados de cuenta → Excel. Archivo `statement_<número>_EUR_<desde>_<hasta>.xlsx` (**uno por divisa**).
-- **Formato:** `.xlsx`, hoja **`All transactions`**, **cabeceras en la fila 1**, 32 columnas. Fechas = fechas reales de Excel; importes = números.
+- **Formato:** `.xlsx`, hoja **`All transactions`**, **cabeceras en la fila 1**, 32 columnas. Fechas = fechas reales de Excel; importes = números. Del más reciente al más antiguo. Algunas celdas vacías vienen como **texto vacío** (`''`) y no como celda vacía: tratar los dos casos igual (confirmado en la Fase 0).
 
 **Columnas que se usan:**
 
@@ -187,21 +187,23 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 |---|---|---|
 | `Documento de identidad` | `CARD-123456` | **ID de la transacción** (no es un DNI) → huella anti-duplicados |
 | `Fecha` | `25/09/2026` | Fecha |
+| `Fecha y hora` | `25/09/2026 13:42:55.294` | Opcional: ordenar movimientos del mismo día |
 | `Cantidad` | `-2.08` | Importe (negativo = gasto) |
 | `Divisa` | `EUR` | En la Fase 1 solo EUR |
 | `Descripción` | `Transacción con tarjeta de 2,08 EUR emitida por ...` | Concepto de respaldo |
 | `Comercio` | `Tienda Ejemplo CIUDAD` | **Concepto preferente** |
 | `Nombre del pagador` / `Nombre del beneficiario` | `Nombre Ejemplo` | Concepto si no hay comercio |
 | `Tipo de transacción` | `DEBIT` / `CREDIT` | Comprobar el signo |
-| `Tipo de detalles de transacción` | `CARD`, `TRANSFER`… | Detectar transferencias y conversiones |
+| `Tipo de detalles de transacción` | `CARD`, `DEPOSIT`, `TRANSFER`… | Detectar transferencias y conversiones. Un ingreso desde imagin llega como `CREDIT` + `DEPOSIT` |
+| `Referencia del pago` | `enviament de diners - imaginBank` | **Solo para detectar** transferencias desde imagin (contiene `imaginBank`); no se guarda |
 | `Cambiar desde` / `Cambiar a` / `Tipo de cambio` | | Conversiones de divisa = transferencia interna |
 | `Comisiones totales` | `0` | Opcional |
 
 **Concepto en Wise:** `Comercio` → si está vacío, `Nombre del beneficiario` (gasto) o `Nombre del pagador` (ingreso) → si también está vacío, `Descripción`.
 
-**Se ignoran y no se guardan:** `Referencia del pago`, `Saldo corriente` (solo para verificar), `Número de cuenta del beneficiario`, `Últimos cuatro dígitos de la tarjeta`, `Nombre completo del titular de la tarjeta`, `Archivo adjunto`, `Nota`, y **todas las columnas del fondo** (`Tipo/Valor de ID del activo negociado` [ISIN], `Unidades negociadas`, `Tipo de negociación` [SELL], precios unitarios, `Tipo de cambio efectivo`, `Valor convertido`).
+**Se ignoran y no se guardan:** `Referencia del pago` (solo se usa para detectar transferencias), `Saldo corriente` (solo para verificar), `Número de cuenta del beneficiario`, `Últimos cuatro dígitos de la tarjeta`, `Nombre completo del titular de la tarjeta`, `Archivo adjunto`, `Nota`, y **todas las columnas del fondo** (`Tipo/Valor de ID del activo negociado` [ISIN], `Unidades negociadas`, `Tipo de negociación` [SELL], precios unitarios, `Tipo de cambio efectivo`, `Valor convertido`).
 
-> Cada pago con tarjeta de Wise **vende participaciones del fondo monetario** para cubrir el pago. Eso es solo la mecánica de Wise y **no es un gasto aparte**. Si aparecen filas propias de intereses o de compra/venta del fondo, se marcan como **rendimiento** o **transferencia interna**.
+> Cada pago con tarjeta de Wise **vende participaciones del fondo monetario** para cubrir el pago. Eso es solo la mecánica de Wise y **no es un gasto aparte**. En el extracto, la venta aparece **en la misma fila** que el pago (columnas del fondo rellenas, `Tipo de negociación` = `SELL`), no en una fila propia: se ignoran esas columnas y la fila es un gasto normal. Si aparecen filas propias de intereses o de compra/venta del fondo, se marcan como **rendimiento** o **transferencia interna**.
 
 ### 6.3 Trade Republic y Scalable Capital
 - **Pendiente:** ver qué permite exportar cada uno (CSV/Excel de transacciones o solo PDFs) y conseguir un ejemplo con **datos inventados**.
@@ -364,7 +366,7 @@ registro_backups
 En imagin, el **saldo** hace que dos compras idénticas el mismo día no se tomen por duplicados. Al importar se informa: *"142 leídos · 120 nuevos · 22 ya existían"*.
 
 ### 9.3 Transferencias internas
-Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir.
+Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. En Wise, el ingreso correspondiente lleva `Referencia del pago` con `imaginBank`, lo que confirma la pareja. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir.
 
 ### 9.4 Categorización
 1. **Reglas** "si el concepto contiene X → categoría Y", por prioridad, comparando en mayúsculas y sin acentos.
