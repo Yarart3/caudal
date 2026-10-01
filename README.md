@@ -16,6 +16,7 @@ Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en
 - [Lenguajes y tecnologías](#lenguajes-y-tecnologías)
 - [Cómo funciona en casa](#cómo-funciona-en-casa)
 - [Instalación](#instalación)
+- [Trabajar desde varios ordenadores](#trabajar-desde-varios-ordenadores)
 - [Uso diario](#uso-diario)
 - [Copias de seguridad](#copias-de-seguridad)
 - [Privacidad y seguridad](#privacidad-y-seguridad)
@@ -103,6 +104,153 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 3. Copiar `.env.example` a `.env` y rellenar la ruta de OneDrive, el nombre del pendrive (`CAUDAL_BK`) y la contraseña de backup.
 4. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`).
 5. La primera vez, un asistente crea los usuarios y sus contraseñas.
+
+## Trabajar desde varios ordenadores
+
+El código se desarrolla en varios equipos (portátil, PC de casa y, más adelante, Mac) y se sincroniza **solo con Git a través de GitHub**. Hay que tener claras tres cosas:
+
+- **Git solo lleva el código y la documentación.** Los datos de la app (la base de datos, en el volumen de Docker) y el archivo `.env` **no viajan con Git**, y nunca deben subirse.
+- **La instancia real, con los datos de verdad, solo funciona en el PC de casa** (ver `docs/DISENO.md`). En el resto de equipos solo se desarrolla y se prueba con los ejemplos inventados de `samples/`. Para mover los datos de un ordenador a otro se usa el script *Restaurar backup* (Fase 1d).
+- **Regla de oro:** antes de empezar, `git pull`; al terminar, `git commit` + `git push`. Así nunca hay dos equipos con cambios distintos sin subir.
+
+Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal.
+
+### Caso 1: equipo nuevo (primera vez)
+
+**1. Prepara Docker** (solo en Windows; en Mac, ver la sección 16 de `docs/DISENO.md`):
+1. Comprueba la virtualización: Administrador de tareas → **Rendimiento** → **CPU** → *Virtualización: Habilitada*. Si está deshabilitada, actívala en la BIOS.
+2. En PowerShell **como administrador** (cada comando puede tardar varios minutos):
+   ```powershell
+   dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+   dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+   bcdedit /set hypervisorlaunchtype auto
+   wsl --install --no-distribution
+   wsl --update
+   ```
+3. Limita la memoria de WSL (si el PC tiene 8 GB de RAM, usa `memory=3GB`):
+   ```powershell
+   Set-Content -Path "$env:USERPROFILE\.wslconfig" -Value "[wsl2]","memory=4GB" -Encoding ascii
+   ```
+4. **Reinicia** el PC (Reiniciar, no Apagar).
+5. Instala Docker Desktop:
+   ```powershell
+   winget install -e --id Docker.DockerDesktop
+   ```
+6. En Docker Desktop, **Settings → General**: marca *Use the WSL 2 based engine*, desmarca *Start Docker Desktop when you sign in to your computer* y pulsa **Apply & restart**.
+7. Comprueba que funciona (debe salir "Hello from Docker!" y unos 4.000.000.000 bytes):
+   ```powershell
+   docker run hello-world
+   docker info --format "{{.MemTotal}}"
+   ```
+
+**2. Instala y configura Git y VS Code**
+```powershell
+winget install -e --id Git.Git
+winget install -e --id Microsoft.VisualStudioCode
+```
+Cierra PowerShell, ábrelo de nuevo y configura Git (pon tu nombre y tu email):
+```powershell
+git config --global user.name "TU_NOMBRE"
+git config --global user.email "TU_EMAIL"
+git config --global init.defaultBranch main
+git config --global core.autocrlf true
+git config --global pull.rebase true
+```
+`pull.rebase true` hace que `git pull` coloque tus commits locales encima de los de GitHub, en lugar de crear commits de "merge" innecesarios.
+
+Instala las extensiones de VS Code:
+```powershell
+code --install-extension ms-python.python
+code --install-extension ms-python.vscode-pylance
+code --install-extension charliermarsh.ruff
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension esbenp.prettier-vscode
+code --install-extension ms-azuretools.vscode-docker
+```
+
+**3. Clona el repositorio** en tu carpeta de usuario (`C:\Users\<tu usuario>\Proyectos\caudal`; en Mac, `~/Proyectos/caudal`). Así está en la misma ruta en todos los equipos y **fuera de OneDrive**: nunca lo pongas en Documentos ni en el Escritorio, que suelen sincronizarse con OneDrive y darían conflictos con `node_modules` y los entornos de Python. Hazlo en un PowerShell **normal**, no de administrador:
+```powershell
+mkdir $env:USERPROFILE\Proyectos -Force
+cd $env:USERPROFILE\Proyectos
+git clone https://github.com/Yarart3/Caudal.git caudal
+cd caudal
+code .
+```
+La primera vez que hagas `git clone` o `git push`, se abre una ventana para iniciar sesión en GitHub.
+
+**4. Crea el `.env` de este equipo** *(a partir de la Fase 1a)*:
+```powershell
+Copy-Item .env.example .env
+```
+Rellénalo con las rutas de **este** equipo. El `.env` lleva contraseñas: **no se sube a Git** (está en `.gitignore`) ni se envía por correo o chat.
+
+### Caso 2: equipo que ya tenía el proyecto, pero está atrasado
+
+**1. Mira si tienes cambios sin guardar en este equipo:**
+```powershell
+cd $env:USERPROFILE\Proyectos\caudal
+git status
+```
+
+**2. Según lo que diga:**
+
+- **"nothing to commit, working tree clean":** no hay cambios locales. Descarga lo nuevo:
+  ```powershell
+  git pull
+  ```
+- **Aparecen archivos modificados** y **quieres conservarlos:** guárdalos en un commit y después descarga lo nuevo:
+  ```powershell
+  git add -A
+  git commit -m "describe aquí el cambio"
+  git pull
+  git push
+  ```
+- **Aparecen archivos modificados** y **no los quieres** (pruebas que no sirven). ⚠️ Esto **borra** esos cambios para siempre:
+  ```powershell
+  git restore .
+  git clean -fd
+  git pull
+  ```
+  `git clean -fd` borra los archivos nuevos que no están en Git. `.env`, `node_modules` y similares están en `.gitignore` y no se tocan.
+
+**3. Si `git pull` dice `CONFLICT`:** el mismo archivo se cambió en dos equipos. **No toques nada más**: pega la salida de `git status` en Claude y lo resolvemos. Para volver a como estabas antes del `pull`:
+```powershell
+git rebase --abort
+```
+
+**4. Comprueba que estás al día:**
+```powershell
+git log --oneline -5
+```
+El último commit tiene que coincidir con el que aparece en GitHub.
+
+**5. Actualiza la app** *(a partir de la Fase 1a)*. Si han cambiado dependencias, el `Dockerfile` o la base de datos, reconstruye los contenedores:
+```powershell
+docker compose up -d --build
+```
+Mira también si `.env.example` tiene variables nuevas y añádelas a tu `.env`:
+```powershell
+git diff ORIG_HEAD HEAD -- .env.example
+```
+
+### Antes de dejar un equipo
+
+Sube siempre lo que hayas hecho, aunque esté a medias:
+```powershell
+git status
+git add -A
+git commit -m "describe aquí el cambio"
+git push
+```
+Si `git push` dice `rejected`, es que otro equipo subió algo antes: haz `git pull` y vuelve a hacer `git push`.
+
+**Comprueba** que `git status` dice **"Your branch is up to date with 'origin/main'"** y **"nothing to commit"**. Si es así, puedes cambiar de equipo sin perder nada.
+
+### Qué es de cada equipo y qué se comparte
+
+| Se comparte por Git | Es de cada equipo (no va a Git) |
+|---|---|
+| Código, documentación, `samples/` inventados, `.env.example` | `.env`, `.wslconfig`, Docker Desktop, la base de datos (volumen `pgdata`), `node_modules` y entornos de Python |
 
 ## Uso diario
 
