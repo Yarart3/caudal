@@ -137,7 +137,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Prerrequisitos:** ninguno.
 - **Necesito de Gerard:** nada al empezar; durante la fase, capturas o salidas de comandos si algo falla.
 - **Pasos:**
-  1. Instalar Docker Desktop (WSL2) y desactivar *"Start Docker Desktop when you sign in"*. Comprobar con `docker run hello-world`.
+  1. Comprobar que la **virtualización** está activada (Administrador de tareas → Rendimiento → CPU → "Virtualización: habilitada"; si no, activarla en la BIOS). Instalar **WSL2** (`wsl --install`) y **Docker Desktop**, y desactivar *"Start Docker Desktop when you sign in"*. Limitar la memoria de WSL con `%UserProfile%\.wslconfig` (`[wsl2]` + `memory=4GB`), para que Docker no le quite RAM al resto del PC. Comprobar con `docker run hello-world`.
   2. Instalar Git y VS Code (extensiones: Python, Pylance, Ruff, ESLint, Prettier, Docker). Configurar `git config --global user.name/user.email`.
   3. Crear la carpeta `caudal/` con README, CLAUDE.md, CHANGELOG.md, INSTRUCCIONES, `docs/` y `maqueta/`. `git init`, primer commit. Repositorio **privado** en GitHub (opcional).
   4. Nombre de volumen del pendrive `CAUDAL_BK` y carpeta `CaudalBackups/`.
@@ -155,6 +155,8 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Necesito de Gerard:** la ruta de OneDrive (para el `.env`), aunque los backups no se implementen hasta la 1d.
 - **Entregables:**
   - `docker-compose.yml` (`app` + `db`, volumen `pgdata`, puerto `APP_PORT`, healthcheck de la BD), `.env.example`, `.gitignore` (sección 13 de DISENO), `.dockerignore`.
+  - `.gitattributes` con los finales de línea correctos: `*.bat` y `*.cmd` → `eol=crlf`; `*.sh`, `*.command` y `*.py` → `eol=lf`. Así los scripts funcionan en Windows y en Mac.
+  - Rutas con espacios (por ejemplo, `OneDrive - Universitat de Lleida`) **siempre entre comillas** en `.env`, `docker-compose.yml` y los scripts.
   - `backend/`: `Dockerfile` multietapa (construye el frontend con Node y lo sirve FastAPI como estáticos), `pyproject.toml`, `app/main.py`, `app/config.py` (pydantic-settings), `app/db.py`, modelos `users`, `accounts`, `categories`, `transactions`, `rules`, `backup_log`, migración inicial de Alembic, `app/auth/` (hash Argon2, sesiones en BD o firmadas, caducidad por inactividad, bloqueo tras 5 intentos), endpoints de setup, auth y accounts.
   - `frontend/`: Vite + React + TS, estilos según la maqueta (variables CSS de la sección 14 de DISENO, fuentes Space Grotesk y Manrope), pantallas **Asistente de primer arranque**, **"¿Quién entra?"**, **Contraseña** y un **panel vacío** con la barra lateral, el usuario y "Cerrar sesión".
   - `tests/`: login correcto e incorrecto, bloqueo, caducidad y **aislamiento** (el usuario A recibe 404 al pedir recursos de B).
