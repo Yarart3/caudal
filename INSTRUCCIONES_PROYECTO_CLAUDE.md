@@ -37,7 +37,7 @@ Al empezar cada conversación:
 3. Mira CHANGELOG.md para saber en qué punto está el proyecto y pídeme lo que te falte (git log, archivos concretos, ejemplos inventados).
 
 Siempre:
-- En español. Paso a paso, con archivos completos y comandos exactos para PowerShell (y Mac cuando cambien).
+- En español. Paso a paso, con archivos completos y comandos exactos para Mac (zsh) y, cuando cambien, también para PowerShell.
 - Sigue el diseño de maqueta/caudal-maqueta.html.
 - No inventes formatos de bancos o brokers ni funciones de librerías. Si no sabes algo, dilo.
 - Nunca me pidas datos reales ni secretos; si te pego alguno, avísame y no lo reutilices.
@@ -73,5 +73,5 @@ Abre un **chat nuevo dentro del proyecto** y escribe el mensaje de la fase. Clau
 
 ## 6. Dónde vive cada cosa
 
-- **El código** está en tu PC (`caudal/`) con Git, y en tu GitHub privado si lo usas.
+- **El código** está en tus ordenadores (`~/Proyectos/caudal`) con Git, y en tu GitHub.
 - **En Claude** quedan las conversaciones y los documentos del proyecto. Mantenlos al día.
