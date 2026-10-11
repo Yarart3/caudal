@@ -19,7 +19,7 @@
 ## 2. Con quién trabajas
 
 - **Gerard**, estudiante de 4º de Ingeniería Informática. Sabe programar; no hace falta explicar lo básico, pero sí **por qué** se elige cada cosa cuando no es obvio.
-- Usa **Windows** (PowerShell) y en unas semanas también **Mac**. Todo tiene que funcionar en los dos.
+- Desarrolla sobre todo en un **MacBook Air M5** (macOS, Apple Silicon, zsh). También tiene un portátil y el PC de casa con **Windows** (PowerShell); la instancia real, con los datos de verdad, funciona en el PC de casa. Todo tiene que funcionar en los dos sistemas.
 - Prefiere **archivos completos y comandos exactos para copiar y pegar**, paso a paso, en **español**.
 - Valora la **honestidad**: si algo es mala idea o tiene riesgos, díselo y propón una alternativa.
 - Los usuarios finales son **Gerard** y **sus padres** (que no son técnicos).
@@ -82,7 +82,7 @@
 ### Durante
 5. Entrega **paso a paso**. Cada paso, con:
    - los **archivos completos** con su ruta;
-   - los **comandos exactos** en PowerShell (Windows) y, si cambian, en Mac;
+   - los **comandos exactos** en zsh (Mac) y, si cambian, en PowerShell (Windows);
    - **cómo comprobar** que funciona (qué debería ver o qué test debería pasar).
 6. Espera la confirmación ("funciona" o el error) antes del siguiente paso, salvo que Gerard pida todo de golpe.
 7. Ante un error: pide la salida exacta (`docker compose ps`, `docker compose logs app --tail 100`, la traza de `pytest`, la consola del navegador), encuentra la **causa raíz**, explícala en 1-2 frases y corrige.
@@ -101,7 +101,7 @@
 
 - Cada archivo, en un bloque de código con la **ruta completa desde la raíz** como título, por ejemplo `backend/app/importers/imagin.py`.
 - **Archivo nuevo o cambio grande:** entero. **Cambio pequeño en un archivo largo:** indica exactamente qué bloque sustituir, con el texto anterior y el nuevo.
-- **Comandos:** siempre desde la raíz del proyecto (`caudal/`), en PowerShell; si en Mac son distintos, añádelos debajo.
+- **Comandos:** siempre desde la raíz del proyecto (`caudal/`), en zsh (Mac); si en Windows son distintos, añade debajo los de PowerShell.
 - **Sin TODOs**, sin `pass` de relleno y sin "implementa aquí". Si algo queda fuera a propósito, dilo y en qué fase se hará.
 - No repitas archivos que no cambian.
 
@@ -129,7 +129,7 @@ Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta 
 
 ## 7. Las fases, de principio a fin
 
-Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6 → 7**. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d, en cuanto Gerard tenga el Mac. La 7 es opcional.
+Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6 → 7**. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
 
 ---
 
@@ -153,7 +153,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 ### Fase 1a: base del proyecto + inicio de sesión
 - **Objetivo:** el esqueleto completo funcionando en Docker, con login y dos usuarios aislados.
 - **Prerrequisitos:** Fase 0.
-- **Necesito de Gerard:** la ruta de OneDrive (para el `.env`), aunque los backups no se implementen hasta la 1d.
+- **Necesito de Gerard:** la ruta de OneDrive del equipo en el que trabaje (para el `.env`; las dos están en la sección 10 de DISENO), aunque los backups no se implementen hasta la 1d.
 - **Entregables:**
   - `docker-compose.yml` (`app` + `db`, volumen `pgdata`, puerto `APP_PORT`, healthcheck de la BD), `.env.example`, `.gitignore` (sección 13 de DISENO), `.dockerignore`.
   - `.gitattributes` con los finales de línea correctos: `*.bat` y `*.cmd` → `eol=crlf`; `*.sh`, `*.command` y `*.py` → `eol=lf`. Así los scripts funcionan en Windows y en Mac.
@@ -258,8 +258,9 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 ---
 
 ### Fase 6: migración a Mac
-- **Prerrequisitos:** 1d como mínimo, y tener el Mac.
-- **Pasos:** sección 16 de DISENO. Comprobar los scripts `.command`, la ruta de OneDrive en el Mac, `/Volumes/Gerard` y que las imágenes de Docker funcionan en ARM.
+- **Estado:** el Mac ya está preparado para desarrollar (sección 16.1 de DISENO). Esta fase es solo para pasar al Mac la **instancia real**, que hasta entonces sigue en el PC de casa.
+- **Prerrequisitos:** 1d como mínimo.
+- **Pasos:** sección 16.2 de DISENO. Comprobar los scripts `.command`, la ruta de OneDrive en el Mac, `/Volumes/Gerard` y que las imágenes de Docker funcionan en ARM.
 - **Hecho cuando:** se restaura el último backup en el Mac y los totales coinciden con los del PC.
 - **Mensaje para empezar:** `Empezamos la Fase 6 de Caudal (migración a Mac). Sigue CLAUDE.md.`
 
