@@ -107,17 +107,17 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 
 ## Trabajar desde varios ordenadores
 
-El código se desarrolla en varios equipos (portátil, PC de casa y, más adelante, Mac) y se sincroniza **solo con Git a través de GitHub**. Hay que tener claras tres cosas:
+El código se desarrolla en varios equipos (MacBook Air, portátil con Windows y PC de casa) y se sincroniza **solo con Git a través de GitHub**. Hay que tener claras tres cosas:
 
 - **Git solo lleva el código y la documentación.** Los datos de la app (la base de datos, en el volumen de Docker) y el archivo `.env` **no viajan con Git**, y nunca deben subirse.
 - **La instancia real, con los datos de verdad, solo funciona en el PC de casa** (ver `docs/DISENO.md`). En el resto de equipos solo se desarrolla y se prueba con los ejemplos inventados de `samples/`. Para mover los datos de un ordenador a otro se usa el script *Restaurar backup* (Fase 1d).
 - **Regla de oro:** antes de empezar, `git pull`; al terminar, `git commit` + `git push`. Así nunca hay dos equipos con cambios distintos sin subir.
 
-Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal.
+Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal, y la preparación del equipo está en la sección 16.1 de `docs/DISENO.md`.
 
 ### Caso 1: equipo nuevo (primera vez)
 
-**1. Prepara Docker** (solo en Windows; en Mac, ver la sección 16 de `docs/DISENO.md`):
+**1. Prepara Docker** (solo en Windows; en Mac, ver la sección 16.1 de `docs/DISENO.md`):
 1. Comprueba la virtualización: Administrador de tareas → **Rendimiento** → **CPU** → *Virtualización: Habilitada*. Si está deshabilitada, actívala en la BIOS.
 2. En PowerShell **como administrador** (cada comando puede tardar varios minutos):
    ```powershell
