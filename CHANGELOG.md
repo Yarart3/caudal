@@ -22,6 +22,7 @@ Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (secc
 - Pendiente de Gerard: elegir la contraseña de backup y apuntarla en papel antes de la Fase 1d.
 - La cuenta de OneDrive de la UdL caducará al acabar la carrera: antes, cambiar `ONEDRIVE_DIR` (pendiente 7 de DISENO).
 - Las capturas del README (`docs/capturas/`) se harán en la Fase 7.
+- 2026-10-11: MacBook Air M5 (macOS, Apple Silicon) preparado como equipo principal de desarrollo (sección 16.1 de DISENO). La instancia real sigue en el PC de casa. Los comandos se dan primero en zsh y, si cambian, en PowerShell.
 
 ## [0.0.0] – 2026-10-01 · Diseño
 ### Añadido
