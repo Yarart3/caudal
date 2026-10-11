@@ -55,7 +55,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Tema | Decisión |
 |---|---|
 | Nombre | **Caudal** |
-| Dónde funciona | PC de casa de Gerard (Windows ahora, Mac en ~1 mes). Nada en la nube ni en un servidor. |
+| Dónde funciona | La instancia real, en el PC de casa de Gerard (Windows). Se desarrolla sobre todo en un MacBook Air M5 (macOS, Apple Silicon) y también en el portátil con Windows, siempre con datos inventados. Nada en la nube ni en un servidor. |
 | Cómo se ejecuta | Docker (Docker Desktop). **No arranca solo al encender el PC**: se abre con el acceso directo "Caudal" y se cierra con "Cerrar Caudal". |
 | Acceso | Navegador en `http://localhost:8080`. Desde otros dispositivos de casa, `http://<IP-del-PC>:8080`, solo con el PC encendido y la app abierta. |
 | Usuarios | Inicio de sesión con usuario y contraseña. Dos usuarios: `gerard` (admin) y `padres`. Se pueden añadir más. |
@@ -471,8 +471,13 @@ BACKUP_INTERVAL_MIN=60
 BACKUP_KEEP=30
 BACKUP_MAX_AGE_DAYS=7
 USB_LABEL=Gerard
-ONEDRIVE_DIR=C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups
+# Windows (PC de casa y portátil). Siempre entre comillas:
+ONEDRIVE_DIR="C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups"
+# macOS (el nombre exacto de la carpeta `OneDrive-...` sale con `ls ~/Library/CloudStorage/`):
+# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups"
 ```
+
+El `.env` es **distinto en cada ordenador** y no se sube a Git.
 
 ---
 
@@ -636,7 +641,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - Opcionales: etiquetas, notas, deshacer importación, tema oscuro y "solo largo plazo" en inversiones.
 
 ### Fase 6: migración a Mac
-Ver sección 16.
+El Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1). Queda pasarle la instancia real, si se decide (sección 16.2).
 
 ### Fase 7 (opcional): versión para el CV
 Instancia **separada** con datos **100 % inventados**, README público para GitHub, capturas, tests y CI. **Nunca** conectada a la real.
@@ -645,10 +650,26 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 
 ## 16. Paso a Mac
 
+### 16.1 Preparar el Mac para desarrollar (hecho el 2026-10-11)
+
+MacBook Air M5 (Apple Silicon). En el Mac solo se desarrolla y se prueba con los ejemplos inventados; la instancia real sigue en el PC de casa.
+
+1. **Docker Desktop**, versión *Apple chip*; al abrirlo por primera vez, instalar Rosetta si lo pide y desactivar *"Start Docker Desktop when you sign in"*. Comprobar con `docker run hello-world`.
+2. **Git:** `xcode-select --install` y `git config --global user.name/user.email`.
+3. **GitHub:** Homebrew, `brew install gh` y `gh auth login`.
+4. **Proyecto:** `git clone https://github.com/Yarart3/caudal.git` en `~/Proyectos/caudal` (fuera de OneDrive).
+5. **VS Code:** las mismas extensiones que en Windows y *Shell Command: Install 'code' command in PATH*.
+6. **OneDrive:** la app con la cuenta de la UdL. La carpeta queda en `~/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/OneDrive-*/Proyectos/CaudalBackups`) y se marca *"Mantener siempre en este dispositivo"*.
+7. **Pendrive:** no hace falta para desarrollar. Si se conecta, aparece en `/Volumes/Gerard`.
+
+### 16.2 Pasar la instancia real al Mac (Fase 6, después de la 1d)
+
+Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían entrar con el Mac en casa, encendido y con la app abierta, y el pendrive no estaría siempre conectado.
+
 1. En Windows: **"Cerrar Caudal"** (hace el backup final).
-2. En el Mac: Docker Desktop (con el arranque automático **desactivado**) y Git; clonar o copiar el proyecto.
-3. Copiar el `.env` ajustando:
-   - `ONEDRIVE_DIR=/Users/<usuario>/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups` (comprobar el nombre exacto en Finder).
+2. En el Mac, ya preparado (16.1): `git pull`.
+3. Crear el `.env` del Mac con la misma `BACKUP_PASSWORD` y:
+   - `ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups"`.
    - El pendrive aparece en `/Volumes/Gerard`.
 4. **"Restaurar backup"** con el último backup.
 5. Abrir con `Caudal.command` (la primera vez, `chmod +x` y permitirlo en *Privacidad y seguridad*).
@@ -680,7 +701,7 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 ## 19. Instrucciones para Claude en este proyecto
 
 - **Idioma:** español.
-- **Sistema:** Windows ahora; todo debe funcionar también en **macOS** (scripts para los dos y rutas en `.env`).
+- **Sistema:** se desarrolla sobre todo en **macOS** (Apple Silicon, zsh); todo debe funcionar también en **Windows**, donde está la instancia real (scripts para los dos y rutas en `.env`). Los comandos, primero en zsh y, si cambian, en PowerShell.
 - **Forma de trabajar:** una fase o bloque por conversación. Seguir `CLAUDE.md`, leer este documento al empezar y respetar sus decisiones. Si algo cambia, proponer la actualización de este documento.
 - **Entregables:** archivos completos, listos para usar, con **pasos exactos** para ejecutarlos. Sin TODOs ni plantillas a medias.
 - **Diseño:** seguir la maqueta (`maqueta/caudal-maqueta.html`) y el estilo de la sección 14.
