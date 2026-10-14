@@ -22,4 +22,5 @@ COPY backend/ ./
 RUN useradd --system --uid 10001 caudal
 USER caudal
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Aplica las migraciones pendientes y arranca la app
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
