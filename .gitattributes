@@ -1,0 +1,19 @@
+# Normaliza los finales de línea en el repositorio (LF) y los convierte al hacer checkout según el tipo.
+* text=auto
+
+# Scripts de Windows: CRLF, o cmd.exe puede fallar
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+# Scripts de Mac/Linux y Python: LF, o bash/sh fallan con "\r"
+*.sh      text eol=lf
+*.command text eol=lf
+*.py      text eol=lf
+
+# Archivos binarios: no tocar
+*.xlsx binary
+*.xls  binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.woff2 binary

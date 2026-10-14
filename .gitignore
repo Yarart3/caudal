@@ -1,0 +1,43 @@
+# --- Secretos y configuración local (nunca a git) ---
+.env
+.env.*
+!.env.example
+
+# --- Datos de la app (nunca a git) ---
+pgdata/
+backups/
+*.dump
+*.enc
+*.sql.gz
+
+# Extractos bancarios: solo se suben los ejemplos inventados de samples/
+*.xlsx
+*.xls
+*.csv
+!samples/*.xlsx
+!samples/*.xls
+!samples/*.csv
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Frontend ---
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+backend/static/
+
+# --- Sistema y editores ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
