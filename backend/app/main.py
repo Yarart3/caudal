@@ -8,12 +8,16 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api import setup
 from app.db import get_db
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 app = FastAPI(title="Caudal", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
+
+# Los routers de la API van ANTES de la ruta del frontend, que lo captura todo
+app.include_router(setup.router)
 
 
 @app.exception_handler(RequestValidationError)
