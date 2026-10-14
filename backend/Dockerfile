@@ -1,4 +1,7 @@
-# Imagen de Caudal. Se construye desde la raíz del proyecto (contexto ".", ver docker-compose.yml).
+# Imagen de Caudal en dos etapas (más la base común):
+#   runtime: Python + FastAPI, la imagen de la app.
+#   dev:     runtime + pytest y ruff, para las comprobaciones (servicio "tests").
+# Se construye desde la raíz del proyecto (contexto ".", ver docker-compose.yml).
 # En la parte 1.6 se añade la etapa que compila el frontend.
 
 # ---------- Base común de Python ----------
@@ -24,3 +27,9 @@ USER caudal
 EXPOSE 8000
 # Aplica las migraciones pendientes y arranca la app
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+# ---------- Dev (tests y lint, servicio "tests") ----------
+FROM base AS dev
+RUN uv sync --locked
+COPY backend/ ./
+CMD ["pytest"]

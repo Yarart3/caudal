@@ -1,5 +1,9 @@
 # Caudal: servicios de Docker.
-# Uso normal: docker compose up -d --build  →  http://localhost:${APP_PORT}
+# Uso normal:  docker compose up -d --build   →   http://localhost:${APP_PORT}
+# Comprobaciones de desarrollo (perfil "dev"):
+#   docker compose run --rm tests                    → pytest
+#   docker compose run --rm tests ruff check .       → lint de Python
+#   docker compose run --rm tests ruff format .      → formatea el código
 name: caudal
 
 services:
@@ -39,6 +43,23 @@ services:
       timeout: 5s
       start_period: 20s
       retries: 5
+
+  # --- Solo para desarrollo: no arranca con "docker compose up" ---
+  tests:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: dev
+    env_file: .env
+    environment:
+      DATABASE_HOST: db
+      TZ: Europe/Madrid
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
