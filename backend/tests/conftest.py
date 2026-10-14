@@ -18,10 +18,15 @@ from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from psycopg import sql  # noqa: E402
 from sqlalchemy import text  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
+from app.auth.security import hash_password  # noqa: E402
 from app.config import get_settings  # noqa: E402
-from app.db import Base, engine  # noqa: E402
+from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.models import User  # noqa: E402
+
+TEST_PASSWORD = "contrasena-de-prueba"
 
 
 def _create_test_database() -> None:
@@ -61,3 +66,26 @@ def clean_tables() -> Iterator[None]:
 def client() -> Iterator[TestClient]:
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def db() -> Iterator[Session]:
+    """Sesión de BD para preparar datos o comprobarlos directamente."""
+    session = SessionLocal()
+    yield session
+    session.close()
+
+
+@pytest.fixture
+def make_user(db: Session):
+    """Crea usuarios de prueba: make_user("gerard", is_admin=True)."""
+
+    def _make(username: str, password: str = TEST_PASSWORD, **fields) -> User:
+        fields.setdefault("display_name", username.capitalize())
+        fields.setdefault("color", "#0E6B58")
+        user = User(username=username, password_hash=hash_password(password), **fields)
+        db.add(user)
+        db.commit()
+        return user
+
+    return _make
