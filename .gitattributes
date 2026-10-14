@@ -1,5 +1,5 @@
 # Normaliza los finales de línea en el repositorio (LF) y los convierte al hacer checkout según el tipo.
-* text=auto
+* text=auto eol=lf
 
 # Scripts de Windows: CRLF, o cmd.exe puede fallar
 *.bat     text eol=crlf

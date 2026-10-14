@@ -3,7 +3,8 @@
 # Comprobaciones de desarrollo (perfil "dev"):
 #   docker compose run --rm tests                    → pytest
 #   docker compose run --rm tests ruff check .       → lint de Python
-#   docker compose run --rm tests ruff format .      → formatea el código
+#   docker compose run --rm tests ruff format .      → formatea el código Python
+#   docker compose run --rm web                      → lint y build del frontend
 name: caudal
 
 services:
@@ -44,7 +45,7 @@ services:
       start_period: 20s
       retries: 5
 
-  # --- Solo para desarrollo: no arranca con "docker compose up" ---
+  # --- Solo para desarrollo: no arrancan con "docker compose up" ---
   tests:
     profiles: ["dev"]
     build:
@@ -61,5 +62,15 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    profiles: ["dev"]
+    image: node:24-slim
+    working_dir: /frontend
+    volumes:
+      - ./frontend:/frontend
+      - frontend_node_modules:/frontend/node_modules
+    command: ["sh", "-c", "npm ci --no-audit --no-fund && npm run lint && npm run build"]
+
 volumes:
   pgdata:
+  frontend_node_modules:

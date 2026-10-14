@@ -1,12 +1,17 @@
-"""Punto de entrada de Caudal. De momento solo la API; el frontend se añade en la parte 1.6."""
+"""Punto de entrada de Caudal: API bajo /api y, en el resto de rutas, el frontend compilado."""
 
-from fastapi import Depends, FastAPI, Request
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+
+# El Dockerfile copia aquí el frontend compilado (frontend/dist)
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 app = FastAPI(title="Caudal", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
 
@@ -24,3 +29,19 @@ def health(db: Session = Depends(get_db)) -> dict[str, str]:
     """La usan el healthcheck de Docker y los scripts de arranque."""
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def frontend(full_path: str) -> FileResponse:
+    """Sirve el frontend. Cualquier ruta desconocida devuelve index.html (React Router decide)."""
+    if full_path == "api" or full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="No encontrado")
+    index = STATIC_DIR / "index.html"
+    if not index.is_file():
+        raise HTTPException(status_code=404, detail="El frontend no está compilado")
+    if full_path:
+        candidate = (STATIC_DIR / full_path).resolve()
+        # Evita salir de la carpeta static con rutas como ../../etc/passwd
+        if candidate.is_relative_to(STATIC_DIR) and candidate.is_file():
+            return FileResponse(candidate)
+    return FileResponse(index)

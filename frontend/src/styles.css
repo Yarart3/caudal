@@ -1,0 +1,63 @@
+/* Variables de la maqueta (DISENO, sección 14) */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --line: #e3e5e0;
+  --line2: #cdd1ca;
+  --soft: #eef0ec;
+  --ink: #15181c;
+  --muted: #5b616b;
+  --accent: #0e6b58;
+  --exp: #c2581b;
+  --bad: #b42318;
+  --inv: #3555a0;
+  --liq: #9db8ae;
+  --radius: 14px;
+  --font-text: 'Manrope Variable', system-ui, sans-serif;
+  --font-num: 'Space Grotesk Variable', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+.num {
+  font-family: var(--font-num);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.muted {
+  color: var(--muted);
+}
