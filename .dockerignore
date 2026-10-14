@@ -1,0 +1,22 @@
+# Solo se necesitan backend/ y frontend/ para construir la imagen
+.git
+.github
+.env
+.env.*
+!.env.example
+docs
+maqueta
+samples
+scripts
+backend/tests
+backend/static
+backups
+pgdata
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.DS_Store
+*.md
