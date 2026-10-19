@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import accounts, auth, setup
+from app.api import accounts, auth, imports, setup, transactions
 from app.db import get_db
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
@@ -20,6 +20,8 @@ app = FastAPI(title="Caudal", docs_url="/api/docs", redoc_url=None, openapi_url=
 app.include_router(setup.router)
 app.include_router(auth.router)
 app.include_router(accounts.router)
+app.include_router(imports.router)
+app.include_router(transactions.router)
 
 
 @app.exception_handler(RequestValidationError)

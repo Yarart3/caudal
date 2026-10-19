@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings==2.15.0",
     "argon2-cffi==25.1.0",
     "openpyxl==3.1.5",  # lectura de los extractos .xlsx (Fase 1b)
+    "python-multipart==0.0.32",  # subida de archivos (formularios multipart) en FastAPI
 ]
 
 [dependency-groups]
