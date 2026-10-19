@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 0 terminada** (entorno preparado). El código empieza en la Fase 1a. Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 1a terminada** (base del proyecto + inicio de sesión): la app arranca en Docker, tiene asistente de primer arranque, inicio de sesión con dos usuarios aislados y un panel vacío. Siguiente: Fase 1b (importadores de imagin y Wise). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -68,8 +68,8 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 
 | Parte | Lenguaje | Tecnologías |
 |---|---|---|
-| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, pandas + openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest |
-| **Frontend** (la web que ves) | **TypeScript** | React, Vite, Recharts |
+| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, pandas + openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff, uv |
+| **Frontend** (la web que ves) | **TypeScript** | React, React Router, Vite, Recharts, ESLint + Prettier |
 | **Base de datos** | **SQL** | PostgreSQL 16 |
 | **Puesta en marcha** | YAML + scripts | Docker Compose; accesos directos `.bat` (Windows) y `.command` (Mac) |
 
@@ -96,6 +96,28 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - **Nunca** se expone a internet.
 
 ## Instalación
+
+### Arrancar la app (desde la Fase 1a)
+
+Solo hace falta **Docker Desktop**: Python, Node y PostgreSQL van dentro de los contenedores.
+
+```bash
+git clone https://github.com/Yarart3/caudal.git
+cd caudal
+cp .env.example .env          # y cambia POSTGRES_PASSWORD por una contraseña aleatoria
+docker compose up -d --build --wait
+```
+
+Abre **http://localhost:8080**. La primera vez aparece el **asistente** para crear `gerard` y `padres` con sus contraseñas. La API, con su documentación interactiva, está en http://localhost:8080/api/docs.
+
+| Para qué | Comando |
+|---|---|
+| Parar (los datos se conservan) | `docker compose down` |
+| Tests y lint del backend | `docker compose run --rm tests` · `docker compose run --rm tests ruff check .` |
+| Lint y build del frontend | `docker compose run --rm web` |
+| Frontend en vivo mientras se desarrolla | `docker compose --profile dev up -d vite` → http://localhost:5173 |
+
+### Instalación definitiva
 
 > ⏳ **Disponible a partir de la Fase 1d.** Pasos previstos:
 
@@ -244,7 +266,9 @@ git push
 ```
 Si `git push` dice `rejected`, es que otro equipo subió algo antes: haz `git pull` y vuelve a hacer `git push`.
 
-**Comprueba** que `git status` dice **"Your branch is up to date with 'origin/main'"** y **"nothing to commit"**. Si es así, puedes cambiar de equipo sin perder nada.
+**Comprueba** que `git status` dice **"Your branch is up to date with 'origin/main'"** y **"nothing to commit"**. Si es así, puedes cambiar de equipo sin perder nada. Si dejas algo a medias, usa un mensaje que empiece por `wip:` (por ejemplo, `wip: phase 1b step 2 (unfinished)`).
+
+En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Git Bash** (terminal de VS Code → flecha **˅** → *Git Bash*), no en PowerShell. Los finales de línea los fija `.gitattributes` (`LF` en todo salvo `.bat` y `.cmd`).
 
 ### Qué es de cada equipo y qué se comparte
 
@@ -289,12 +313,11 @@ caudal/
 │   ├── fases/                      ← qué se hizo en cada fase, cómo y apuntes
 │   └── capturas/
 ├── maqueta/caudal-maqueta.html     ← diseño de referencia (datos inventados)
-├── backend/                        ← Python (FastAPI)          [Fase 1a]
-├── frontend/                       ← TypeScript (React)        [Fase 1a]
+├── backend/                        ← Python (FastAPI), con alembic/ y tests/
+├── frontend/                       ← TypeScript (React + Vite)
 ├── scripts/windows · scripts/mac   ← accesos directos          [Fase 1d]
 ├── samples/                        ← extractos de ejemplo INVENTADOS
-├── tests/
-├── docker-compose.yml · .env.example · .gitignore              [Fase 1a]
+├── docker-compose.yml · .env.example · .gitignore · .gitattributes
 ```
 
 ## Roadmap
@@ -302,7 +325,7 @@ caudal/
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Preparar el entorno (Docker, Git, pendrive, OneDrive, ejemplos) | ✅ |
-| 1a | Base del proyecto + inicio de sesión | ⬜ |
+| 1a | Base del proyecto + inicio de sesión | ✅ |
 | 1b | Importadores de imagin y Wise | ⬜ |
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ⬜ |
 | 1d | Backups + accesos directos | ⬜ |
@@ -319,7 +342,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** diseño cerrado, sin código todavía (empieza en la Fase 0)
+- **Estado:** Fase 1a terminada (base del proyecto + inicio de sesión). Siguiente: Fase 1b
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -117,15 +117,17 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 | `gerard` | Gerard | imagin, Wise, Trade Republic, Scalable Capital | **admin** (crea usuarios y restablece contraseñas) |
 | `padres` | Padres (cuenta compartida) | CaixaBank, Sabadell | normal |
 
-- **Primer arranque:** un asistente crea `gerard` (admin) y `padres` y pide sus contraseñas.
+- **Primer arranque:** un asistente crea `gerard` (admin) y `padres` y pide sus contraseñas: al menos 8 caracteres, repetidas para evitar erratas y **distintas** entre los dos usuarios. Solo funciona con la base de datos sin usuarios.
 - **Más usuarios en el futuro** (por ejemplo, la hermana): *Ajustes → Usuarios → Nuevo usuario*. Cada usuario nuevo empieza vacío, con sus propias cuentas, categorías, reglas e inversiones.
 - **Contraseña olvidada:** el admin la restablece desde *Ajustes → Usuarios*. Si es la del propio admin, se usa el script `Restablecer contraseña` (`.bat` / `.command`).
 
 ### Seguridad del inicio de sesión
 - Las contraseñas se guardan como **hash Argon2**, nunca en texto plano.
-- Sesión en **cookie `HttpOnly` + `SameSite=Strict`**, que **caduca tras 30 minutos sin actividad**.
-- **Bloqueo de 5 minutos tras 5 intentos fallidos.**
-- **La separación entre usuarios la aplica el servidor:** cada consulta va filtrada por el usuario de la sesión.
+- Sesión en **cookie `HttpOnly` + `SameSite=Strict`**, que **caduca tras 30 minutos sin actividad**. La cookie no lleva `Secure` porque la app va por HTTP en la red de casa.
+- **Las sesiones se guardan en la base de datos** (tabla `sesiones`), y de cada una solo el **hash SHA-256 del token**: quien lea la base de datos o un backup no puede usarlas. Cerrar sesión la borra de verdad.
+- El error de inicio de sesión es el mismo si falla el usuario o la contraseña, y tarda lo mismo, para no revelar qué usuarios existen.
+- **Bloqueo de 5 minutos tras 5 intentos fallidos**, por usuario. Mientras dura, tampoco se entra con la contraseña correcta.
+- **La separación entre usuarios la aplica el servidor:** cada consulta va filtrada por el usuario de la sesión. Pedir un recurso de otro usuario da **404** (como si no existiera), no 403.
 
 ### Privacidad entre usuarios
 - **Cada uno lo suyo.** No existe la vista conjunta.
@@ -297,8 +299,11 @@ El saldo **se calcula**, no se guarda por movimiento. Se guarda un **saldo de re
 
 ```text
 usuarios
-  id, nombre_usuario (único), nombre_visible, hash_contraseña, es_admin,
+  id, nombre_usuario (único), nombre_visible, color (avatar), hash_contraseña, es_admin,
   intentos_fallidos, bloqueado_hasta, creado_en
+
+sesiones
+  id, usuario_id → usuarios, hash_token (único, SHA-256), creada_en, ultimo_uso
 
 cuentas
   id, usuario_id → usuarios, nombre ("imagin", "Trade Republic"...),
@@ -445,12 +450,12 @@ caudal/
 │       ├── prices/             ← yahoo.py, morningstar.py, coingecko.py, caché
 │       ├── backup/
 │       └── api/
+├── backend/tests/              ← pytest, con una BD aparte (caudal_test)
 ├── frontend/src/               ← login, Patrimonio, Movimientos, Inversiones, Ajustes
 ├── scripts/
 │   ├── windows/  Caudal.bat, Cerrar Caudal.bat, Restaurar backup.bat, Restablecer contraseña.bat
 │   └── mac/      Caudal.command, Cerrar Caudal.command, ...
-├── samples/                    ← ejemplos con DATOS INVENTADOS
-└── tests/
+└── samples/                    ← ejemplos con DATOS INVENTADOS
 ```
 
 **Configuración (`.env`, orientativo):**
@@ -460,8 +465,9 @@ APP_PORT=8080
 POSTGRES_USER=caudal
 POSTGRES_PASSWORD=<generada en la instalación>
 POSTGRES_DB=caudal
-SESSION_SECRET=<generada en la instalación>
 SESSION_TIMEOUT_MIN=30
+LOGIN_MAX_ATTEMPTS=5
+LOGIN_LOCKOUT_MIN=5
 
 PRICE_REFRESH_MIN=15
 PRICE_MAX_AGE_HOURS=6
@@ -474,10 +480,17 @@ USB_LABEL=Gerard
 # Windows (PC de casa y portátil). Siempre entre comillas:
 ONEDRIVE_DIR="C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups"
 # macOS (el nombre exacto de la carpeta `OneDrive-...` sale con `ls ~/Library/CloudStorage/`):
-# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups"
+# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups"
 ```
 
-El `.env` es **distinto en cada ordenador** y no se sube a Git.
+El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_SECRET`: las sesiones se guardan en la base de datos (sección 4).
+
+**Decisiones de implementación (Fase 1a):**
+- **Migraciones automáticas:** la app ejecuta `alembic upgrade head` al arrancar, así que nadie tiene que acordarse de migrar.
+- **Imagen en tres etapas:** Node compila el frontend, Python lo sirve junto a la API y una etapa `dev` añade pytest y ruff. Node no queda en la imagen final.
+- **Dependencias fijadas** con `uv.lock` (Python) y `package-lock.json` (frontend). Versiones de partida: Python 3.12, FastAPI 0.143, SQLAlchemy 2.1, Alembic 1.20, PostgreSQL 16, Node 24 LTS, React 19.3, React Router 8.4, Vite 8.3 y **TypeScript 6.0.3** (la 7 todavía no es compatible con `typescript-eslint`).
+- **Desarrollo:** servicios `tests` (pytest y ruff), `web` (lint y build del frontend) y `vite` (frontend en vivo en `localhost:5173`), en el perfil `dev` de Docker Compose. No hace falta instalar Python ni Node en los equipos.
+- **Finales de línea:** `.gitattributes` con `* text=auto eol=lf` (todo `LF` salvo `.bat` y `.cmd`).
 
 ---
 
@@ -558,7 +571,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 
 ## 14. La maqueta
 
-- **Archivo:** `maqueta/caudal-maqueta.html` (doble clic; solo carga las fuentes de Google Fonts si hay internet).
+- **Archivo:** `maqueta/caudal-maqueta.html` (doble clic; solo carga las fuentes de Google Fonts si hay internet). La app real, en cambio, lleva las fuentes dentro (paquetes `@fontsource`): funciona sin internet y no hace peticiones a Google.
 - **Versión editable en Claude:** https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (pulsar ▶ Play para usarla).
 - **Todos los datos son inventados.** Se puede entrar como Gerard o Padres con cualquier contraseña.
 - **Es la referencia visual oficial:** la app real debe parecerse a ella. Se puede mejorar, pero sin cambiar la estructura de las tres pestañas sin actualizar este documento.
@@ -595,7 +608,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - **Hecho cuando:** `docker run hello-world` funciona y existen los ejemplos de imagin y Wise.
 
 ### Fase 1: MVP útil (Gerard)
-**1a. Base + inicio de sesión**
+**1a. Base + inicio de sesión** ✅ (2026-10-19, detalle en `docs/fases/FASE_1a.md`)
 - Docker Compose (`app` + `db`), `.env.example`, `.gitignore`, Alembic con las tablas de movimientos.
 - Asistente de primer arranque, login, sesión, caducidad, bloqueo y cerrar sesión. Pantalla "¿Quién entra?" como en la maqueta.
 - **Hecho cuando:** se entra con los dos usuarios, cada uno ve su panel vacío y hay tests de permisos.
@@ -659,7 +672,7 @@ MacBook Air M5 (Apple Silicon). En el Mac solo se desarrolla y se prueba con los
 3. **GitHub:** Homebrew, `brew install gh` y `gh auth login`.
 4. **Proyecto:** `git clone https://github.com/Yarart3/caudal.git` en `~/Proyectos/caudal` (fuera de OneDrive).
 5. **VS Code:** las mismas extensiones que en Windows y *Shell Command: Install 'code' command in PATH*.
-6. **OneDrive:** la app con la cuenta de la UdL. La carpeta queda en `~/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/OneDrive-*/Proyectos/CaudalBackups`) y se marca *"Mantener siempre en este dispositivo"*.
+6. **OneDrive:** la app con la cuenta de la UdL. La carpeta queda en `~/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/OneDrive-*/Proyectos/CaudalBackups`) y se marca *"Mantener siempre en este dispositivo"*.
 7. **Pendrive:** no hace falta para desarrollar. Si se conecta, aparece en `/Volumes/Gerard`.
 
 ### 16.2 Pasar la instancia real al Mac (Fase 6, después de la 1d)
@@ -669,7 +682,7 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 1. En Windows: **"Cerrar Caudal"** (hace el backup final).
 2. En el Mac, ya preparado (16.1): `git pull`.
 3. Crear el `.env` del Mac con la misma `BACKUP_PASSWORD` y:
-   - `ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-<organización>/Proyectos/CaudalBackups"`.
+   - `ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups"`.
    - El pendrive aparece en `/Volumes/Gerard`.
 4. **"Restaurar backup"** con el último backup.
 5. Abrir con `Caudal.command` (la primera vez, `chmod +x` y permitirlo en *Privacidad y seguridad*).
@@ -688,6 +701,8 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 5 | Confirmar las categorías iniciales | Fase 1c |
 | 6 | Objetivo de patrimonio de cada usuario | Fase 2 |
 | 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
+| 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
+| 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`) y separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev` | Fase 1d |
 
 ---
 

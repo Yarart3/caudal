@@ -2,6 +2,29 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [0.1.0] – 2026-10-19 · Fase 1a
+### Añadido
+- Docker Compose con `db` (PostgreSQL 16, volumen `pgdata`, healthcheck) y `app` (FastAPI + frontend compilado, puerto `APP_PORT`, healthcheck en `/api/health`). Servicios de desarrollo en el perfil `dev`: `tests` (pytest y ruff), `web` (lint y build del frontend) y `vite` (frontend en vivo en `localhost:5173`).
+- `.env.example`, `.gitignore`, `.gitattributes` (`* text=auto eol=lf`) y `.dockerignore`.
+- Backend: `Dockerfile` en tres etapas (frontend con Node → runtime con Python → dev), dependencias fijadas con `uv.lock`, configuración con pydantic-settings y conexión con SQLAlchemy 2.
+- Modelos `users`, `sessions`, `accounts`, `categories`, `transactions`, `rules` y `backup_log`, y la migración inicial `0001` de Alembic, que se aplica sola al arrancar la app.
+- Inicio de sesión: contraseñas con hash Argon2; sesiones guardadas en la BD con el hash SHA-256 del token; cookie `HttpOnly` + `SameSite=Strict`; caducidad tras 30 minutos sin actividad; bloqueo de 5 minutos tras 5 intentos fallidos.
+- API: `GET /api/setup/status`, `POST /api/setup`, `GET /api/auth/users`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET/POST/PATCH /api/accounts` y `GET /api/accounts/{id}`. Errores en castellano con el formato `{"detail": "…"}`.
+- Frontend (Vite + React 19 + TypeScript 6, React Router 8): asistente de primer arranque, "¿Quién entra?", contraseña, y panel vacío con la barra lateral, el usuario y "Cerrar sesión", según la maqueta. Al caducar la sesión, vuelve a "¿Quién entra?" con un aviso. Las fuentes van dentro de la app (`@fontsource`).
+- 31 tests: contraseñas, sesiones y caducidad, asistente, login, bloqueo, cuentas y **aislamiento entre usuarios** (404 al pedir recursos de otro).
+- `docs/fases/FASE_1a.md`: qué se hizo, cómo, decisiones, problemas y apuntes para aprender.
+### Cambiado
+- Sesiones en BD en lugar de firmadas: se quita `SESSION_SECRET` del `.env` y se añaden `LOGIN_MAX_ATTEMPTS` y `LOGIN_LOCKOUT_MIN`.
+- Los tests van en `backend/tests/` (no en `tests/` en la raíz) y usan una BD aparte, `caudal_test`.
+- Fuentes con `@fontsource` en lugar de Google Fonts.
+- Forma de trabajar (CLAUDE.md): fases en partes pequeñas con un commit cada una, archivos como bloques `cat > … <<'EOF'` para pegar en la terminal, Git Bash en Windows y commits `wip:` al cambiar de equipo.
+- Documentos de fases renombrados a `FASE_<n>.md`.
+### Notas
+- El asistente exige contraseñas de al menos 8 caracteres y distintas para Gerard y Padres.
+- Pendiente de decidir: el repositorio de GitHub es público (DISENO, pendiente 8).
+- Antes de meter datos reales en el PC de casa: borrar la BD de pruebas y separar la de desarrollo (DISENO, pendiente 9, Fase 1d).
+- El logo definitivo se integrará cuando esté listo (`frontend/public/favicon.svg` y `frontend/src/Logo.tsx`).
+
 ## [0.0.1] – 2026-10-01 · Fase 0
 ### Añadido
 - Entorno preparado en el portátil y en el PC de casa: WSL2, Docker Desktop (sin arranque automático, WSL limitado a 4 GB), Git y VS Code con sus extensiones.

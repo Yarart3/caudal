@@ -46,7 +46,7 @@
 | usuarios | `users` |
 | cuentas (tipo gasto / inversion / mixta) | `accounts` (`kind`: `spending` / `investment` / `mixed`) |
 | categorias | `categories` |
-| movimientos | `transactions` |
+| movimientos | `transactions` (concepto → `description`) |
 | estado_categoria (auto / manual / revisar) | `category_status` (`auto` / `manual` / `review`) |
 | es_transferencia_interna | `is_internal_transfer` |
 | huella | `fingerprint` |
@@ -57,7 +57,9 @@
 | precios | `prices` |
 | valores_manuales | `manual_valuations` |
 | objetivos | `goals` |
-| registro_backups | `backup_log` |
+| registro_backups | `backup_log` (destino → `destination`: `usb` / `onedrive`) |
+| sesiones | `sessions` (`token_hash`, `last_seen_at`) |
+| subtipo_liquidez (efectivo / fondo_monetario) | `accounts.liquidity_type` (`cash` / `money_market`) |
 
 ### Reglas técnicas
 - **Dinero:** `Decimal` en Python y `NUMERIC(12,2)` en la BD; participaciones con `NUMERIC(18,8)`; precios con `NUMERIC(18,6)`. **Nunca `float`** para importes. En el frontend, el dinero viaja como **string** en el JSON y se formatea con `Intl.NumberFormat('es-ES', {style:'currency', currency:'EUR'})`. Ojo: `es-ES` no agrupa los miles en números de 4 cifras; usa `useGrouping: 'always'` o un formateador propio para que salga `1.234 €`.
@@ -65,8 +67,8 @@
 - **API:** todo bajo `/api/...`, JSON, errores con `{"detail": "mensaje en castellano"}`, autenticación con cookie de sesión. **Cada endpoint filtra por el usuario de la sesión.**
 - **Migraciones:** todo cambio de esquema va con una migración de Alembic. Nunca `create_all` en producción.
 - **Configuración:** solo por `.env`. Nada escrito a fuego (rutas, contraseñas, puertos).
-- **Calidad:** `ruff check` + `ruff format`, `pytest`, `npm run lint`, `npm run build` sin errores antes de dar una fase por buena.
-- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits: `feat: …`, `fix: …`, `docs: …`, `test: …`, `chore: …` (por ejemplo, `docs: keep USB volume label Gerard`).
+- **Calidad:** `ruff check` + `ruff format`, `pytest`, `npm run lint`, `npm run build` sin errores antes de dar una fase por buena. Todo se ejecuta en Docker: `docker compose run --rm tests`, `docker compose run --rm tests ruff check .`, `docker compose run --rm tests ruff format --check .` y `docker compose run --rm web`.
+- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits: `feat: …`, `fix: …`, `docs: …`, `test: …`, `chore: …` (por ejemplo, `docs: keep USB volume label Gerard`). Se hace commit y push **al final de cada parte** de la fase, directamente en `main`. Si Gerard cambia de equipo a mitad de una parte: commit `wip: …` y push.
 
 ## 4. Protocolo de cada conversación
 
@@ -99,9 +101,11 @@
 
 ## 5. Formato de entrega
 
-- Cada archivo, en un bloque de código con la **ruta completa desde la raíz** como título, por ejemplo `backend/app/importers/imagin.py`.
+- **Fases en partes pequeñas** (1.1, 1.2…), cada una con sus comprobaciones y su commit. El estado de la fase se lleva en `docs/fases/FASE_<n>.md`.
+- **Archivos como bloques para pegar en la terminal:** `cat > ruta <<'EOF' … EOF`, con la **ruta completa desde la raíz** (por ejemplo `backend/app/importers/imagin.py`). Funcionan en zsh (Mac) y en **Git Bash** (Windows); en PowerShell no. Recordar que se pegan en la terminal, no en un archivo abierto, y una sola vez. Después de cada bloque, `wc -l` para comprobar que ningún archivo quedó vacío.
+- Antes de entregar, **probarlo**: ruff, pytest, lint y build y, si hay pantallas, en un navegador.
 - **Archivo nuevo o cambio grande:** entero. **Cambio pequeño en un archivo largo:** indica exactamente qué bloque sustituir, con el texto anterior y el nuevo.
-- **Comandos:** siempre desde la raíz del proyecto (`caudal/`), en zsh (Mac); si en Windows son distintos, añade debajo los de PowerShell.
+- **Comandos:** siempre desde la raíz del proyecto (`caudal/`), en zsh (Mac); si en Windows son distintos, añade debajo los de Git Bash o PowerShell. Diferencias habituales: `sed -i ''` (Mac) / `sed -i` (Git Bash); `curl.exe` en PowerShell; `psql` siempre con `-P pager=off`.
 - **Sin TODOs**, sin `pass` de relleno y sin "implementa aquí". Si algo queda fuera a propósito, dilo y en qué fase se hará.
 - No repitas archivos que no cambian.
 
@@ -112,7 +116,7 @@
 | 1a | `GET /api/setup/status` · `POST /api/setup` | Saber si hay usuarios y crear los iniciales |
 | 1a | `GET /api/auth/users` | Tarjetas de "¿Quién entra?" (solo nombre visible, inicial y color) |
 | 1a | `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sesión |
-| 1a | `GET/POST/PATCH /api/accounts` | Cuentas del usuario |
+| 1a | `GET/POST/PATCH /api/accounts` · `GET /api/accounts/{id}` | Cuentas del usuario (404 si es de otro) |
 | 1b | `POST /api/imports` (multipart: `account_id` + archivo) | Importar extracto → `{read, new, duplicates, review, internal, errors}` (`errors`: lista de `{row, field, value, message}`) |
 | 1c | `GET /api/transactions?month=&q=&category=&status=` · `POST` · `PATCH /{id}` · `DELETE /{id}` | Movimientos |
 | 1c | `GET/POST/PATCH/DELETE /api/categories` · `/api/rules` · `POST /api/rules/apply` | Categorías y reglas |
@@ -158,9 +162,9 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
   - `docker-compose.yml` (`app` + `db`, volumen `pgdata`, puerto `APP_PORT`, healthcheck de la BD), `.env.example`, `.gitignore` (sección 13 de DISENO), `.dockerignore`.
   - `.gitattributes` con los finales de línea correctos: `*.bat` y `*.cmd` → `eol=crlf`; `*.sh`, `*.command` y `*.py` → `eol=lf`. Así los scripts funcionan en Windows y en Mac.
   - Rutas con espacios (por ejemplo, `OneDrive - udl.cat`) **siempre entre comillas** en `.env`, `docker-compose.yml` y los scripts.
-  - `backend/`: `Dockerfile` multietapa (construye el frontend con Node y lo sirve FastAPI como estáticos), `pyproject.toml`, `app/main.py`, `app/config.py` (pydantic-settings), `app/db.py`, modelos `users`, `accounts`, `categories`, `transactions`, `rules`, `backup_log`, migración inicial de Alembic, `app/auth/` (hash Argon2, sesiones en BD o firmadas, caducidad por inactividad, bloqueo tras 5 intentos), endpoints de setup, auth y accounts.
+  - `backend/`: `Dockerfile` multietapa (construye el frontend con Node y lo sirve FastAPI como estáticos), `pyproject.toml`, `app/main.py`, `app/config.py` (pydantic-settings), `app/db.py`, modelos `users`, `accounts`, `categories`, `transactions`, `rules`, `backup_log`, migración inicial de Alembic, `app/auth/` (hash Argon2, sesiones en BD con el hash del token, caducidad por inactividad, bloqueo tras 5 intentos), endpoints de setup, auth y accounts.
   - `frontend/`: Vite + React + TS, estilos según la maqueta (variables CSS de la sección 14 de DISENO, fuentes Space Grotesk y Manrope), pantallas **Asistente de primer arranque**, **"¿Quién entra?"**, **Contraseña** y un **panel vacío** con la barra lateral, el usuario y "Cerrar sesión".
-  - `tests/`: login correcto e incorrecto, bloqueo, caducidad y **aislamiento** (el usuario A recibe 404 al pedir recursos de B).
+  - `backend/tests/`: login correcto e incorrecto, bloqueo, caducidad y **aislamiento** (el usuario A recibe 404 al pedir recursos de B).
 - **Hecho cuando:** `docker compose up -d --build` → `http://localhost:8080` muestra el asistente; se crean `gerard` (admin) y `padres`; cada uno entra y ve su panel vacío; los tests pasan; los datos sobreviven a `docker compose down` + `up`.
 - **Mensaje para empezar:** `Empezamos la Fase 1a de Caudal (base + inicio de sesión). Sigue CLAUDE.md.`
 
