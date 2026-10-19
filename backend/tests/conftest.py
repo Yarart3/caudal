@@ -17,14 +17,14 @@ from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from psycopg import sql  # noqa: E402
-from sqlalchemy import text  # noqa: E402
+from sqlalchemy import select, text  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from app.auth.security import hash_password  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import User  # noqa: E402
+from app.models import Account, User  # noqa: E402
 
 TEST_PASSWORD = "contrasena-de-prueba"
 
@@ -87,5 +87,28 @@ def make_user(db: Session):
         db.add(user)
         db.commit()
         return user
+
+    return _make
+
+
+@pytest.fixture
+def make_account(db: Session, make_user):
+    """make_account("imagin") → cuenta de gasto con ese banco (None = cuenta a mano).
+
+    Si el usuario no existe, lo crea: make_account("imagin", username="padres").
+    """
+
+    def _make(import_format: str | None, username: str = "gerard", **fields) -> Account:
+        user = db.scalar(select(User).where(User.username == username)) or make_user(username)
+        account = Account(
+            user_id=user.id,
+            name=fields.pop("name", import_format or "Efectivo"),
+            kind="spending",
+            import_format=import_format,
+            **fields,
+        )
+        db.add(account)
+        db.commit()
+        return account
 
     return _make
