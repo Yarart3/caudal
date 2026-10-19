@@ -24,7 +24,9 @@ export function StartPage() {
   if (error !== null) {
     return (
       <Screen>
-        <p className="error">{error}</p>
+        <p className="err" role="alert">
+          {error}
+        </p>
       </Screen>
     );
   }

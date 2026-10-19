@@ -18,7 +18,11 @@ export function LoginPage() {
   return (
     <Screen>
       <h1>¿Quién entra?</h1>
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p className="err" role="alert">
+          {error}
+        </p>
+      )}
       {users?.map((u) => (
         <div key={u.username} className="row">
           <span className="avatar" style={{ background: u.color }}>

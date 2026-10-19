@@ -1,18 +1,19 @@
 import type { ReactNode } from 'react';
 import { Logo } from '../Logo';
 
-/** Pantalla centrada con una tarjeta y el logo, como las de entrada de la maqueta. */
-export function Screen({ children }: { children: ReactNode }) {
+/** Tarjeta centrada con el logo: la base de las pantallas de entrada (como en la maqueta). */
+export function Screen({ children, foot }: { children: ReactNode; foot?: ReactNode }) {
   return (
-    <main className="screen">
-      <div className="card screen-card">
+    <main className="login-wrap">
+      <div className="login">
         <div className="row">
           <Logo />
           <span className="num" style={{ fontWeight: 700, fontSize: 20 }}>
             Caudal
           </span>
         </div>
-        {children}
+        <div className="login-body">{children}</div>
+        {foot && <p className="muted login-foot">{foot}</p>}
       </div>
     </main>
   );
