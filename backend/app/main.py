@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import auth, setup
+from app.api import accounts, auth, setup
 from app.db import get_db
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
@@ -19,12 +19,18 @@ app = FastAPI(title="Caudal", docs_url="/api/docs", redoc_url=None, openapi_url=
 # Los routers de la API van ANTES de la ruta del frontend, que lo captura todo
 app.include_router(setup.router)
 app.include_router(auth.router)
+app.include_router(accounts.router)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
     """Errores de validación con el formato {"detail": "mensaje en castellano"}."""
-    fields = sorted({str(err["loc"][-1]) for err in exc.errors() if err.get("loc")})
+    errors = exc.errors()
+    # Validaciones propias (ValueError en un validador): su mensaje ya está en castellano
+    own = [e["msg"].removeprefix("Value error, ") for e in errors if e.get("type") == "value_error"]
+    if own:
+        return JSONResponse(status_code=422, content={"detail": own[0]})
+    fields = sorted({str(err["loc"][-1]) for err in errors if err.get("loc")})
     detail = "Datos no válidos" + (f": revisa {', '.join(fields)}" if fields else "")
     return JSONResponse(status_code=422, content={"detail": detail})
 
