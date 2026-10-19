@@ -249,3 +249,135 @@ p {
 .user-btn:focus-visible {
   border-color: var(--accent);
 }
+
+/* --- Panel: barra lateral y contenido (parte 3.4, como en la maqueta) --- */
+.shell {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side {
+  background: var(--ink);
+  color: #e9eae6;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidenav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidenav button {
+  text-align: left;
+  border: 0;
+  cursor: pointer;
+  color: #c9ccc5;
+  background: transparent;
+  padding: 10px 12px;
+  min-height: 44px;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sidenav button.on {
+  color: #fff;
+  background: #2a2f35;
+}
+
+.sidenav button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.sidefoot {
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid #2f343a;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #c9ccc5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.content {
+  padding: 28px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 6px 4px 4px;
+}
+
+.user-pill button {
+  border: 0;
+  background: var(--soft);
+  border-radius: 99px;
+  padding: 8px 12px;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 640px;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .sidenav {
+    flex-direction: row;
+  }
+
+  .sidefoot {
+    display: none;
+  }
+
+  .content {
+    padding: 20px 16px 40px;
+  }
+}

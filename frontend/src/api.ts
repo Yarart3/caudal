@@ -23,6 +23,14 @@ export class ApiError extends Error {
 
 type RequestOptions = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
 
+// Aviso de "la sesión ya no vale" (401). Lo registra AuthProvider para volver a "¿Quién entra?".
+// El login no cuenta: ahí un 401 es "contraseña incorrecta".
+let onSessionExpired: (() => void) | null = null;
+
+export function setSessionExpiredHandler(handler: (() => void) | null): void {
+  onSessionExpired = handler;
+}
+
 async function request<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
   let res: Response;
   try {
@@ -46,6 +54,7 @@ async function request<T>(path: string, { method = 'GET', body }: RequestOptions
       typeof data.detail === 'string'
         ? data.detail
         : `Error inesperado (${res.status})`;
+    if (res.status === 401 && path !== '/api/auth/login') onSessionExpired?.();
     throw new ApiError(res.status, detail);
   }
   return data as T;

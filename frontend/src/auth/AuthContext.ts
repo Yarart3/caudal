@@ -4,8 +4,12 @@ import type { Me } from '../api';
 export type AuthState = {
   /** undefined = aún comprobando la sesión · null = sin sesión · Me = usuario que ha entrado */
   user: Me | null | undefined;
+  /** true si se ha vuelto a "¿Quién entra?" porque la sesión caducó */
+  expired: boolean;
   setUser: (user: Me | null) => void;
   logout: () => Promise<void>;
+  /** Pregunta al servidor si la sesión sigue viva (al volver a la pestaña) */
+  checkSession: () => void;
 };
 
 export const AuthContext = createContext<AuthState | null>(null);

@@ -9,7 +9,7 @@ const FOOT =
 
 /** "¿Quién entra?": se elige la tarjeta del usuario y después se escribe la contraseña. */
 export function LoginPage() {
-  const { user } = useAuth();
+  const { user, expired } = useAuth();
   const [users, setUsers] = useState<UserCard[] | null>(null);
   const [picked, setPicked] = useState<UserCard | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +34,11 @@ export function LoginPage() {
   return (
     <Screen foot={FOOT}>
       <h1 style={{ fontSize: 26 }}>¿Quién entra?</h1>
+      {expired && (
+        <p className="note" role="status">
+          Tu sesión se ha cerrado tras 30 minutos sin usarla. Vuelve a entrar.
+        </p>
+      )}
       {error && (
         <p className="err" role="alert">
           {error}
