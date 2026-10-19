@@ -59,6 +59,7 @@ services:
       TZ: Europe/Madrid
     volumes:
       - ./backend:/app
+      - ./samples:/samples:ro
     depends_on:
       db:
         condition: service_healthy

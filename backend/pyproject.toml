@@ -12,6 +12,7 @@ dependencies = [
     "pydantic==2.14.1",
     "pydantic-settings==2.15.0",
     "argon2-cffi==25.1.0",
+    "openpyxl==3.1.5",  # lectura de los extractos .xlsx (Fase 1b)
 ]
 
 [dependency-groups]
