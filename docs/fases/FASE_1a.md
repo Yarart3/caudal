@@ -39,7 +39,7 @@ Este documento explica **qué se ha hecho**, **cómo** (con los comandos exactos
 | 1 | 1.6 | Frontend (Vite + React + TypeScript) compilado en la imagen y servido por FastAPI | ✅ |
 | 2 | 2.1 | Seguridad: Argon2, tokens de sesión, cookie, caducidad, `current_user` | ✅ |
 | 2 | 2.2 | Asistente de primer arranque: `GET /api/setup/status` y `POST /api/setup` | ✅ |
-| 2 | 2.3 | `GET /api/auth/users`, login, logout, `me` y bloqueo tras 5 intentos | ⬜ |
+| 2 | 2.3 | `GET /api/auth/users`, login, logout, `me` y bloqueo tras 5 intentos | ✅ |
 | 2 | 2.4 | `GET/POST/PATCH /api/accounts` filtrado por usuario + test de aislamiento | ⬜ |
 | 3 | 3.x | Pantallas según la maqueta: asistente, "¿Quién entra?", contraseña, panel vacío | ⬜ |
 | — | Cierre | Criterios de "hecho", CHANGELOG `0.1.0`, README, DISENO y CLAUDE.md | ⬜ |
