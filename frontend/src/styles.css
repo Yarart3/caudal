@@ -228,3 +228,24 @@ p {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Tarjetas de "¿Quién entra?" (parte 3.3) */
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  padding: 16px;
+  min-height: 76px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.user-btn:hover,
+.user-btn:focus-visible {
+  border-color: var(--accent);
+}
