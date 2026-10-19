@@ -5,6 +5,7 @@
 #   docker compose run --rm tests ruff check .       → lint de Python
 #   docker compose run --rm tests ruff format .      → formatea el código Python
 #   docker compose run --rm web                      → lint y build del frontend
+#   docker compose --profile dev up -d vite          → frontend en vivo en http://localhost:5173
 name: caudal
 
 services:
@@ -70,6 +71,25 @@ services:
       - ./frontend:/frontend
       - frontend_node_modules:/frontend/node_modules
     command: ["sh", "-c", "npm ci --no-audit --no-fund && npm run lint && npm run build"]
+
+  # Servidor de desarrollo de Vite: al guardar un archivo del frontend, el navegador se actualiza.
+  # Las llamadas a /api van a la app de Docker (servicio "app").
+  vite:
+    profiles: ["dev"]
+    image: node:24-slim
+    working_dir: /frontend
+    environment:
+      VITE_API_TARGET: http://app:8000
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/frontend
+      - frontend_node_modules:/frontend/node_modules
+    command: ["sh", "-c", "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"]
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   pgdata:
