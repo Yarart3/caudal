@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 1a terminada** (base del proyecto + inicio de sesión): la app arranca en Docker, tiene asistente de primer arranque, inicio de sesión con dos usuarios aislados y un panel vacío. Siguiente: Fase 1b (importadores de imagin y Wise). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 1b terminada** (importadores de imagin y Wise): además del inicio de sesión con dos usuarios aislados, ya se importan los extractos Excel de imagin y Wise sin duplicados, se detectan las transferencias entre cuentas propias y se pueden apuntar movimientos a mano. Siguiente: Fase 1c (categorización y pestañas Movimientos y Patrimonio). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -50,7 +50,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - Objetivo de patrimonio con hitos.
 
 **2. Movimientos**
-- Importar extractos (Excel/CSV) **sin duplicados**, aunque se importe dos veces lo mismo.
+- Importar extractos en Excel, tal cual los da el banco, **sin duplicados**, aunque se importe dos veces lo mismo.
 - Categorización automática por reglas y pantalla para revisar lo dudoso (por ejemplo, los Bizum).
 - Detección de **transferencias entre tus propias cuentas**, para que no cuenten como gasto.
 - Ingresos vs gastos, gasto por categoría, presupuestos con avisos y pagos recurrentes.
@@ -68,7 +68,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 
 | Parte | Lenguaje | Tecnologías |
 |---|---|---|
-| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, pandas + openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff, uv |
+| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff, uv |
 | **Frontend** (la web que ves) | **TypeScript** | React, React Router, Vite, Recharts, ESLint + Prettier |
 | **Base de datos** | **SQL** | PostgreSQL 16 |
 | **Puesta en marcha** | YAML + scripts | Docker Compose; accesos directos `.bat` (Windows) y `.command` (Mac) |
@@ -279,7 +279,7 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 ## Uso diario
 
 1. Doble clic en **Caudal** → eliges tu usuario → contraseña.
-2. **Movimientos → Importar extracto:** eliges la cuenta y arrastras el Excel/CSV del banco.
+2. **Movimientos → Importar extracto:** eliges la cuenta y arrastras el Excel del banco. Si alguna fila no se puede leer, te la enseña y la apuntas a mano.
 3. Revisas los movimientos marcados **"Revisar"**. Lo que corrijas, la app lo aprende.
 4. **Inversiones:** apuntas cada compra o venta en **+ Añadir compra / venta** (puedes duplicar una anterior); los precios se actualizan solos. El historial antiguo se puede cargar de golpe con la plantilla de Excel.
 5. Al terminar, doble clic en **Cerrar Caudal**: hace un backup y apaga todo.
@@ -326,7 +326,7 @@ caudal/
 |---|---|---|
 | 0 | Preparar el entorno (Docker, Git, pendrive, OneDrive, ejemplos) | ✅ |
 | 1a | Base del proyecto + inicio de sesión | ✅ |
-| 1b | Importadores de imagin y Wise | ⬜ |
+| 1b | Importadores de imagin y Wise | ✅ |
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ⬜ |
 | 1d | Backups + accesos directos | ⬜ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ⬜ |
@@ -342,7 +342,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

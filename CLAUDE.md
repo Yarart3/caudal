@@ -29,7 +29,7 @@
 ### Lenguajes
 | Parte | Lenguaje | Stack |
 |---|---|---|
-| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, pandas + openpyxl + xlrd, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff |
+| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff |
 | Frontend | **TypeScript** (`strict`) | React + Vite, React Router, Recharts, ESLint + Prettier |
 | Base de datos | **SQL** | PostgreSQL 16 |
 | Infraestructura | YAML, Batch, Bash | Docker Compose, scripts `.bat` (Windows) y `.command` (Mac) |
@@ -117,8 +117,9 @@
 | 1a | `GET /api/auth/users` | Tarjetas de "¿Quién entra?" (solo nombre visible, inicial y color) |
 | 1a | `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sesión |
 | 1a | `GET/POST/PATCH /api/accounts` · `GET /api/accounts/{id}` | Cuentas del usuario (404 si es de otro) |
-| 1b | `POST /api/imports` (multipart: `account_id` + archivo) | Importar extracto → `{read, new, duplicates, review, internal, errors}` (`errors`: lista de `{row, field, value, message}`) |
-| 1c | `GET /api/transactions?month=&q=&category=&status=` · `POST` · `PATCH /{id}` · `DELETE /{id}` | Movimientos |
+| 1b | `POST /api/imports` (multipart: `account_id` + archivo, máx. 5 MB) | Importar extracto → `{read, new, duplicates, review, internal, errors, warnings, closing_balance, closing_date}` (`errors`: lista de `{row, field, value, message}`) |
+| 1b | `POST /api/transactions` | Alta manual de un movimiento (filas que no se han podido leer); busca pareja de transferencia |
+| 1c | `GET /api/transactions?month=&q=&category=&status=` · `PATCH /{id}` · `DELETE /{id}` | Movimientos |
 | 1c | `GET/POST/PATCH/DELETE /api/categories` · `/api/rules` · `POST /api/rules/apply` | Categorías y reglas |
 | 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos |
 | 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual |
@@ -175,7 +176,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Prerrequisitos:** 1a. Archivos `samples/imagin_ejemplo.xlsx` y `samples/wise_ejemplo.xlsx`.
 - **Necesito de Gerard:** **los dos archivos de ejemplo adjuntos** (inventados). **No escribas el importador sin verlos.**
 - **Entregables:**
-  - `backend/app/importers/base.py` (interfaz común: `detect(file) -> bool`, `parse(file) -> list[ParsedTransaction]`), `imagin.py`, `wise.py` y un registro de importadores.
+  - `backend/app/importers/base.py` (interfaz común: `detect(workbook) -> bool`, `parse(workbook) -> ParseResult`, con los movimientos, las filas con error y los avisos de saldo), `imagin.py`, `wise.py` y un registro de importadores.
   - Normalización: importes `-14,50EUR` → `Decimal('-14.50')`; fechas como texto `dd/mm/aaaa` (aceptar también fecha de Excel); conceptos de imagin en catalán y a veces en minúsculas (`BIZUM ENVIAT`, `enviament de dine`); concepto de Wise (Comercio → beneficiario o pagador → Descripción); columnas ignoradas.
   - `fingerprint` según la sección 9.2 de DISENO; inserción con `ON CONFLICT DO NOTHING` sobre `(account_id, fingerprint)`.
   - `app/transfers/`: emparejar transferencias internas (sección 9.3), dentro del mismo usuario.

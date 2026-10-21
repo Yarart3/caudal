@@ -2,6 +2,30 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [0.2.0] – 2026-10-21 · Fase 1b
+### Añadido
+- Importadores de **imagin** y **Wise** (`backend/app/importers/`): lectura por nombre de columna, comprobación de que el archivo es del banco de la cuenta, importes a `Decimal` sin pasar por `float`, fechas en texto o de Excel, concepto de Wise (Comercio → beneficiario o pagador → Descripción) y columnas del fondo de Wise ignoradas.
+- Filas que no se pueden leer: van a `errors` con la fila, la columna, el dato y el motivo, sin abortar el resto.
+- Comprobación del saldo fila a fila: aviso si no cuadra («puede faltar algún movimiento»). Al importar, el saldo de referencia de la cuenta pasa a ser el último del extracto (salvo que el extracto sea más antiguo).
+- Huella anti-duplicados (DISENO 9.2) e inserción con `ON CONFLICT DO NOTHING`: importar dos veces el mismo archivo da 0 nuevos; dos compras iguales el mismo día no se toman por duplicadas.
+- Transferencias internas (`backend/app/transfers/`): emparejado entre cuentas del mismo usuario (importes opuestos, ≤ 3 días y concepto o pista de transferencia); las conversiones de divisa de Wise son internas.
+- API: `POST /api/imports` (multipart, máx. 5 MB) y `POST /api/transactions` (alta manual), con tests de aislamiento entre usuarios.
+- Pantalla **Importar** (`/importar`, *Movimientos* en la barra lateral): elegir o crear la cuenta, arrastrar el Excel, resumen «leídos / nuevos / ya existían / por revisar / internos / con error», avisos de saldo y «Añadir a mano» para las filas con error.
+- 66 tests nuevos (97 en total).
+- `docs/fases/FASE_1b.md`.
+### Cambiado
+- `samples/imagin_ejemplo.xlsx` rehecho con datos inventados: todas las celdas en texto, dos decimales, saldos que cuadran, dos compras iguales el mismo día, la transferencia a Wise (pareja del `+50` del ejemplo de Wise) y una transferencia recibida (`TRANSFER IMMEDIATA`).
+- Transferencias internas: el concepto o la pista del extracto pasan a ser **obligatorios** para emparejar (DISENO 9.3).
+- Huella de Wise: `sha256(cuenta | ID)` en lugar del ID tal cual (DISENO 9.2).
+- Lectura de extractos solo con openpyxl, sin pandas ni xlrd. Dependencias nuevas: `openpyxl` y `python-multipart`.
+- El servicio `tests` monta `samples/` en solo lectura.
+- `POST /api/transactions` se adelanta de la 1c a la 1b (CLAUDE.md §6).
+- Frontend: la barra lateral y la cabecera pasan a `AppShell.tsx`, común a todas las pantallas con sesión.
+### Notas
+- El ejemplo antiguo de imagin no cubría los casos que decía la entrada 0.0.1 (no tenía dos compras iguales ni la pareja de la transferencia, y sus saldos no cuadraban). Por eso se rehízo.
+- Pendiente (DISENO §17, pendiente 10): con el primer extracto real de Wise, comprobar si salen tipos de fila que los ejemplos no tienen.
+- La categoría de los movimientos llega en la 1c: hasta entonces, todo lo importado queda «por revisar», salvo las transferencias internas.
+
 ## [0.1.0] – 2026-10-19 · Fase 1a
 ### Añadido
 - Docker Compose con `db` (PostgreSQL 16, volumen `pgdata`, healthcheck) y `app` (FastAPI + frontend compilado, puerto `APP_PORT`, healthcheck en `/api/health`). Servicios de desarrollo en el perfil `dev`: `tests` (pytest y ruff), `web` (lint y build del frontend) y `vite` (frontend en vivo en `localhost:5173`).

@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 1a terminada (base del proyecto + inicio de sesión). Siguiente: Fase 1b
+- **Estado:** Fase 1b terminada (importadores de imagin y Wise). Siguiente: Fase 1c
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -174,7 +174,7 @@ La app abre siempre en **Patrimonio**. Cada pestaña responde a una pregunta dis
 
 | Columna | Ejemplo (inventado) | Notas |
 |---|---|---|
-| `Concepto` | `BIZUM ENVIAT` / `BIZUM REBUT` / `BON AREA` / `WWW.AMAZON` / `enviament de dine` | En **catalán** y **no siempre en mayúsculas**. Puede venir **cortado** (`enviament de dine` = transferencia enviada, sin destinatario). |
+| `Concepto` | `BIZUM ENVIAT` / `BIZUM REBUT` / `BON AREA` / `WWW.AMAZON` / `enviament de dine` / `TRANSFER IMMEDIATA` | En **catalán** y **no siempre en mayúsculas**. Puede venir **cortado** (`enviament de dine` = transferencia enviada, sin destinatario). `TRANSFER IMMEDIATA` = transferencia recibida. |
 | `Fecha` | `29/09/2026` | **Texto** con formato `dd/mm/aaaa`. Por robustez, aceptar también una fecha de Excel si algún día cambia. |
 | `Importe` | `-23,00EUR` / `69,73EUR` | **Texto con la divisa pegada y siempre dos decimales:** quitar `EUR`, quitar los puntos de miles y cambiar la coma decimal por punto. Negativo = gasto. |
 | `Saldo` | `42,46EUR` | Mismo formato. **No se guarda**: se usa para la huella anti-duplicados y para comprobar que no falta ningún movimiento. |
@@ -366,7 +366,7 @@ registro_backups
 
 | Origen | Huella |
 |---|---|
-| Wise | `Documento de identidad` (ID único) |
+| Wise | `sha256(cuenta | Documento de identidad)` (el ID es único; se pasa por SHA-256 para que la huella mida siempre 64 caracteres) |
 | imagin | `sha256(cuenta | fecha | importe | concepto normalizado | saldo del extracto)` |
 | Genérico | `sha256(cuenta | fecha | importe | concepto normalizado | nº de aparición en el archivo)` |
 | Plantilla de inversiones | `sha256(cuenta | fecha | producto | tipo | participaciones | importe)` (las operaciones a mano no la necesitan) |
@@ -374,7 +374,16 @@ registro_backups
 En imagin, el **saldo** hace que dos compras idénticas el mismo día no se tomen por duplicados. Al importar se informa: *"142 leídos · 120 nuevos · 22 ya existían"*.
 
 ### 9.3 Transferencias internas
-Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia (y, si ayuda, un concepto como `TRANSFERENCIA`, una recarga de Wise o el nombre del propio titular). En imagin el concepto de una transferencia enviada (`enviament de dine`) **no dice el destino**, así que allí cuentan solo el importe y la fecha. En Wise, el ingreso correspondiente lleva `Referencia del pago` con `imaginBank`, lo que confirma la pareja. Se marcan los dos y el usuario puede desmarcarlo. También son internas: las conversiones de divisa de Wise y el dinero que se pasa a un broker para invertir. En Trade Republic el ingreso se apunta a mano, y se empareja igual con la salida de imagin.
+Dentro del **mismo usuario**, se emparejan dos movimientos de **cuentas distintas** con **importes opuestos** y **≤ 3 días** de diferencia, **siempre que algo confirme que es una transferencia**:
+- la **pista del extracto**: en Wise, el ingreso lleva `Referencia del pago` con `imaginBank`, y la otra pata está en una cuenta imagin; o
+- un **concepto de transferencia** en alguna de las dos patas (contiene `TRANSFER`, `ENVIAMENT` o `TRASPAS`, sin mayúsculas ni acentos: `enviament de dine`, `TRANSFER IMMEDIATA`, `Traspaso…`).
+
+Sin esa confirmación **no** se emparejan (decisión de la Fase 1b): un pago con tarjeta de −12,40 y una devolución de +12,40 en otra cuenta no son una transferencia, y marcarlos escondería un gasto de verdad. Es mejor que alguna transferencia quede sin marcar y el usuario la marque a mano.
+
+- Si hay varias candidatas, gana la confirmada por la pista, después la que tiene concepto de transferencia y después la más cercana en fecha. Cada movimiento se empareja una sola vez.
+- Solo se busca pareja a lo **recién importado o apuntado a mano**. Así, si el usuario desmarca una pareja, no se vuelve a marcar sola en la siguiente importación.
+- Las dos patas quedan como **internas** y, si estaban `revisar`, pasan a `auto` sin categoría (no son gasto ni ingreso). Si una ya tenía categoría puesta a mano, se respeta.
+- También son internas: las **conversiones de divisa** de Wise (filas con `Cambiar desde` / `Cambiar a`), aunque no tengan pareja, y el dinero que se pasa a un broker. En Trade Republic el ingreso se apunta a mano y se empareja igual con la salida de imagin.
 
 ### 9.4 Categorización
 1. **Reglas** "si el concepto contiene X → categoría Y", por prioridad, comparando en mayúsculas y sin acentos.
@@ -413,7 +422,7 @@ Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → 
 |---|---|
 | Base de datos | PostgreSQL 16 |
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic, APScheduler (tareas periódicas) |
-| Lectura de extractos | pandas + openpyxl (`.xlsx`), xlrd (`.xls`) |
+| Lectura de extractos | openpyxl (`.xlsx`). Sin pandas ni xlrd (Fase 1b) |
 | Contraseñas | argon2-cffi |
 | Precios | httpx (con caché, tiempo de espera y reintentos) |
 | Cálculos financieros | `Decimal`; XIRR implementado y testeado (o `pyxirr`) |
@@ -491,6 +500,14 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Dependencias fijadas** con `uv.lock` (Python) y `package-lock.json` (frontend). Versiones de partida: Python 3.12, FastAPI 0.143, SQLAlchemy 2.1, Alembic 1.20, PostgreSQL 16, Node 24 LTS, React 19.3, React Router 8.4, Vite 8.3 y **TypeScript 6.0.3** (la 7 todavía no es compatible con `typescript-eslint`).
 - **Desarrollo:** servicios `tests` (pytest y ruff), `web` (lint y build del frontend) y `vite` (frontend en vivo en `localhost:5173`), en el perfil `dev` de Docker Compose. No hace falta instalar Python ni Node en los equipos.
 - **Finales de línea:** `.gitattributes` con `* text=auto eol=lf` (todo `LF` salvo `.bat` y `.cmd`).
+
+**Decisiones de implementación (Fase 1b):**
+- **Solo openpyxl, sin pandas ni xlrd:** hace falta ver cada celda tal cual (texto o fecha de Excel) y no pasar nunca por `float`; pandas convierte los tipos por su cuenta. Ningún banco da `.xls`.
+- **Importes de Excel a `Decimal`** con `Decimal(str(valor))`: la representación más corta del `float` es exacta para importes de dos decimales. Si trae más decimales, la fila va a errores.
+- **Subida de archivos** con `python-multipart`, máximo **5 MB** por archivo (un año de extracto ocupa unos cientos de KB).
+- **Saldo de referencia:** al importar pasa a ser el último saldo del extracto, salvo que el extracto sea más antiguo que el que ya tiene la cuenta.
+- **Alta manual** (`POST /api/transactions`) adelantada a la 1b: la necesita la pantalla Importar para apuntar las filas que no se pueden leer.
+- **Pantalla Importar** en `/importar` (en la barra lateral, *Movimientos*); en la 1c pasa a ser parte de la pestaña Movimientos. Mientras no haya *Ajustes → Cuentas*, permite crear la cuenta de imagin o Wise desde la misma pantalla.
 
 ---
 
@@ -613,7 +630,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - Asistente de primer arranque, login, sesión, caducidad, bloqueo y cerrar sesión. Pantalla "¿Quién entra?" como en la maqueta.
 - **Hecho cuando:** se entra con los dos usuarios, cada uno ve su panel vacío y hay tests de permisos.
 
-**1b. Importadores imagin + Wise**
+**1b. Importadores imagin + Wise** ✅ (2026-10-21, detalle en `docs/fases/FASE_1b.md`)
 - Lectura y limpieza, concepto de Wise, huella, deduplicación, ignorar columnas del fondo y transferencias internas.
 - Pantalla de importar con el resumen "leídos / nuevos / ya existían".
 - **Filas que no se pueden leer:** nunca se descartan en silencio. El resumen indica la fila y el dato que ha fallado (*"Fila 5: no se ha podido leer el importe «-23 EUR»"*) y ofrece **añadir ese movimiento a mano** desde la misma pantalla. Si el saldo de imagin no cuadra entre dos filas, avisa de que puede faltar un movimiento.
@@ -703,6 +720,7 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
 | 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`) y separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev` | Fase 1d |
+| 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
 
 ---
 
