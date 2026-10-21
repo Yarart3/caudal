@@ -80,25 +80,35 @@ def find_rule(description: str, rules: list[CompiledRule]) -> CompiledRule | Non
     return None
 
 
-def apply_rules(db: Session, user_id: int, transaction_ids: Iterable[int] | None = None) -> int:
-    """Aplica las reglas a los movimientos **por revisar** del usuario y devuelve cuántos han
-    quedado categorizados.
+def apply_rules(
+    db: Session,
+    user_id: int,
+    transaction_ids: Iterable[int] | None = None,
+    *,
+    include_auto: bool = False,
+) -> int:
+    """Aplica las reglas a los movimientos del usuario y devuelve cuántos han quedado
+    categorizados.
 
-    - Solo toca los `review` que no son transferencia interna: nunca pisa una categoría
-      puesta a mano (`manual`) ni una ya asignada (`auto`).
+    - Por defecto solo toca los **por revisar** (`review`). Nunca toca una categoría puesta a
+      mano (`manual`) ni las transferencias internas.
+    - `include_auto=True` vuelve a evaluar también los `auto` (botón «Reaplicar reglas» de
+      Ajustes, para arreglar lo que categorizó mal una regla ya corregida). Un `auto` que ya
+      no encaja con ninguna regla vuelve a `review`.
     - `transaction_ids`: limita a esos movimientos (los recién importados). None = todos los
-      pendientes del usuario (reaplicar tras crear una regla).
+      del usuario.
     - No hace commit: lo hace quien llama.
     """
     rules = load_rules(db, user_id)
-    if not rules:
+    statuses = ("review", "auto") if include_auto else ("review",)
+    if not rules and not include_auto:
         return 0
     query = (
         select(Transaction)
         .join(Account, Account.id == Transaction.account_id)
         .where(
             Account.user_id == user_id,
-            Transaction.category_status == "review",
+            Transaction.category_status.in_(statuses),
             Transaction.is_internal_transfer.is_(False),
         )
     )
@@ -112,6 +122,9 @@ def apply_rules(db: Session, user_id: int, transaction_ids: Iterable[int] | None
     for tx in db.scalars(query):
         rule = find_rule(tx.description, rules)
         if rule is None or rule.category_id is None:
+            if tx.category_status == "auto":  # solo pasa con include_auto
+                tx.category_id = None
+                tx.category_status = "review"
             continue
         tx.category_id = rule.category_id
         tx.category_status = "auto"

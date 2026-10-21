@@ -21,6 +21,7 @@ from sqlalchemy import select, text  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from app.auth.security import hash_password  # noqa: E402
+from app.categories import seed_user_defaults  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
@@ -112,3 +113,21 @@ def make_account(db: Session, make_user):
         return account
 
     return _make
+
+
+@pytest.fixture
+def login(make_user):
+    """login("gerard") → TestClient con la sesión iniciada (crea el usuario con su semilla de
+    categorías y reglas, como el asistente de primer arranque)."""
+
+    def _login(username: str, **fields) -> TestClient:
+        user = make_user(username, **fields)
+        with SessionLocal() as session:
+            seed_user_defaults(session, user.id)
+            session.commit()
+        client = TestClient(app)
+        res = client.post("/api/auth/login", json={"username": username, "password": TEST_PASSWORD})
+        assert res.status_code == 200
+        return client
+
+    return _login
