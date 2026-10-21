@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.security import hash_password
+from app.categories import seed_user_defaults
 from app.db import get_db
 from app.models import User
 
@@ -67,6 +68,9 @@ def run_setup(body: SetupRequest, db: Session = Depends(get_db)) -> list[Created
     ]
     db.add_all(users)
     try:
+        db.flush()  # para tener los id de los usuarios
+        for user in users:
+            seed_user_defaults(db, user.id)  # categorías y reglas iniciales (DISENO 9.4)
         db.commit()
     except IntegrityError:
         # Dos asistentes a la vez: el segundo choca con el UNIQUE de username

@@ -1,7 +1,8 @@
 """Importar un extracto en una cuenta: leer, comprobar, guardar sin duplicados.
 
-Se usa desde POST /api/imports (parte 1.4). Después de guardar, busca las transferencias
-internas entre los movimientos nuevos y los que ya había (app/transfers).
+Se usa desde POST /api/imports. Después de guardar, busca las transferencias internas entre
+los movimientos nuevos y los que ya había (app/transfers) y, a los que no lo son, les aplica
+las reglas de categorización (app/categories).
 """
 
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from app.categories import apply_rules
 from app.importers import check_format
 from app.importers.base import ImportFormatError, RowError, open_workbook
 from app.importers.fingerprint import fingerprint
@@ -29,6 +31,7 @@ class ImportSummary:
     duplicates: int = 0  # ya estaban guardadas de una importación anterior
     review: int = 0  # nuevas que quedan por revisar (sin categoría)
     internal: int = 0  # nuevas marcadas como transferencia interna
+    categorized: int = 0  # nuevas categorizadas por las reglas
     errors: list[RowError] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     closing_balance: Decimal | None = None
@@ -95,7 +98,10 @@ def import_statement(db: Session, account: Account, data: bytes) -> ImportSummar
     db.flush()
     matched = match_internal_transfers(db, account.user_id, [i for i, _ in inserted], hints)
     summary.internal = len(conversions | matched)
-    summary.review = summary.new - summary.internal
+    # Primero las transferencias y después las reglas: una transferencia interna no es gasto
+    # ni ingreso, así que no lleva categoría (apply_rules se salta las internas)
+    summary.categorized = apply_rules(db, account.user_id, [i for i, _ in inserted])
+    summary.review = summary.new - summary.internal - summary.categorized
 
     _update_reference_balance(account, parsed.closing_balance, parsed.closing_date)
     db.commit()

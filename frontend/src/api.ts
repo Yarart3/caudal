@@ -37,6 +37,7 @@ export type ImportResult = {
   duplicates: number;
   review: number;
   internal: number;
+  categorized: number;
   errors: RowError[];
   warnings: string[];
   closing_balance: string | null;

@@ -35,6 +35,7 @@ class ImportOut(BaseModel):
     duplicates: int
     review: int
     internal: int
+    categorized: int
     errors: list[RowErrorOut]
     warnings: list[str]
     closing_balance: Decimal | None
@@ -68,6 +69,7 @@ def import_file(
         duplicates=summary.duplicates,
         review=summary.review,
         internal=summary.internal,
+        categorized=summary.categorized,
         errors=[RowErrorOut(**vars(e)) for e in summary.errors],
         warnings=summary.warnings,
         closing_balance=summary.closing_balance,

@@ -219,6 +219,7 @@ function ImportSummary({
   const parts = [
     `${data.new} nuevos`,
     `${data.duplicates} ya existían`,
+    `${data.categorized} ${data.categorized === 1 ? 'categorizado' : 'categorizados'} automáticamente`,
     `${data.review} por revisar`,
     `${data.internal} ${data.internal === 1 ? 'transferencia interna' : 'transferencias internas'}`,
   ];
@@ -507,7 +508,9 @@ function ManualCard({ accounts, pending }: { accounts: Account[]; pending: Pendi
           Guardado: {saved.description} · {formatEur(saved.amount)} · {formatDate(saved.date)}
           {saved.is_internal_transfer
             ? ' · marcado como transferencia interna'
-            : ' · queda por revisar hasta que le pongas categoría'}
+            : saved.category_status === 'auto'
+              ? ' · categorizado automáticamente'
+              : ' · queda por revisar hasta que le pongas categoría'}
         </p>
       )}
       <button type="submit" className="btn btn-primary" disabled={sending}>

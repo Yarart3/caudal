@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api.accounts import get_own_account
 from app.auth.deps import current_user
+from app.categories import apply_rules
 from app.db import get_db
 from app.models import Transaction, User
 from app.transfers import match_internal_transfers
@@ -57,5 +58,6 @@ def create_transaction(
     # Un ingreso apuntado a mano (por ejemplo, en Trade Republic) se empareja igual que uno
     # importado con la salida de imagin (DISENO 9.3)
     match_internal_transfers(db, user.id, [tx.id], {})
+    apply_rules(db, user.id, [tx.id])  # si no es interna, como uno importado
     db.commit()
     return TransactionOut.model_validate(tx, from_attributes=True)
