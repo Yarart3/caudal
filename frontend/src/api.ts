@@ -11,6 +11,56 @@ export type UserCard = {
 
 export type Me = UserCard & { is_admin: boolean };
 
+// Dinero: viaja como texto ("-14.50") para no perder céntimos con los float de JavaScript
+export type Account = {
+  id: number;
+  name: string;
+  kind: 'spending' | 'investment' | 'mixed';
+  import_format: 'imagin' | 'wise' | null;
+  liquidity_type: 'cash' | 'money_market';
+  reference_balance: string | null;
+  reference_balance_date: string | null;
+};
+
+export type AccountCreate = {
+  name: string;
+  kind: Account['kind'];
+  import_format: Account['import_format'];
+  liquidity_type: Account['liquidity_type'];
+};
+
+export type RowError = { row: number; field: string; value: string; message: string };
+
+export type ImportResult = {
+  read: number;
+  new: number;
+  duplicates: number;
+  review: number;
+  internal: number;
+  errors: RowError[];
+  warnings: string[];
+  closing_balance: string | null;
+  closing_date: string | null;
+};
+
+export type Transaction = {
+  id: number;
+  account_id: number;
+  date: string;
+  description: string;
+  amount: string;
+  category_id: number | null;
+  category_status: 'auto' | 'manual' | 'review';
+  is_internal_transfer: boolean;
+};
+
+export type TransactionCreate = {
+  account_id: number;
+  date: string;
+  description: string;
+  amount: string;
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -32,13 +82,15 @@ export function setSessionExpiredHandler(handler: (() => void) | null): void {
 }
 
 async function request<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
+  // Un FormData (subida de archivos) va tal cual: el navegador pone el Content-Type multipart
+  const isForm = body instanceof FormData;
   let res: Response;
   try {
     res = await fetch(path, {
       method,
       credentials: 'same-origin',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: body === undefined || isForm ? undefined : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, 'No se puede conectar con Caudal. ¿Está arrancado?');
@@ -77,4 +129,15 @@ export const api = {
     request<Me>('/api/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
   me: () => request<Me>('/api/auth/me'),
+  accounts: () => request<Account[]>('/api/accounts'),
+  createAccount: (account: AccountCreate) =>
+    request<Account>('/api/accounts', { method: 'POST', body: account }),
+  importStatement: (accountId: number, file: File) => {
+    const form = new FormData();
+    form.append('account_id', String(accountId));
+    form.append('file', file);
+    return request<ImportResult>('/api/imports', { method: 'POST', body: form });
+  },
+  createTransaction: (tx: TransactionCreate) =>
+    request<Transaction>('/api/transactions', { method: 'POST', body: tx }),
 };

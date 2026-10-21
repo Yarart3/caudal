@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { AuthProvider } from './auth/AuthProvider';
 import { RequireAuth } from './auth/RequireAuth';
+import { ImportPage } from './pages/ImportPage';
 import { LoginPage } from './pages/LoginPage';
 import { PanelPage } from './pages/PanelPage';
 import { SetupPage } from './pages/SetupPage';
@@ -19,6 +20,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <PanelPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/importar"
+            element={
+              <RequireAuth>
+                <ImportPage />
               </RequireAuth>
             }
           />

@@ -381,3 +381,168 @@ p {
     padding: 20px 16px 40px;
   }
 }
+
+/* --- Importar extracto y movimiento manual (Fase 1b, parte 1.5; como en la maqueta) --- */
+.panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.panel h2 {
+  font-size: 18px;
+}
+
+.panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.r2e {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.span2 {
+  grid-column: span 2;
+}
+
+.field select {
+  padding: 10px 12px;
+  min-height: 44px;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.drop {
+  border: 2px dashed var(--line2);
+  border-radius: 12px;
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  cursor: pointer;
+  background: #fafbf9;
+}
+
+.drop.over,
+.drop:focus-within {
+  border-color: var(--accent);
+  background: #eef5f2;
+}
+
+.drop.busy {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #eef5f2;
+  font-size: 14px;
+}
+
+.track {
+  height: 8px;
+  background: var(--soft);
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+}
+
+.track div {
+  height: 100%;
+}
+
+.toggle {
+  flex: 1 1 0;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  border: 1px solid var(--line2);
+  background: #fff;
+  color: var(--ink);
+}
+
+.toggle.on-g {
+  background: #fbebdd;
+  border-color: var(--exp);
+}
+
+.toggle.on-i {
+  background: #e3f0ea;
+  border-color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 6px;
+}
+
+td {
+  padding: 10px 6px;
+  border-top: 1px solid var(--soft);
+}
+
+.r {
+  text-align: right;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1180px) {
+  .r2e {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .span2 {
+    grid-column: auto;
+  }
+}
