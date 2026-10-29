@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import {
   api,
   errorMessage,
@@ -8,6 +9,7 @@ import {
   type Transaction,
 } from '../api';
 import { AppShell } from '../AppShell';
+import { notifyDataChanged } from '../events';
 import { formatDate, formatEur, parseEsAmount, todayIso } from '../format';
 
 const BANKS = { imagin: 'imagin', wise: 'Wise' } as const;
@@ -17,8 +19,9 @@ type Bank = keyof typeof BANKS;
 type Pending = { accountId: number; error: RowError; key: number };
 
 /**
- * Pantalla Importar (Fase 1b): elegir cuenta, soltar el extracto, ver el resumen y apuntar a
- * mano las filas que no se han podido leer. En la 1c pasa a formar parte de Movimientos.
+ * Pantalla Importar (Movimientos → Importar extracto): elegir cuenta, soltar el extracto, ver
+ * el resumen, ir a revisar lo que no se ha categorizado y apuntar a mano las filas que no se
+ * han podido leer.
  */
 export function ImportPage() {
   const [accounts, setAccounts] = useState<Account[] | null>(null);
@@ -33,7 +36,7 @@ export function ImportPage() {
   }, []);
 
   return (
-    <AppShell title="Movimientos" current="Movimientos">
+    <AppShell title="Importar extracto" current="Movimientos">
       {loadError && (
         <p className="err" role="alert">
           {loadError}
@@ -91,6 +94,7 @@ function ImportCard({
     try {
       const data = await api.importStatement(account.id, file);
       setLast({ accountId: account.id, accountName: account.name, fileName: file.name, data });
+      notifyDataChanged();
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -215,6 +219,7 @@ function ImportSummary({
   onAddManually: (error: RowError) => void;
 }) {
   const { data } = last;
+  const navigate = useNavigate();
   const newShare = data.read === 0 ? 0 : Math.round((data.new / data.read) * 100);
   const parts = [
     `${data.new} nuevos`,
@@ -243,6 +248,18 @@ function ImportSummary({
           </span>
         )}
       </div>
+
+      {data.review > 0 && (
+        <div className="row">
+          <button
+            type="button"
+            className="btn btn-sm btn-accent"
+            onClick={() => navigate('/movimientos/revisar')}
+          >
+            Revisar {data.review} {data.review === 1 ? 'movimiento' : 'movimientos'}
+          </button>
+        </div>
+      )}
 
       {data.warnings.map((warning) => (
         <p key={warning} className="note">
@@ -410,6 +427,7 @@ function ManualCard({ accounts, pending }: { accounts: Account[]; pending: Pendi
         amount: kind === 'expense' ? `-${value}` : value,
       });
       setSaved(created);
+      notifyDataChanged();
       setDescription('');
       setAmount('');
     } catch (err) {

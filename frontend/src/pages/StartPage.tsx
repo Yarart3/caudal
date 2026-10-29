@@ -32,5 +32,5 @@ export function StartPage() {
   }
   if (needsSetup === null || user === undefined) return <Loading />;
   if (needsSetup) return <Navigate to="/bienvenida" replace />;
-  return <Navigate to={user ? '/panel' : '/entrar'} replace />;
+  return <Navigate to={user ? '/patrimonio' : '/entrar'} replace />;
 }

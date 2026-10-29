@@ -55,6 +55,54 @@ export type Transaction = {
   is_internal_transfer: boolean;
 };
 
+export type StatusFilter = 'review' | 'auto' | 'manual' | 'internal';
+
+export type TransactionFilters = {
+  month?: string; // "AAAA-MM"
+  q?: string;
+  category?: number;
+  status?: StatusFilter;
+  account?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export type TransactionPage = { items: Transaction[]; total: number };
+
+export type TransactionUpdate = Partial<{
+  account_id: number;
+  date: string;
+  description: string;
+  amount: string;
+  category_id: number | null; // null = sin categoría (por revisar)
+  is_internal_transfer: boolean;
+}>;
+
+export type CategoryKind = 'expense' | 'income';
+
+export type Category = {
+  id: number;
+  name: string;
+  kind: CategoryKind;
+  color: string;
+  transactions: number;
+  rules: number;
+};
+
+export type CategoryCreate = { name: string; kind: CategoryKind; color: string };
+
+export type Rule = {
+  id: number;
+  pattern: string;
+  category_id: number | null; // null = dejar por revisar
+  priority: number;
+  created_by: 'system' | 'user';
+};
+
+export type RuleSaved = { rule: Rule; replaced: boolean; categorized: number };
+
+export type RulesApplied = { categorized: number; review: number };
+
 export type TransactionCreate = {
   account_id: number;
   date: string;
@@ -118,6 +166,16 @@ export function errorMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Ha ocurrido un error inesperado';
 }
 
+/** {month: "2026-09", q: undefined} → "?month=2026-09" (sin los vacíos). */
+function queryString(params: Record<string, string | number | boolean | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value));
+  }
+  const text = search.toString();
+  return text ? `?${text}` : '';
+}
+
 export const api = {
   setupStatus: () => request<{ needs_setup: boolean }>('/api/setup/status'),
   setup: (gerardPassword: string, padresPassword: string) =>
@@ -141,4 +199,28 @@ export const api = {
   },
   createTransaction: (tx: TransactionCreate) =>
     request<Transaction>('/api/transactions', { method: 'POST', body: tx }),
+  transactions: (filters: TransactionFilters = {}) =>
+    request<TransactionPage>(`/api/transactions${queryString(filters)}`),
+  updateTransaction: (id: number, changes: TransactionUpdate) =>
+    request<Transaction>(`/api/transactions/${id}`, { method: 'PATCH', body: changes }),
+  deleteTransaction: (id: number) => request<void>(`/api/transactions/${id}`, { method: 'DELETE' }),
+
+  categories: () => request<Category[]>('/api/categories'),
+  createCategory: (category: CategoryCreate) =>
+    request<Category>('/api/categories', { method: 'POST', body: category }),
+  updateCategory: (id: number, changes: Partial<CategoryCreate>) =>
+    request<Category>(`/api/categories/${id}`, { method: 'PATCH', body: changes }),
+  deleteCategory: (id: number) => request<void>(`/api/categories/${id}`, { method: 'DELETE' }),
+
+  rules: () => request<Rule[]>('/api/rules'),
+  /** Crea la regla o, si ya hay una con el mismo texto, la sustituye. */
+  saveRule: (rule: { pattern: string; category_id: number | null; apply?: boolean }) =>
+    request<RuleSaved>('/api/rules', { method: 'POST', body: rule }),
+  updateRule: (id: number, changes: Partial<Pick<Rule, 'pattern' | 'category_id' | 'priority'>>) =>
+    request<Rule>(`/api/rules/${id}`, { method: 'PATCH', body: changes }),
+  deleteRule: (id: number) => request<void>(`/api/rules/${id}`, { method: 'DELETE' }),
+  applyRules: (includeAuto: boolean) =>
+    request<RulesApplied>(`/api/rules/apply${queryString({ include_auto: includeAuto })}`, {
+      method: 'POST',
+    }),
 };

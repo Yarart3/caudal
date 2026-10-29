@@ -39,3 +39,47 @@ export function parseEsAmount(text: string): string | null {
   if (/^0+$/.test(integer) && /^0+$/.test(decimals)) return null;
   return `${integer.replace(/^0+(?=\d)/, '')}.${decimals}`;
 }
+
+/** "-12.5" → "-12,50 €" · "12.5" → "+12,50 €" (los ingresos llevan el +, como en la maqueta). */
+export function formatSigned(amount: string): string {
+  return Number(amount) > 0 ? `+${formatEur(amount)}` : formatEur(amount);
+}
+
+/** "-1234.50" → "1234,50": el importe sin signo, para rellenar un campo de texto. */
+export function toEsAmount(amount: string): string {
+  return amount.replace(/^-/, '').replace('.', ',');
+}
+
+const monthNames = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
+
+/** "2026-09" → "Septiembre 2026" */
+export function formatMonth(month: string): string {
+  const [year, number] = month.split('-').map(Number);
+  const text = monthNames.format(new Date(year, number - 1, 1)).replace(' de ', ' ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Los últimos `count` meses hasta el actual, del más reciente al más antiguo ("AAAA-MM"). */
+export function recentMonths(count: number): string[] {
+  const now = new Date();
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+}
+
+/**
+ * Texto que se propone para «¿Aplicar siempre?»: el concepto en mayúsculas y sin acentos (como
+ * lo compara el backend), sin las palabras con números (fechas, referencias de tarjeta…).
+ * El usuario lo puede corregir antes de crear la regla.
+ */
+export function suggestPattern(description: string): string {
+  const text = description
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toUpperCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  const words = text.filter((word) => !/\d/.test(word));
+  return (words.length > 0 ? words : text).join(' ');
+}

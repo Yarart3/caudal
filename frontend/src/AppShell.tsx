@@ -1,32 +1,59 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { api } from './api';
 import { useAuth } from './auth/AuthContext';
+import { onDataChanged } from './events';
 import { Logo } from './Logo';
 
-type Section = { name: string; path: string | null };
+export type Section = 'Patrimonio' | 'Movimientos' | 'Inversiones' | 'Ajustes';
 
-// Las pestañas completas llegan en la Fase 1c. De momento: Patrimonio (panel vacío) y
-// Movimientos (que en la 1b solo tiene la pantalla de importar).
-const SECTIONS: Section[] = [
-  { name: 'Patrimonio', path: '/panel' },
-  { name: 'Movimientos', path: '/importar' },
-  { name: 'Inversiones', path: null },
-  { name: 'Ajustes', path: null },
+const SECTIONS: { name: Section; path: string }[] = [
+  { name: 'Patrimonio', path: '/patrimonio' },
+  { name: 'Movimientos', path: '/movimientos' },
+  { name: 'Inversiones', path: '/inversiones' },
+  { name: 'Ajustes', path: '/ajustes' },
 ];
+// Las tres pestañas de la maqueta (Ajustes solo está en la barra lateral)
+const TABS = SECTIONS.slice(0, 3);
 
-/** Marco de las pantallas con sesión: barra lateral, título y usuario (como en la maqueta). */
+/** Cuántos movimientos quedan por revisar. Se actualiza cuando cambian los datos. */
+function useReviewCount(): number | null {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const load = () => {
+      api
+        .transactions({ status: 'review', limit: 0 })
+        .then((page) => alive && setCount(page.total))
+        .catch(() => undefined); // el contador no es imprescindible
+    };
+    load();
+    const off = onDataChanged(load);
+    return () => {
+      alive = false;
+      off();
+    };
+  }, []);
+  return count;
+}
+
+/** Marco de las pantallas con sesión: barra lateral, cabecera, pestañas y usuario (maqueta). */
 export function AppShell({
   title,
   current,
+  tabs = false,
   children,
 }: {
   title: string;
-  current: string;
+  current: Section;
+  /** Muestra las pestañas Patrimonio · Movimientos · Inversiones debajo del título */
+  tabs?: boolean;
   children: ReactNode;
 }) {
   const { user, logout, checkSession } = useAuth();
   const navigate = useNavigate();
   const [leaving, setLeaving] = useState(false);
+  const reviewCount = useReviewCount();
 
   // Al volver a la pestaña, comprueba si la sesión ha caducado mientras tanto
   useEffect(() => {
@@ -57,17 +84,22 @@ export function AppShell({
         <nav className="sidenav" aria-label="Secciones">
           {SECTIONS.map(({ name, path }) => {
             const on = name === current;
+            const pending = name === 'Movimientos' && reviewCount ? reviewCount : 0;
             return (
               <button
                 key={name}
                 type="button"
                 className={on ? 'on' : undefined}
                 aria-current={on ? 'page' : undefined}
-                disabled={path === null}
-                title={path === null ? 'Disponible en próximas fases' : undefined}
-                onClick={() => path && !on && navigate(path)}
+                onClick={() => navigate(path)}
               >
                 {name}
+                {pending > 0 && (
+                  <span className="count" title={`${pending} por revisar`}>
+                    {pending}
+                    <span className="sr-only"> por revisar</span>
+                  </span>
+                )}
               </button>
             );
           })}
@@ -81,20 +113,44 @@ export function AppShell({
       <main className="content">
         <header className="between">
           <h1 style={{ fontSize: 30 }}>{title}</h1>
-          <div className="user-pill">
-            <span
-              className="avatar"
-              style={{ width: 36, height: 36, fontSize: 15, background: user.color }}
-              aria-hidden="true"
+          <div className="row" style={{ flexWrap: 'wrap', gap: 12 }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => navigate('/movimientos/importar')}
             >
-              {user.initial}
-            </span>
-            <strong style={{ fontSize: 14 }}>{user.display_name}</strong>
-            <button type="button" onClick={handleLogout} disabled={leaving}>
-              {leaving ? 'Saliendo…' : 'Cerrar sesión'}
+              Importar extracto
             </button>
+            <div className="user-pill">
+              <span
+                className="avatar"
+                style={{ width: 36, height: 36, fontSize: 15, background: user.color }}
+                aria-hidden="true"
+              >
+                {user.initial}
+              </span>
+              <strong style={{ fontSize: 14 }}>{user.display_name}</strong>
+              <button type="button" onClick={handleLogout} disabled={leaving}>
+                {leaving ? 'Saliendo…' : 'Cerrar sesión'}
+              </button>
+            </div>
           </div>
         </header>
+        {tabs && (
+          <div className="tabs" role="group" aria-label="Pestañas">
+            {TABS.map(({ name, path }) => (
+              <button
+                key={name}
+                type="button"
+                className={name === current ? 'on' : undefined}
+                aria-pressed={name === current}
+                onClick={() => name !== current && navigate(path)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
         {children}
       </main>
     </div>

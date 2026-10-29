@@ -22,7 +22,7 @@ export function LoginPage() {
   }, []);
 
   // Si ya hay sesión, a qué esperar: directo al panel
-  if (user) return <Navigate to="/panel" replace />;
+  if (user) return <Navigate to="/patrimonio" replace />;
   if (users === null && error === null) return <Loading />;
   // Sin usuarios todavía: primero el asistente
   if (users !== null && users.length === 0) return <Navigate to="/" replace />;
@@ -77,7 +77,7 @@ function PasswordStep({ user, onBack }: { user: UserCard; onBack: () => void }) 
     try {
       const me = await api.login(user.username, password);
       setUser(me);
-      navigate('/panel', { replace: true });
+      navigate('/patrimonio', { replace: true });
     } catch (err) {
       // 401: contraseña incorrecta · 429: bloqueado. El mensaje ya viene en castellano.
       setError(errorMessage(err));
