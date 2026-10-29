@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import accounts, auth, categories, imports, rules, setup, transactions
+from app.api import accounts, auth, categories, dashboard, imports, rules, setup, transactions
 from app.db import get_db
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
@@ -24,6 +24,7 @@ app.include_router(imports.router)
 app.include_router(transactions.router)
 app.include_router(categories.router)
 app.include_router(rules.router)
+app.include_router(dashboard.router)
 
 
 @app.exception_handler(RequestValidationError)
