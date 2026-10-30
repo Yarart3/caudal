@@ -2,6 +2,28 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [0.4.0] – 2026-10-30 · Fase 1d
+### Añadido
+- Backups cifrados (`backend/app/backup/`): `pg_dump -Fc` → **AES-256-GCM** con la clave derivada de `BACKUP_PASSWORD` por **scrypt** (sal y nonce aleatorios en la cabecera) → `caudal_AAAA-MM-DD_HHMM.dump.enc`, en el pendrive y en OneDrive, con rotación de las 30 últimas y registro en `backup_log`.
+- Los 4 momentos: **tras importar** (si entra algo nuevo), **cada 60 min** si hubo cambios, **al cerrar** (script) y **al arrancar** si la última copia buena tiene más de 7 días.
+- Restauración sobre una base vacía (`python -m app.backup restore`): descifra y comprueba el archivo antes de tocar nada, hace una copia de lo actual y restaura en una sola transacción.
+- API: `GET /api/backups/status` y `POST /api/backups/run`.
+- Indicador «Último backup · Pendrive ✓/✗ · OneDrive ✓/✗» en la cabecera (como la maqueta) y **Ajustes → Copias de seguridad** con «Hacer copia ahora».
+- Restablecer contraseña desde la terminal (`python -m app.auth.reset`): cambia la contraseña, desbloquea y cierra las sesiones del usuario.
+- Accesos directos: `scripts/mac/*.command` y `scripts/windows/*.bat` (que llaman a un `.ps1`): **Caudal**, **Cerrar Caudal**, **Restaurar backup** y **Restablecer contraseña**.
+- 59 tests nuevos (231 en total), entre ellos uno que vuelca la BD, la restaura en otra base y compara todas las tablas fila a fila.
+- `docs/fases/FASE_1d.md`.
+### Cambiado
+- Imagen de Docker con el cliente de **PostgreSQL 16** (`pg_dump` y `pg_restore`) del repositorio oficial PGDG. Dependencia nueva: `cryptography`.
+- `docker-compose.yml`: la app monta el pendrive (`USB_BACKUP_DIR`, lo pone el script de arranque) y OneDrive (`ONEDRIVE_DIR`) en `/backups/usb` y `/backups/onedrive`.
+- `.env.example`: `BACKUP_PASSWORD` activo; en el Mac de desarrollo, `ONEDRIVE_DIR` apunta a `CaudalBackupsDev`, nunca a la carpeta real.
+- **Sin APScheduler:** los backups periódicos los lleva un hilo de la app (DISENO §10, CLAUDE.md §3).
+- Scripts de Windows: cada `.bat` llama a un `.ps1` con la lógica (DISENO §11).
+### Notas
+- Un destino solo se usa si tiene el marcador `.caudal-backups` (lo crean los scripts): así un pendrive desconectado con la app abierta sale ✗ en lugar de escribir en una carpeta vacía.
+- **Aplazado** a la revisión final (DISENO §17, pendiente 11): restauración completa desde el pendrive real, scripts de Windows en el PC y montaje del pendrive en Docker con WSL2 (pendiente 12).
+- Antes de meter datos reales en el PC: elegir la contraseña de backup definitiva y apuntarla en papel, y separar la BD de desarrollo (pendiente 9).
+
 ## [0.3.0] – 2026-10-30 · Fase 1c
 ### Añadido
 - Categorías y reglas iniciales por usuario (DISENO 9.4): se crean al dar de alta el usuario, y la migración `0002` las crea para los que ya existían.

@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 1c terminada** (categorización y pestañas): además de importar los extractos de imagin y Wise sin duplicados, los movimientos se categorizan solos con reglas que aprenden de tus correcciones, y ya funcionan las pestañas **Patrimonio** (liquidez) y **Movimientos** (indicadores, gráficos y tabla con alta, edición y borrado), la pantalla **Revisar** y **Ajustes → Categorías y reglas**. Siguiente: Fase 1d (backups y accesos directos). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 1d terminada** (backups y accesos directos): además de importar los extractos de imagin y Wise, categorizarlos y ver las pestañas **Patrimonio** y **Movimientos**, Caudal hace **copias cifradas** solas en el pendrive y en OneDrive, enseña su estado en la cabecera y se abre y se cierra con **doble clic**. Siguiente: Fase 2 (control del gasto). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -68,10 +68,10 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 
 | Parte | Lenguaje | Tecnologías |
 |---|---|---|
-| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff, uv |
+| **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, openpyxl, argon2-cffi, httpx, cryptography, pytest, ruff, uv |
 | **Frontend** (la web que ves) | **TypeScript** | React, React Router, Vite, ESLint + Prettier; gráficos en CSS como la maqueta |
 | **Base de datos** | **SQL** | PostgreSQL 16 |
-| **Puesta en marcha** | YAML + scripts | Docker Compose; accesos directos `.bat` (Windows) y `.command` (Mac) |
+| **Puesta en marcha** | YAML + scripts | Docker Compose; accesos directos `.bat` + PowerShell (Windows) y `.command` (Mac) |
 
 **Por qué estos:**
 - **Python** es el mejor lenguaje para leer Excel/CSV de bancos y hacer cálculos financieros. Con `Decimal`, el dinero se calcula sin errores de redondeo.
@@ -119,20 +119,32 @@ Abre **http://localhost:8080**. La primera vez aparece el **asistente** para cre
 
 ### Instalación definitiva
 
-> ⏳ **Disponible a partir de la Fase 1d.** Pasos previstos:
-
 1. Instalar **Docker Desktop** y desactivar *"Start Docker Desktop when you sign in"*.
 2. Descargar o clonar este repositorio.
-3. Copiar `.env.example` a `.env` y rellenar la ruta de OneDrive, el nombre del pendrive (`Gerard`) y la contraseña de backup.
-4. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`).
-5. La primera vez, un asistente crea los usuarios y sus contraseñas.
+3. Copiar `.env.example` a `.env` y rellenar:
+   - `POSTGRES_PASSWORD`: una contraseña aleatoria (el comando está en el propio archivo).
+   - `BACKUP_PASSWORD`: la contraseña de las copias, **distinta** de las de inicio de sesión y **apuntada en papel** (si se pierde, las copias no se pueden abrir). Solo letras sin acentos, números y guiones.
+   - `ONEDRIVE_DIR`: la carpeta `CaudalBackups` de OneDrive, entre comillas. En un equipo de desarrollo, una carpeta aparte (`CaudalBackupsDev`), nunca la real.
+   - `USB_LABEL`: el nombre del pendrive (`Gerard`).
+4. `docker compose build` (y otra vez después de cada `git pull` que cambie el código).
+5. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`; la primera vez, clic derecho → **Abrir**).
+6. La primera vez, un asistente crea los usuarios y sus contraseñas.
+
+| Acceso directo (`scripts/windows/*.bat` · `scripts/mac/*.command`) | Qué hace |
+|---|---|
+| **Caudal** | Abre Docker Desktop si hace falta, busca el pendrive por su nombre, arranca la app y abre el navegador |
+| **Cerrar Caudal** | Hace la copia final, para la app y, si quieres, cierra Docker Desktop |
+| **Restaurar backup** | Elige una copia (del pendrive o de OneDrive), pide la contraseña y la restaura. Antes guarda una copia de lo que hay |
+| **Restablecer contraseña** | Cambia la contraseña de un usuario y lo desbloquea |
+
+> Cierra siempre con **Cerrar Caudal** antes de cerrar Docker Desktop. Si Docker se cierra con la app abierta, un contenedor puede quedar dañado (`RWLayer … unexpectedly nil`): se arregla con `docker compose down` (**sin** `-v`) y volviendo a abrir. Los datos están en el volumen `pgdata` y no se pierden.
 
 ## Trabajar desde varios ordenadores
 
 El código se desarrolla en varios equipos (MacBook Air, portátil con Windows y PC de casa) y se sincroniza **solo con Git a través de GitHub**. Hay que tener claras tres cosas:
 
 - **Git solo lleva el código y la documentación.** Los datos de la app (la base de datos, en el volumen de Docker) y el archivo `.env` **no viajan con Git**, y nunca deben subirse.
-- **La instancia real, con los datos de verdad, solo funciona en el PC de casa** (ver `docs/DISENO.md`). En el resto de equipos solo se desarrolla y se prueba con los ejemplos inventados de `samples/`. Para mover los datos de un ordenador a otro se usa el script *Restaurar backup* (Fase 1d).
+- **La instancia real, con los datos de verdad, solo funciona en el PC de casa** (ver `docs/DISENO.md`). En el resto de equipos solo se desarrolla y se prueba con los ejemplos inventados de `samples/`. Para mover los datos de un ordenador a otro se usa el script *Restaurar backup*.
 - **Regla de oro:** antes de empezar, `git pull`; al terminar, `git commit` + `git push`. Así nunca hay dos equipos con cambios distintos sin subir.
 
 Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal, y la preparación del equipo está en la sección 16.1 de `docs/DISENO.md`.
@@ -286,10 +298,13 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 
 ## Copias de seguridad
 
-- **Automáticas:** después de cada importación, cada hora si hubo cambios, al cerrar y al abrir si la última tiene más de una semana.
-- **En dos sitios:** el pendrive (detectado por su nombre, no por la letra) y OneDrive.
-- **Cifradas** (AES-256) con una contraseña propia. Se guardan las 30 últimas.
+- **Automáticas:** después de cada importación, cada hora si hubo cambios, al cerrar y al abrir si la última tiene más de una semana. También a mano: **Ajustes → Copias de seguridad → Hacer copia ahora**.
+- **En dos sitios:** el pendrive (detectado por su nombre, no por la letra) y OneDrive. Si uno falla, se guarda en el otro.
+- **Cifradas** (AES-256-GCM, clave derivada con scrypt) con una contraseña propia. Se guardan las 30 últimas en cada sitio.
+- **Indicador** en la cabecera: «Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓». En rojo, lo que necesita atención.
 - **Restaurar:** script *Restaurar backup*. Sirve también para pasar a otro ordenador.
+
+Desde la terminal: `docker compose exec app python -m app.backup run` (copia ahora) y `docker compose exec app python -m app.backup list` (copias disponibles).
 
 ## Privacidad y seguridad
 
@@ -315,7 +330,7 @@ caudal/
 ├── maqueta/caudal-maqueta.html     ← diseño de referencia (datos inventados)
 ├── backend/                        ← Python (FastAPI), con alembic/ y tests/
 ├── frontend/                       ← TypeScript (React + Vite)
-├── scripts/windows · scripts/mac   ← accesos directos          [Fase 1d]
+├── scripts/windows · scripts/mac   ← accesos directos (abrir, cerrar, restaurar, contraseña)
 ├── samples/                        ← extractos de ejemplo INVENTADOS
 ├── docker-compose.yml · .env.example · .gitignore · .gitattributes
 ```
@@ -328,7 +343,7 @@ caudal/
 | 1a | Base del proyecto + inicio de sesión | ✅ |
 | 1b | Importadores de imagin y Wise | ✅ |
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ✅ |
-| 1d | Backups + accesos directos | ⬜ |
+| 1d | Backups + accesos directos | ✅ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ⬜ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ⬜ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |

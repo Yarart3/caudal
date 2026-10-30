@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 1c terminada (categorización y pestañas Movimientos y Patrimonio). Siguiente: Fase 1d
+- **Estado:** Fase 1d terminada (backups cifrados y accesos directos). Siguiente: Fase 2
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -429,7 +429,7 @@ Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → 
 | Capa | Tecnología |
 |---|---|
 | Base de datos | PostgreSQL 16 |
-| Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic, APScheduler (tareas periódicas) |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic. Tareas periódicas: un hilo de la app para los backups (Fase 1d); APScheduler solo si hace falta para los precios (Fase 3) |
 | Lectura de extractos | openpyxl (`.xlsx`). Sin pandas ni xlrd (Fase 1b) |
 | Contraseñas | argon2-cffi |
 | Precios | httpx (con caché, tiempo de espera y reintentos) |
@@ -471,8 +471,8 @@ caudal/
 ├── backend/tests/              ← pytest, con una BD aparte (caudal_test)
 ├── frontend/src/               ← login, Patrimonio, Movimientos, Inversiones, Ajustes
 ├── scripts/
-│   ├── windows/  Caudal.bat, Cerrar Caudal.bat, Restaurar backup.bat, Restablecer contraseña.bat
-│   └── mac/      Caudal.command, Cerrar Caudal.command, ...
+│   ├── windows/  Caudal.bat, Cerrar Caudal.bat, Restaurar backup.bat, Restablecer contraseña.bat (+ un .ps1 cada uno)
+│   └── mac/      Caudal.command, Cerrar Caudal.command, Restaurar backup.command, Restablecer contraseña.command
 └── samples/                    ← ejemplos con DATOS INVENTADOS
 ```
 
@@ -497,8 +497,9 @@ BACKUP_MAX_AGE_DAYS=7
 USB_LABEL=Gerard
 # Windows (PC de casa y portátil). Siempre entre comillas:
 ONEDRIVE_DIR="C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups"
-# macOS (el nombre exacto de la carpeta `OneDrive-...` sale con `ls ~/Library/CloudStorage/`):
-# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups"
+# macOS (el nombre exacto de la carpeta `OneDrive-...` sale con `ls ~/Library/CloudStorage/`).
+# En el Mac de DESARROLLO, una carpeta aparte (nunca la real: se mezclarían y la rotación borraría copias buenas):
+# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackupsDev"
 ```
 
 El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_SECRET`: las sesiones se guardan en la base de datos (sección 4).
@@ -530,22 +531,41 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Editar un movimiento importado** conserva su huella: reimportar el mismo extracto no lo duplica ni deshace la edición. **Borrarlo** sí hace que vuelva a entrar si se reimporta ese extracto.
 - **El buscador de movimientos** no ignora los acentos («àrea» no encuentra «AREA»); haría falta la extensión `unaccent` de PostgreSQL.
 
+**Decisiones de implementación (Fase 1d):**
+- **Formato del archivo de backup** (`.dump.enc`): cabecera de 40 bytes (`CAUDALBK`, versión, parámetros de scrypt N = 2^17, r = 8, p = 1, sal de 16 bytes y nonce de 12) + datos cifrados con AES-256-GCM. La cabecera va como datos asociados: cambiar un solo byte hace fallar el descifrado. Al leer, se rechazan parámetros de scrypt abusivos.
+- **Cliente de PostgreSQL 16** en la imagen, del repositorio oficial PGDG: el `pg_dump` de Debian es de otra versión.
+- **Marcador `.caudal-backups`:** la app solo escribe en una carpeta que lo tenga. Lo crean los scripts de arranque. Así, sin pendrive (o desconectado con la app abierta) sale «Pendrive ✗» en lugar de escribir en una carpeta vacía que monta Docker.
+- **Destinos montados** en `/backups/usb` y `/backups/onedrive`. `USB_BACKUP_DIR` no va en el `.env`: lo pone el script si encuentra el pendrive. Si no existe la carpeta de OneDrive, el script no deja que Docker la cree.
+- **Escritura atómica** (archivo temporal + renombrar) y **bloqueo de PostgreSQL** (`pg_try_advisory_lock`) para que no haya dos copias a la vez, aunque una la lance la app y otra el script.
+- **«Si hubo cambios»** se mira con los contadores de `pg_stat_user_tables` (sin `sessions` ni `backup_log`). PostgreSQL los publica con hasta unos segundos de retraso: como mucho sale una copia de más, nunca una de menos.
+- **Sin APScheduler:** un hilo de la app hace la copia de arranque y la periódica. Tras importar, la copia va en segundo plano después de responder.
+- **API:** `GET /api/backups/status` y `POST /api/backups/run`. Los backups son de la BD entera: cualquier usuario con sesión ve el mismo estado y puede pedir una copia (no expone datos de nadie). El pendrive sale ✓ solo si **está ahora** y su último backup salió bien.
+- **Restaurar:** primero se descifra y se comprueba (`pg_restore --list`), después se hace una copia de lo actual y solo entonces se borra la base y se restaura en una sola transacción.
+- **Restablecer contraseña** desde la terminal (`python -m app.auth.reset`): también desbloquea y cierra las sesiones de ese usuario.
+- **Scripts de Windows:** cada `.bat` llama a un `.ps1` (UTF-8 con BOM, para PowerShell 5.1) con la lógica. El pendrive se busca con `Win32_LogicalDisk` por su nombre; si hay dos unidades con el mismo nombre, no se usa ninguna.
+
 ---
 
 ## 11. Arranque y parada (Docker solo cuando quieras)
 
 **Requisito:** en Docker Desktop, desactivar *Settings → General → "Start Docker Desktop when you sign in"*. Así, al encender el PC para jugar, no se carga nada.
 
+Los accesos directos están en `scripts/windows/` (`.bat`, que llaman a un `.ps1`) y en `scripts/mac/` (`.command`).
+
 ### Acceso directo "Caudal" (doble clic)
 1. Abre Docker Desktop si no está abierto y **espera** a que esté listo.
-2. **Busca el pendrive por su nombre de volumen** (`USB_LABEL`), no por su letra. Si no lo encuentra, sigue igualmente y el panel avisa.
+2. **Busca el pendrive por su nombre de volumen** (`USB_LABEL`), no por su letra, y crea en él `CaudalBackups/` con su marcador. Si no lo encuentra, sigue igualmente y el panel avisa.
 3. `docker compose up -d`.
 4. Cuando la app responde, **abre el navegador** en `http://localhost:8080`.
 
 ### Acceso directo "Cerrar Caudal" (doble clic)
-1. **Backup final.**
+1. **Backup final.** Si hay otra copia en marcha, espera hasta un minuto. Si falla, pregunta antes de cerrar.
 2. `docker compose down` (los datos se conservan en el volumen).
-3. Opcional: cierra Docker Desktop para liberar memoria.
+3. Opcional: cierra Docker Desktop para liberar memoria. **Siempre en este orden**: si Docker Desktop se cierra con la app abierta, un contenedor puede quedar dañado (se arregla con `docker compose down`, sin `-v`).
+
+### Otros accesos directos
+- **"Restaurar backup":** sección 12.
+- **"Restablecer contraseña":** cambia la contraseña de un usuario, lo desbloquea y cierra sus sesiones.
 
 ### Desde otros dispositivos de casa
 `http://<IP-del-PC>:8080` con el PC encendido y la app abierta. En el firewall de Windows, permitir **solo en redes privadas**. **Nunca** abrir puertos en el router.
@@ -572,9 +592,10 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
 
 ### Cómo
-- `pg_dump` (formato custom) → **AES-256-GCM** con clave derivada de `BACKUP_PASSWORD` → `caudal_AAAA-MM-DD_HHMM.dump.enc`.
-- **Rotación:** las **30 últimas** por destino.
-- **Indicador:** `Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓`.
+- `pg_dump` (formato custom) → **AES-256-GCM** con clave derivada de `BACKUP_PASSWORD` por **scrypt** → `caudal_AAAA-MM-DD_HHMM.dump.enc`. Formato en la sección 10 (decisiones de la Fase 1d).
+- **Rotación:** las **30 últimas** por destino. Solo se tocan los archivos con ese nombre; el resto del pendrive no.
+- **Registro:** cada intento, por destino, en `backup_log`.
+- **Indicador:** `Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓` en la cabecera, y **Ajustes → Copias de seguridad** con «Hacer copia ahora». En rojo si falta la contraseña, si la última copia tiene más de 7 días o si un destino tiene ✗.
 
 ### Contraseña de backup
 - **Distinta** de las de inicio de sesión.
@@ -582,7 +603,7 @@ Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
 - **Apuntarla en papel en un sitio seguro.** Si se pierde, las copias no se pueden abrir.
 
 ### Restaurar
-Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y hace `pg_restore` sobre una base vacía. **Se prueba de verdad en la Fase 1d** y en la mudanza al Mac.
+Script **"Restaurar backup"**: enseña una lista numerada con las copias del pendrive y de OneDrive, se elige una, se escribe la contraseña (Enter = la del `.env`) y se confirma escribiendo `RESTAURAR`. Antes de tocar nada descifra y comprueba el archivo; después hace una copia de lo actual, borra la base y hace `pg_restore` en una sola transacción. Probado en la Fase 1d con datos inventados y OneDrive; con el pendrive real y en el PC, en la revisión final (sección 17, pendiente 11) y en la mudanza al Mac.
 
 ### Avisos
 - **OneDrive de la universidad:** al acabar la carrera la UdL desactivará la cuenta. **Antes de graduarse** hay que mover los backups a otro sitio. Conviene revisar las normas de uso de la UdL sobre archivos personales. Al ir cifrados, nadie puede leerlos.
@@ -662,9 +683,9 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - **Estructura de 3 pestañas.** **Movimientos**: indicadores, gráficos, tabla con buscador y alta, edición y borrado manual. **Patrimonio**: con la liquidez de las cuentas (saldos de referencia). **Inversiones**: vacía con su mensaje.
 - **Hecho cuando:** tras importar un mes real, todo lo que no sea Bizum queda categorizado y los gráficos coinciden con los totales.
 
-**1d. Backups + accesos directos**
-- Backup cifrado, rotación, los 4 momentos, pendrive por nombre, indicador. Scripts de Windows.
-- **Hecho cuando:** se ha hecho una **restauración completa de prueba** desde el pendrive y desde OneDrive.
+**1d. Backups + accesos directos** ✅ (2026-10-30, detalle en `docs/fases/FASE_1d.md`)
+- Backup cifrado, rotación, los 4 momentos, pendrive por nombre, indicador. Scripts de Windows y de Mac.
+- **Hecho cuando:** se ha hecho una **restauración completa de prueba** desde el pendrive y desde OneDrive. Hecha desde OneDrive (y con un test que compara todas las tablas); desde el pendrive real, aplazada (sección 17, pendiente 11).
 
 ### Fase 2: control del gasto
 - Presupuestos (OK / Al límite ≥ 90 % / Superado), avisos y pagos recurrentes.
@@ -740,9 +761,10 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 6 | Objetivo de patrimonio de cada usuario | Fase 2 |
 | 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
-| 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`) y separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev` | Fase 1d |
+| 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`), separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev`, elegir la `BACKUP_PASSWORD` definitiva y apuntarla en papel | Antes del primer uso real (revisión final) |
 | 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
-| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar) | Antes del 1.0 |
+| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar). **1d** → restauración completa desde el **pendrive real** y desde OneDrive en el PC; con el pendrive desconectado, aviso y OneDrive sigue; los cuatro `.bat` en el PC (primero, el pendrive: pendiente 12) | Antes del 1.0 |
+| 12 | En Windows, comprobar que Docker Desktop (WSL2) monta el pendrive (`E:\CaudalBackups`) como el disco `C:`. Si sale «Pendrive ✗» con el pendrive conectado, cambiar el script para que copie el backup de OneDrive al pendrive en lugar de montarlo | Revisión final, en el PC |
 
 ---
 

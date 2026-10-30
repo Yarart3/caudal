@@ -29,10 +29,10 @@
 ### Lenguajes
 | Parte | Lenguaje | Stack |
 |---|---|---|
-| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff |
+| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, cryptography, pytest, ruff (APScheduler solo si hace falta en la Fase 3: los backups periódicos usan un hilo de la app) |
 | Frontend | **TypeScript** (`strict`) | React + Vite, React Router, ESLint + Prettier. Gráficos en CSS como la maqueta (Recharts solo si hace falta en la Fase 3) |
 | Base de datos | **SQL** | PostgreSQL 16 |
-| Infraestructura | YAML, Batch, Bash | Docker Compose, scripts `.bat` (Windows) y `.command` (Mac) |
+| Infraestructura | YAML, Batch, PowerShell, Bash | Docker Compose, scripts `.bat` que llaman a un `.ps1` (Windows) y `.command` (Mac) |
 
 - Usa las **versiones estables actuales** al empezar la Fase 1a y **fíjalas** (`pyproject.toml` + lock, `package.json` + `package-lock.json`, imágenes Docker con etiqueta concreta: `python:3.12-slim`, `postgres:16`, `node:<LTS>`). No uses versiones beta.
 - Si dudas de que una API de una librería exista en la versión fijada, dilo y propón cómo comprobarlo. **No inventes funciones.**
@@ -123,7 +123,7 @@
 | 1c | `GET/POST/PATCH/DELETE /api/categories` | Categorías (con cuántos movimientos y reglas tiene cada una) |
 | 1c | `GET/POST/PATCH/DELETE /api/rules` · `POST /api/rules/apply?include_auto=` | Reglas. `POST` crea o sustituye la regla con el mismo texto (lo usa «¿Aplicar siempre?») |
 | 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos (sin `month`: el del último movimiento) |
-| 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual |
+| 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual (los backups son de la BD entera: cualquier usuario con sesión ve el mismo estado; 409 si falta la contraseña o hay otro en marcha) |
 | 2 | `GET/PUT /api/budgets` · `GET /api/alerts` · `GET /api/recurring` · `GET/PUT /api/goals` | Control del gasto |
 | 3 | `GET /api/products/search?q=` · `GET/POST/PATCH /api/products` | Productos |
 | 3 | `GET/POST/PATCH/DELETE /api/investments/operations` · `POST /api/investments/import` | Operaciones |
@@ -214,7 +214,8 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
   - `app/backup/`: `pg_dump -Fc` → AES-256-GCM (clave por scrypt con sal aleatoria guardada en la cabecera del archivo) → `caudal_AAAA-MM-DD_HHMM.dump.enc`; rotación de 30; `backup_log`; los 4 disparadores (tras importar, cada 60 min si hubo cambios, al cerrar y al arrancar si hay más de 7 días).
   - Montaje de los destinos: OneDrive por `ONEDRIVE_DIR`; el pendrive lo **detecta el script de arranque** por su nombre de volumen y monta su ruta (si no está, el panel lo indica).
   - Indicador `Último backup · Pendrive ✓/✗ · OneDrive ✓/✗` y `POST /api/backups/run`.
-  - Scripts `scripts/windows/`: `Caudal.bat` (abre Docker Desktop si hace falta y espera, detecta el pendrive, `docker compose up -d`, espera al healthcheck, abre el navegador), `Cerrar Caudal.bat` (backup y `down`), `Restaurar backup.bat`, `Restablecer contraseña.bat`. Equivalentes en `scripts/mac/*.command`.
+  - Scripts `scripts/windows/`: `Caudal.bat` (abre Docker Desktop si hace falta y espera, detecta el pendrive, `docker compose up -d`, espera al healthcheck, abre el navegador), `Cerrar Caudal.bat` (backup y `down`), `Restaurar backup.bat`, `Restablecer contraseña.bat`. Cada `.bat` llama a un `.ps1` (UTF-8 con BOM) con la lógica. Equivalentes en `scripts/mac/*.command`.
+  - **Hecho (2026-10-30):** detalle en `docs/fases/FASE_1d.md`. Aplazado a la revisión final: restauración desde el pendrive real y scripts de Windows en el PC (DISENO §17, pendientes 11 y 12).
   - Tests: cifrar y descifrar ida y vuelta, rotación y contraseña incorrecta.
 - **Hecho cuando:** se hace una **restauración completa** sobre una base vacía, desde el pendrive y desde OneDrive, y los datos coinciden; con el pendrive desconectado, el aviso aparece y OneDrive sigue funcionando.
 - **Mensaje para empezar:** `Empezamos la Fase 1d de Caudal (backups + accesos directos). Sigue CLAUDE.md.`
