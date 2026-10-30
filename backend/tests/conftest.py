@@ -8,6 +8,8 @@ import os
 
 # Tiene que ir ANTES de importar app.*: el motor de la BD se crea al importar app.db
 os.environ["POSTGRES_DB"] = os.environ.get("POSTGRES_DB", "caudal") + "_test"
+# Sin backups automáticos en los tests (los que los prueban los activan a propósito)
+os.environ["BACKUP_AUTO"] = "false"
 
 from collections.abc import Iterator  # noqa: E402
 

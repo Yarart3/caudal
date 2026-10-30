@@ -23,6 +23,8 @@ class Settings(BaseSettings):
 
     # Backups (Fase 1d, DISENO §12). Sin contraseña no se hacen copias y el panel lo avisa.
     backup_password: SecretStr | None = None
+    # Backups automáticos (tras importar, periódico y al arrancar). Los tests los desactivan.
+    backup_auto: bool = True
     backup_interval_min: int = 60
     backup_keep: int = 30
     backup_max_age_days: int = 7

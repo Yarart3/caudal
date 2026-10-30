@@ -4,12 +4,22 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.accounts import get_own_account
 from app.auth.deps import current_user
+from app.backup.auto import auto_backup
 from app.db import get_db
 from app.importers.base import ImportFormatError
 from app.importers.service import import_statement
@@ -46,6 +56,7 @@ class ImportOut(BaseModel):
 def import_file(
     account_id: Annotated[int, Form()],
     file: Annotated[UploadFile, File()],
+    background: BackgroundTasks,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> ImportOut:
@@ -62,6 +73,9 @@ def import_file(
     except ImportFormatError as error:
         db.rollback()
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from None
+    # Backup tras importar (DISENO §12), después de responder: el usuario no espera
+    if summary.new > 0:
+        background.add_task(auto_backup.run_quietly, "import")
     # El archivo no se guarda en ningún sitio (DISENO 8.3): se descarta al acabar la petición
     return ImportOut(
         read=summary.read,

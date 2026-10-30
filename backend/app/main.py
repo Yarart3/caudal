@@ -1,5 +1,7 @@
 """Punto de entrada de Caudal: API bajo /api y, en el resto de rutas, el frontend compilado."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -8,13 +10,40 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import accounts, auth, categories, dashboard, imports, rules, setup, transactions
+from app.api import (
+    accounts,
+    auth,
+    backups,
+    categories,
+    dashboard,
+    imports,
+    rules,
+    setup,
+    transactions,
+)
+from app.backup.auto import auto_backup
 from app.db import get_db
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
-app = FastAPI(title="Caudal", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Al arrancar: hilo de backups automáticos (backup si el último es antiguo y luego cada
+    BACKUP_INTERVAL_MIN si hubo cambios). Al parar: lo detiene."""
+    auto_backup.start()
+    yield
+    auto_backup.stop()
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title="Caudal",
+    docs_url="/api/docs",
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
+)
 
 # Los routers de la API van ANTES de la ruta del frontend, que lo captura todo
 app.include_router(setup.router)
@@ -25,6 +54,7 @@ app.include_router(transactions.router)
 app.include_router(categories.router)
 app.include_router(rules.router)
 app.include_router(dashboard.router)
+app.include_router(backups.router)
 
 
 @app.exception_handler(RequestValidationError)
