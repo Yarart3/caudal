@@ -1,7 +1,9 @@
 """Configuración de Caudal, leída de las variables de entorno (el .env de docker compose)."""
 
 from functools import lru_cache
+from pathlib import Path
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -18,6 +20,15 @@ class Settings(BaseSettings):
     session_timeout_min: int = 30
     login_max_attempts: int = 5
     login_lockout_min: int = 5
+
+    # Backups (Fase 1d, DISENO §12). Sin contraseña no se hacen copias y el panel lo avisa.
+    backup_password: SecretStr | None = None
+    backup_interval_min: int = 60
+    backup_keep: int = 30
+    backup_max_age_days: int = 7
+    # Carpetas DENTRO del contenedor; docker-compose.yml monta ahí el pendrive y OneDrive
+    backup_usb_dir: Path = Path("/backups/usb")
+    backup_onedrive_dir: Path = Path("/backups/onedrive")
 
     @property
     def database_url(self) -> URL:

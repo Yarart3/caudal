@@ -36,6 +36,21 @@ services:
       TZ: Europe/Madrid
     ports:
       - "${APP_PORT:-8080}:8000"
+    # Destinos de los backups (Fase 1d). La app solo escribe en una carpeta si dentro está el
+    # marcador .caudal-backups (lo crean los scripts de arranque). Sin pendrive o sin OneDrive se
+    # monta una carpeta vacía de backups/, sin marcador, y el panel avisa.
+    # USB_BACKUP_DIR no va en el .env: lo pone el script de arranque al encontrar el pendrive.
+    volumes:
+      - type: bind
+        source: ${USB_BACKUP_DIR:-./backups/sin-pendrive}
+        target: /backups/usb
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${ONEDRIVE_DIR:-./backups/sin-onedrive}
+        target: /backups/onedrive
+        bind:
+          create_host_path: true
     depends_on:
       db:
         condition: service_healthy
