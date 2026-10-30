@@ -772,3 +772,50 @@ td {
     display: none;
   }
 }
+
+/* --- Backups (Fase 1d): indicador de la cabecera y tarjeta de Ajustes --- */
+.backup-line {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.backup-bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.backup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.backup-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.backup-mark {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  width: 20px;
+  text-align: center;
+  flex: none;
+}
+
+.backup-mark.good {
+  color: var(--accent);
+}
+
+.backup-mark.bad {
+  color: var(--bad);
+}

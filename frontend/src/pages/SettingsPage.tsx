@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, errorMessage, type Category, type CategoryKind, type Rule } from '../api';
 import { AppShell } from '../AppShell';
+import { BackupCard } from '../components/BackupCard';
 import { CategorySelect } from '../components/CategorySelect';
 import { notifyDataChanged, onDataChanged } from '../events';
 
@@ -10,7 +11,8 @@ const KINDS: { value: CategoryKind; label: string }[] = [
 ];
 const NEW_COLOR = '#5B616B';
 
-/** Ajustes → Categorías y reglas (Fase 1c). Usuarios y formatos llegan en la Fase 4. */
+/** Ajustes → Copias de seguridad (Fase 1d) y Categorías y reglas (Fase 1c).
+ * Usuarios y formatos llegan en la Fase 4. */
 export function SettingsPage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [rules, setRules] = useState<Rule[] | null>(null);
@@ -51,6 +53,7 @@ export function SettingsPage() {
 
   return (
     <AppShell title="Ajustes" current="Ajustes">
+      <BackupCard />
       {error && (
         <p className="err" role="alert">
           {error}

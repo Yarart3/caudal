@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { api } from './api';
 import { useAuth } from './auth/AuthContext';
+import { BackupIndicator } from './components/BackupIndicator';
 import { onDataChanged } from './events';
 import { Logo } from './Logo';
 
@@ -112,7 +113,10 @@ export function AppShell({
 
       <main className="content">
         <header className="between">
-          <h1 style={{ fontSize: 30 }}>{title}</h1>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <h1 style={{ fontSize: 30 }}>{title}</h1>
+            <BackupIndicator />
+          </div>
           <div className="row" style={{ flexWrap: 'wrap', gap: 12 }}>
             <button
               type="button"

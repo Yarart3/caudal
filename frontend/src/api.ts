@@ -110,6 +110,28 @@ export type TransactionCreate = {
   amount: string;
 };
 
+// Backups (Fase 1d). Son de la BD entera: todos los usuarios ven el mismo estado.
+export type BackupDestination = {
+  destination: 'usb' | 'onedrive';
+  label: string; // "Pendrive" / "OneDrive"
+  available: boolean; // el pendrive está conectado / la carpeta de OneDrive existe
+  ok: boolean; // disponible y su último backup salió bien → ✓
+  last_at: string | null;
+  last_ok_at: string | null;
+  message: string | null;
+};
+
+export type BackupStatus = {
+  configured: boolean; // hay BACKUP_PASSWORD en el .env
+  auto: boolean;
+  last_backup_at: string | null;
+  stale: boolean; // sin backups o el último tiene más de max_age_days días
+  max_age_days: number;
+  destinations: BackupDestination[];
+};
+
+export type BackupRun = { ok: boolean; filename: string; status: BackupStatus };
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -219,6 +241,8 @@ export const api = {
   updateRule: (id: number, changes: Partial<Pick<Rule, 'pattern' | 'category_id' | 'priority'>>) =>
     request<Rule>(`/api/rules/${id}`, { method: 'PATCH', body: changes }),
   deleteRule: (id: number) => request<void>(`/api/rules/${id}`, { method: 'DELETE' }),
+    backupStatus: () => request<BackupStatus>('/api/backups/status'),
+  runBackup: () => request<BackupRun>('/api/backups/run', { method: 'POST' }),
   applyRules: (includeAuto: boolean) =>
     request<RulesApplied>(`/api/rules/apply${queryString({ include_auto: includeAuto })}`, {
       method: 'POST',

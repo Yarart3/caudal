@@ -83,3 +83,26 @@ export function suggestPattern(description: string): string {
   const words = text.filter((word) => !/\d/.test(word));
   return (words.length > 0 ? words : text).join(' ');
 }
+
+/**
+ * Fecha y hora de un evento (ISO con zona) en hora local:
+ * "hoy 18:42" · "ayer 09:05" · "28/10 18:42" · "28/10/2025 18:42" (si es de otro año).
+ */
+export function formatMoment(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const dayStart = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((dayStart(now) - dayStart(d)) / 86_400_000);
+  if (days === 0) return `hoy ${time}`;
+  if (days === 1) return `ayer ${time}`;
+  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  return d.getFullYear() === now.getFullYear()
+    ? `${date} ${time}`
+    : `${date}/${d.getFullYear()} ${time}`;
+}
+
+/** Días enteros transcurridos desde una fecha ISO. */
+export function daysSince(iso: string, now: Date = new Date()): number {
+  return Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);
+}
