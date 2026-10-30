@@ -14,6 +14,7 @@ dependencies = [
     "argon2-cffi==25.1.0",
     "openpyxl==3.1.5",  # lectura de los extractos .xlsx (Fase 1b)
     "python-multipart==0.0.32",  # subida de archivos (formularios multipart) en FastAPI
+    "cryptography==50.0.2",  # cifrado de los backups: AES-256-GCM + scrypt (Fase 1d)
 ]
 
 [dependency-groups]
