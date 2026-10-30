@@ -2,6 +2,34 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [0.3.0] – 2026-10-30 · Fase 1c
+### Añadido
+- Categorías y reglas iniciales por usuario (DISENO 9.4): se crean al dar de alta el usuario, y la migración `0002` las crea para los que ya existían.
+- Motor de reglas (`backend/app/categories/`): **palabra entera**, en mayúsculas y sin acentos, por prioridad; reglas sin categoría para dejar los Bizum por revisar. Se aplica al importar (después de las transferencias internas) y al apuntar a mano.
+- API de movimientos: `GET /api/transactions` con mes, buscador, categoría, estado, cuenta y paginación (`{items, total}`), `PATCH` (categoría puesta a mano, marcar o desmarcar transferencia interna, editar campos) y `DELETE`.
+- API de categorías y reglas: `GET/POST/PATCH/DELETE /api/categories` y `/api/rules`, `POST /api/rules/apply` (con `include_auto` para corregir lo automático).
+- API de los paneles: `GET /api/dashboard/net-worth` y `/api/dashboard/cashflow` (saldos calculados, ingresos y gastos sin internas, 12 meses, gasto por categoría).
+- **Estructura de 3 pestañas** con la barra lateral de la maqueta y el contador de «por revisar».
+- **Movimientos:** 4 indicadores, ingresos vs gastos a 12 meses, gasto por categoría, tabla con buscador y filtros, y ventana para añadir, editar y borrar.
+- **Revisar** (`/movimientos/revisar`) con «¿Aplicar siempre?» (texto editable; no se ofrece con los Bizum) y «Es un traspaso entre mis cuentas».
+- **Patrimonio:** indicadores, evolución a 12 meses, patrimonio por entidad y reparto «Efectivo / Fondo monetario» (solo liquidez).
+- **Inversiones:** estado vacío «Todavía no hay inversiones».
+- **Ajustes → Categorías y reglas** (adelantado de la Fase 4).
+- 75 tests nuevos (172 en total), con aislamiento entre usuarios en cada endpoint nuevo y totales comparados con sumas hechas a mano.
+- `docs/fases/FASE_1c.md`.
+### Cambiado
+- Reglas por **palabra entera** en lugar de «contiene»: `BAR` ya no encaja con «BARCELONA» (DISENO 9.4).
+- `rules.category_id` pasa a ser opcional (regla sin categoría = dejar por revisar).
+- Gráficos en CSS, como la maqueta, en lugar de Recharts (DISENO 2 y 10, CLAUDE.md §3).
+- Rutas del frontend: `/patrimonio`, `/movimientos`, `/movimientos/importar`, `/movimientos/revisar`, `/inversiones`, `/ajustes`. `/panel` e `/importar` redirigen.
+- El resumen de Importar dice cuántos se han categorizado automáticamente y lleva a Revisar.
+- Contrato de la API actualizado (CLAUDE.md §6).
+### Notas
+- Una devolución cuenta como ingreso aunque tenga categoría de gasto (DISENO 9.1).
+- El panel enseña el mes del último movimiento; el selector de mes llega en la Fase 2.
+- Forma de trabajar: las comprobaciones con datos reales y de uso se aplazan a una revisión final (DISENO §17, pendiente 11; CLAUDE.md §4). El criterio de la 1c «un mes real queda categorizado salvo Bizum» queda aplazado.
+- El buscador no ignora los acentos; la tabla de Movimientos en el móvil se desplaza en horizontal (se mejora en la Fase 4).
+
 ## [0.2.0] – 2026-10-21 · Fase 1b
 ### Añadido
 - Importadores de **imagin** y **Wise** (`backend/app/importers/`): lectura por nombre de columna, comprobación de que el archivo es del banco de la cuenta, importes a `Decimal` sin pasar por `float`, fechas en texto o de Excel, concepto de Wise (Comercio → beneficiario o pagador → Descripción) y columnas del fondo de Wise ignoradas.

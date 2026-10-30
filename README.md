@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 1b terminada** (importadores de imagin y Wise): además del inicio de sesión con dos usuarios aislados, ya se importan los extractos Excel de imagin y Wise sin duplicados, se detectan las transferencias entre cuentas propias y se pueden apuntar movimientos a mano. Siguiente: Fase 1c (categorización y pestañas Movimientos y Patrimonio). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 1c terminada** (categorización y pestañas): además de importar los extractos de imagin y Wise sin duplicados, los movimientos se categorizan solos con reglas que aprenden de tus correcciones, y ya funcionan las pestañas **Patrimonio** (liquidez) y **Movimientos** (indicadores, gráficos y tabla con alta, edición y borrado), la pantalla **Revisar** y **Ajustes → Categorías y reglas**. Siguiente: Fase 1d (backups y accesos directos). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -69,7 +69,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 | Parte | Lenguaje | Tecnologías |
 |---|---|---|
 | **Backend** (lógica, importadores, cálculos, API) | **Python 3.12** | FastAPI, SQLAlchemy 2, Alembic, Pydantic, openpyxl, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff, uv |
-| **Frontend** (la web que ves) | **TypeScript** | React, React Router, Vite, Recharts, ESLint + Prettier |
+| **Frontend** (la web que ves) | **TypeScript** | React, React Router, Vite, ESLint + Prettier; gráficos en CSS como la maqueta |
 | **Base de datos** | **SQL** | PostgreSQL 16 |
 | **Puesta en marcha** | YAML + scripts | Docker Compose; accesos directos `.bat` (Windows) y `.command` (Mac) |
 
@@ -280,7 +280,7 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 
 1. Doble clic en **Caudal** → eliges tu usuario → contraseña.
 2. **Movimientos → Importar extracto:** eliges la cuenta y arrastras el Excel del banco. Si alguna fila no se puede leer, te la enseña y la apuntas a mano.
-3. Revisas los movimientos marcados **"Revisar"**. Lo que corrijas, la app lo aprende.
+3. **Movimientos → Revisar:** eliges la categoría de lo que ninguna regla conoce y, si quieres, **«¿Aplicar siempre?»** crea la regla para las próximas veces. Las reglas se editan en **Ajustes**.
 4. **Inversiones:** apuntas cada compra o venta en **+ Añadir compra / venta** (puedes duplicar una anterior); los precios se actualizan solos. El historial antiguo se puede cargar de golpe con la plantilla de Excel.
 5. Al terminar, doble clic en **Cerrar Caudal**: hace un backup y apaga todo.
 
@@ -327,7 +327,7 @@ caudal/
 | 0 | Preparar el entorno (Docker, Git, pendrive, OneDrive, ejemplos) | ✅ |
 | 1a | Base del proyecto + inicio de sesión | ✅ |
 | 1b | Importadores de imagin y Wise | ✅ |
-| 1c | Categorización + pestañas Movimientos y Patrimonio | ⬜ |
+| 1c | Categorización + pestañas Movimientos y Patrimonio | ✅ |
 | 1d | Backups + accesos directos | ⬜ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ⬜ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ⬜ |
@@ -342,7 +342,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

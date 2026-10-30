@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 1b terminada (importadores de imagin y Wise). Siguiente: Fase 1c
+- **Estado:** Fase 1c terminada (categorización y pestañas Movimientos y Patrimonio). Siguiente: Fase 1d
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -68,7 +68,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Precios de inversiones | Automáticos (Morningstar, Yahoo Finance, CoinGecko), con retraso de ~15 min en bolsa; fondos, una vez al día |
 | Backups | Automáticos y **cifrados**, en el **pendrive** (siempre conectado, 250 GB) y en **OneDrive** (cuenta de la universidad) |
 | IA | En las primeras fases no se usa IA externa con datos reales. Si más adelante se usa un modelo, será **local**. |
-| Stack | PostgreSQL + FastAPI (Python) + React (Vite + Recharts), con Docker Compose |
+| Stack | PostgreSQL + FastAPI (Python) + React (Vite; gráficos en CSS como la maqueta), con Docker Compose |
 
 ---
 
@@ -362,6 +362,8 @@ registro_backups
 ### 9.1 Gasto o ingreso
 `importe < 0` → gasto; `importe > 0` → ingreso. Los totales **excluyen** las transferencias internas.
 
+Una **devolución** (+) cuenta como ingreso aunque tenga una categoría de gasto: así el gasto por categoría suma exactamente el gasto del mes (decisión de la Fase 1c).
+
 ### 9.2 Huella anti-duplicados
 
 | Origen | Huella |
@@ -386,15 +388,21 @@ Sin esa confirmación **no** se emparejan (decisión de la Fase 1b): un pago con
 - También son internas: las **conversiones de divisa** de Wise (filas con `Cambiar desde` / `Cambiar a`), aunque no tengan pareja, y el dinero que se pasa a un broker. En Trade Republic el ingreso se apunta a mano y se empareja igual con la salida de imagin.
 
 ### 9.4 Categorización
-1. **Reglas** "si el concepto contiene X → categoría Y", por prioridad, comparando en mayúsculas y sin acentos.
+1. **Reglas** "si el concepto contiene la **palabra entera** X → categoría Y", comparando en mayúsculas, sin acentos y con un solo espacio. `BAR` encaja con «BAR PEPE» o «CAFE-BAR», pero no con «BARCELONA» ni «EMBARQUE»: un borde es cualquier carácter que no sea letra o número, o el principio o el final del concepto (decisión de la Fase 1c).
+   - **Orden:** prioridad (el número más bajo primero), después el texto más largo y después la regla más antigua. Prioridades: **10** las que dejan por revisar (Bizum), **50** las creadas por el usuario y **100** las iniciales.
+   - Una regla **sin categoría** deja el movimiento **por revisar** y corta la búsqueda: «BIZUM ENVIAT BAR PEPE» no acaba en Comida fuera.
+   - Las reglas solo tocan lo que está **por revisar**. Nunca cambian una categoría puesta a mano ni las transferencias internas.
 2. Si ninguna encaja → **`revisar`**.
-3. **Aprende de las correcciones:** al cambiar una categoría, la app ofrece *"¿Aplicar siempre a 'BON AREA'?"*. Si se acepta, crea la regla y la reaplica a los pendientes.
+3. **Aprende de las correcciones:** al poner una categoría a mano, la app ofrece *"¿Aplicar siempre a 'BON AREA'?"* con el texto del concepto (sin las palabras con números), que se puede editar. Si se acepta, crea la regla (o sustituye la que tenga el mismo texto) y la reaplica a los pendientes. Con los Bizum no se ofrece.
+4. **Ajustes → Categorías y reglas:** se pueden crear, renombrar, recolorear y borrar categorías, y editar, crear y borrar reglas. Borrar una categoría borra sus reglas y devuelve sus movimientos a «por revisar» (y se les pasan las demás reglas). «Reaplicar a todo» vuelve a pasar las reglas por lo automático y lo pendiente.
 
 **Categorías iniciales (editables):**
 - **Gastos:** Supermercado, Comida fuera, Ocio y salidas, Transporte, Vivienda, Suministros, Suscripciones, Compras online, Ropa, Salud, Educación / Material uni, Regalos, Otros.
 - **Ingresos:** Nómina, Bizum recibido, Transferencias recibidas, Intereses, Otros ingresos.
 
-**Reglas iniciales de ejemplo:** `BON AREA`, `MERCADONA`, `CONSUM` → Supermercado · `MC DONALDS`, `BAR` → Comida fuera · `AMAZON`, `WWW.AMAZ` → Compras online · `REPSOL`, `RENFE` → Transporte · `SPOTIFY`, `NETFLIX` → Suscripciones · `BIZUM ENVIAT` / `BIZUM REBUT` (imagin, en catalán) → **revisar**.
+**Reglas iniciales:** `BON AREA`, `MERCADONA`, `CONSUM` → Supermercado · `MC DONALDS`, `BAR` → Comida fuera · `AMAZON`, `WWW.AMAZ` → Compras online · `REPSOL`, `RENFE` → Transporte · `SPOTIFY`, `NETFLIX` → Suscripciones · `BIZUM ENVIAT` / `BIZUM REBUT` (imagin, en catalán) → **revisar** (reglas sin categoría).
+
+Las categorías y reglas iniciales se crean para cada usuario al crearlo (asistente de primer arranque). Los usuarios que ya existían antes de la Fase 1c las recibieron con la migración `0002`.
 
 ### 9.5 Pagos recurrentes (Fase 2)
 Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → pago recurrente, con el total al mes.
@@ -427,7 +435,7 @@ Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → 
 | Precios | httpx (con caché, tiempo de espera y reintentos) |
 | Cálculos financieros | `Decimal`; XIRR implementado y testeado (o `pyxirr`) |
 | Cifrado de backups | `cryptography` (AES-256-GCM, clave derivada con scrypt) |
-| Frontend | React + Vite + TypeScript, Recharts |
+| Frontend | React + Vite + TypeScript. Gráficos con CSS (barras y `conic-gradient`), como la maqueta; Recharts solo si hace falta en la Fase 3 |
 | Orquestación | Docker Compose (`app` + `db`) |
 
 **Estructura de carpetas prevista:**
@@ -453,7 +461,8 @@ caudal/
 │       ├── main.py
 │       ├── auth/               ← login, sesiones, usuarios
 │       ├── importers/          ← imagin.py, wise.py, caixabank.py, sabadell.py, generico.py, plantilla_inversiones.py, rumbo.py
-│       ├── categorization/
+│       ├── categories/         ← categorías y reglas iniciales, motor de reglas
+│       ├── dashboard/          ← totales de Patrimonio y Movimientos
 │       ├── transfers/
 │       ├── investments/        ← productos, operaciones, FIFO, XIRR, comparativa
 │       ├── prices/             ← yahoo.py, morningstar.py, coingecko.py, caché
@@ -508,6 +517,18 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Saldo de referencia:** al importar pasa a ser el último saldo del extracto, salvo que el extracto sea más antiguo que el que ya tiene la cuenta.
 - **Alta manual** (`POST /api/transactions`) adelantada a la 1b: la necesita la pantalla Importar para apuntar las filas que no se pueden leer.
 - **Pantalla Importar** en `/importar` (en la barra lateral, *Movimientos*); en la 1c pasa a ser parte de la pestaña Movimientos. Mientras no haya *Ajustes → Cuentas*, permite crear la cuenta de imagin o Wise desde la misma pantalla.
+
+**Decisiones de implementación (Fase 1c):**
+- **Reglas por palabra entera**, con prioridades y reglas sin categoría para Bizum (sección 9.4). Migración `0002`: `rules.category_id` pasa a ser opcional y crea la semilla de los usuarios que ya existían.
+- **Saldo de una cuenta a una fecha D** (se calcula, no se guarda): `saldo de referencia + S(D) − S(fecha de referencia)`, donde `S(x)` es la suma de sus movimientos hasta `x`. Funciona hacia delante y hacia atrás. Una cuenta sin saldo de referencia (a mano) suma todos sus movimientos. Antes del primer extracto, la evolución enseña el saldo con el que empezaba ese extracto.
+- **Mes de los paneles:** el del último movimiento del usuario (si importas septiembre en octubre, ves septiembre). El selector de mes llega en la Fase 2.
+- **Devoluciones como ingreso** (sección 9.1).
+- **Gráficos en CSS**, como la maqueta, sin Recharts: son barras y donuts sencillos y así no se añade ninguna dependencia.
+- **Rutas del frontend:** `/patrimonio`, `/movimientos`, `/movimientos/importar`, `/movimientos/revisar`, `/inversiones` y `/ajustes`. `/panel` e `/importar` redirigen a las nuevas.
+- **API:** `POST /api/rules` crea la regla o sustituye la que tenga el mismo texto; `POST /api/rules/apply?include_auto=true` reaplica también lo automático; `GET /api/transactions` devuelve `{items, total}` con `limit` (máx. 1000) y `offset`.
+- **Ajustes → Categorías y reglas** se adelanta de la Fase 4 a la 1c: sin ella, una regla mal creada solo se podría arreglar desde `/api/docs`.
+- **Editar un movimiento importado** conserva su huella: reimportar el mismo extracto no lo duplica ni deshace la edición. **Borrarlo** sí hace que vuelva a entrar si se reimporta ese extracto.
+- **El buscador de movimientos** no ignora los acentos («àrea» no encuentra «AREA»); haría falta la extensión `unaccent` de PostgreSQL.
 
 ---
 
@@ -636,7 +657,7 @@ Script **"Restaurar backup"**: se elige el archivo, se escribe la contraseña y 
 - **Filas que no se pueden leer:** nunca se descartan en silencio. El resumen indica la fila y el dato que ha fallado (*"Fila 5: no se ha podido leer el importe «-23 EUR»"*) y ofrece **añadir ese movimiento a mano** desde la misma pantalla. Si el saldo de imagin no cuadra entre dos filas, avisa de que puede faltar un movimiento.
 - **Hecho cuando:** importar dos veces no duplica, los tests con `samples/` pasan y el saldo calculado cuadra con el extracto.
 
-**1c. Categorización + pestañas Movimientos y Patrimonio**
+**1c. Categorización + pestañas Movimientos y Patrimonio** ✅ (2026-10-30, detalle en `docs/fases/FASE_1c.md`)
 - Categorías, reglas, revisión y "¿Aplicar siempre?".
 - **Estructura de 3 pestañas.** **Movimientos**: indicadores, gráficos, tabla con buscador y alta, edición y borrado manual. **Patrimonio**: con la liquidez de las cuentas (saldos de referencia). **Inversiones**: vacía con su mensaje.
 - **Hecho cuando:** tras importar un mes real, todo lo que no sea Bizum queda categorizado y los gráficos coinciden con los totales.
@@ -715,12 +736,13 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 2 | ~~¿La `Fecha` de imagin es fecha o texto? ¿imagin exporta CSV?~~ → texto `dd/mm/aaaa`; solo Excel o PDF | ✅ Fase 0 |
 | 3 | ~~Qué exportan Trade Republic y Scalable~~ → se llevan a mano (sección 6.3) | ✅ Fase 0 |
 | 4 | Ejemplos de CaixaBank y Sabadell | Antes de la Fase 4 |
-| 5 | Confirmar las categorías iniciales | Fase 1c |
+| 5 | ~~Confirmar las categorías iniciales~~ → se quedan las de la sección 9.4 | ✅ Fase 1c |
 | 6 | Objetivo de patrimonio de cada usuario | Fase 2 |
 | 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
 | 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`) y separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev` | Fase 1d |
 | 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
+| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar) | Antes del 1.0 |
 
 ---
 

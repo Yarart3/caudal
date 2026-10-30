@@ -30,7 +30,7 @@
 | Parte | Lenguaje | Stack |
 |---|---|---|
 | Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, APScheduler, cryptography, pytest, ruff |
-| Frontend | **TypeScript** (`strict`) | React + Vite, React Router, Recharts, ESLint + Prettier |
+| Frontend | **TypeScript** (`strict`) | React + Vite, React Router, ESLint + Prettier. Gráficos en CSS como la maqueta (Recharts solo si hace falta en la Fase 3) |
 | Base de datos | **SQL** | PostgreSQL 16 |
 | Infraestructura | YAML, Batch, Bash | Docker Compose, scripts `.bat` (Windows) y `.command` (Mac) |
 
@@ -90,7 +90,7 @@
 7. Ante un error: pide la salida exacta (`docker compose ps`, `docker compose logs app --tail 100`, la traza de `pytest`, la consola del navegador), encuentra la **causa raíz**, explícala en 1-2 frases y corrige.
 
 ### Al terminar la fase
-8. Repasa los **criterios de "hecho"** de la fase uno a uno, con Gerard.
+8. Repasa los **criterios de "hecho"** de la fase uno a uno, con Gerard. Los que necesitan **datos reales o probar a fondo el uso** no se hacen al cerrar cada fase: se apuntan como *aplazados* en `docs/fases/FASE_<n>.md` y en el pendiente 11 de DISENO, y se revisan todos juntos al final (decisión de Gerard, Fase 1c). Los tests, el lint y el build sí se pasan en cada fase.
 9. Entrega las actualizaciones de documentación:
    - **`CHANGELOG.md`:** una entrada nueva para la fase (sección 9).
    - **`README.md`:** estado del roadmap (⬜ → ✅) y lo que cambie en instalación o uso.
@@ -119,9 +119,10 @@
 | 1a | `GET/POST/PATCH /api/accounts` · `GET /api/accounts/{id}` | Cuentas del usuario (404 si es de otro) |
 | 1b | `POST /api/imports` (multipart: `account_id` + archivo, máx. 5 MB) | Importar extracto → `{read, new, duplicates, review, internal, errors, warnings, closing_balance, closing_date}` (`errors`: lista de `{row, field, value, message}`) |
 | 1b | `POST /api/transactions` | Alta manual de un movimiento (filas que no se han podido leer); busca pareja de transferencia |
-| 1c | `GET /api/transactions?month=&q=&category=&status=` · `PATCH /{id}` · `DELETE /{id}` | Movimientos |
-| 1c | `GET/POST/PATCH/DELETE /api/categories` · `/api/rules` · `POST /api/rules/apply` | Categorías y reglas |
-| 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos |
+| 1c | `GET /api/transactions?month=&q=&category=&status=&account=&limit=&offset=` → `{items, total}` · `PATCH /{id}` · `DELETE /{id}` | Movimientos (`status`: `review` / `auto` / `manual` / `internal`; `limit=0` = solo el total) |
+| 1c | `GET/POST/PATCH/DELETE /api/categories` | Categorías (con cuántos movimientos y reglas tiene cada una) |
+| 1c | `GET/POST/PATCH/DELETE /api/rules` · `POST /api/rules/apply?include_auto=` | Reglas. `POST` crea o sustituye la regla con el mismo texto (lo usa «¿Aplicar siempre?») |
+| 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos (sin `month`: el del último movimiento) |
 | 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual |
 | 2 | `GET/PUT /api/budgets` · `GET /api/alerts` · `GET /api/recurring` · `GET/PUT /api/goals` | Control del gasto |
 | 3 | `GET /api/products/search?q=` · `GET/POST/PATCH /api/products` | Productos |
