@@ -241,7 +241,7 @@ export const api = {
   updateRule: (id: number, changes: Partial<Pick<Rule, 'pattern' | 'category_id' | 'priority'>>) =>
     request<Rule>(`/api/rules/${id}`, { method: 'PATCH', body: changes }),
   deleteRule: (id: number) => request<void>(`/api/rules/${id}`, { method: 'DELETE' }),
-    backupStatus: () => request<BackupStatus>('/api/backups/status'),
+  backupStatus: () => request<BackupStatus>('/api/backups/status'),
   runBackup: () => request<BackupRun>('/api/backups/run', { method: 'POST' }),
   applyRules: (includeAuto: boolean) =>
     request<RulesApplied>(`/api/rules/apply${queryString({ include_auto: includeAuto })}`, {
