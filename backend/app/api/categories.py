@@ -131,7 +131,10 @@ def update_category(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"El campo {field} no puede ir vacío"
             )
         setattr(category, field, value)
+    if category.kind == "income":
+        category.monthly_budget = None  # las categorías de ingreso no tienen presupuesto
     _commit_or_duplicate(db)
+    
     tx_counts, rule_counts = _counts(db, user)
     return _out(category, tx_counts, rule_counts)
 

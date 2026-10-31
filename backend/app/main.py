@@ -14,6 +14,7 @@ from app.api import (
     accounts,
     auth,
     backups,
+    budgets,
     categories,
     dashboard,
     imports,
@@ -55,6 +56,7 @@ app.include_router(categories.router)
 app.include_router(rules.router)
 app.include_router(dashboard.router)
 app.include_router(backups.router)
+app.include_router(budgets.router)
 
 
 @app.exception_handler(RequestValidationError)
