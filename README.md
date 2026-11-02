@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 1d terminada** (backups y accesos directos): además de importar los extractos de imagin y Wise, categorizarlos y ver las pestañas **Patrimonio** y **Movimientos**, Caudal hace **copias cifradas** solas en el pendrive y en OneDrive, enseña su estado en la cabecera y se abre y se cierra con **doble clic**. Siguiente: Fase 2 (control del gasto). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 2 terminada** (control del gasto): además de importar los extractos de imagin y Wise, categorizarlos y hacer copias cifradas, Caudal tiene **presupuestos por categoría**, **avisos**, **pagos recurrentes**, **objetivo de patrimonio con hitos** y **selector de mes** en las pestañas Patrimonio y Movimientos. Siguiente: Fase 3 (patrimonio e inversiones). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -53,7 +53,8 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - Importar extractos en Excel, tal cual los da el banco, **sin duplicados**, aunque se importe dos veces lo mismo.
 - Categorización automática por reglas y pantalla para revisar lo dudoso (por ejemplo, los Bizum).
 - Detección de **transferencias entre tus propias cuentas**, para que no cuenten como gasto.
-- Ingresos vs gastos, gasto por categoría, presupuestos con avisos y pagos recurrentes.
+- Ingresos vs gastos, gasto por categoría y **selector de mes**.
+- Presupuestos por categoría (OK / Al límite / Superado), avisos y pagos recurrentes detectados automáticamente.
 - Alta, edición y borrado de movimientos a mano.
 
 **3. Inversiones**
@@ -344,7 +345,7 @@ caudal/
 | 1b | Importadores de imagin y Wise | ✅ |
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ✅ |
 | 1d | Backups + accesos directos | ✅ |
-| 2 | Presupuestos, avisos, recurrentes, objetivos | ⬜ |
+| 2 | Presupuestos, avisos, recurrentes, objetivos | ✅ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ⬜ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
@@ -357,7 +358,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

@@ -124,7 +124,7 @@
 | 1c | `GET/POST/PATCH/DELETE /api/rules` · `POST /api/rules/apply?include_auto=` | Reglas. `POST` crea o sustituye la regla con el mismo texto (lo usa «¿Aplicar siempre?») |
 | 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos (sin `month`: el del último movimiento) |
 | 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual (los backups son de la BD entera: cualquier usuario con sesión ve el mismo estado; 409 si falta la contraseña o hay otro en marcha) |
-| 2 | `GET/PUT /api/budgets` · `GET /api/alerts` · `GET /api/recurring` · `GET/PUT /api/goals` | Control del gasto |
+| 2 | `GET/PUT /api/budgets?month=` · `GET /api/alerts?month=` · `GET /api/recurring?month=` · `GET/PUT/DELETE /api/goals` | Control del gasto (sin `month`: el del último movimiento). `PUT /api/budgets` recibe `{items: [{category_id, amount}]}` y `amount: null` quita el presupuesto; `PUT /api/goals` recibe `{name, target_amount}` |
 | 3 | `GET /api/products/search?q=` · `GET/POST/PATCH /api/products` | Productos |
 | 3 | `GET/POST/PATCH/DELETE /api/investments/operations` · `POST /api/investments/import` | Operaciones |
 | 3 | `GET /api/investments/summary` · `GET /api/investments/positions` · `GET /api/investments/benchmark` | Pestaña Inversiones |
@@ -227,6 +227,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Necesito de Gerard:** presupuestos por categoría y objetivo de patrimonio (puede ser aproximado).
 - **Entregables:** presupuestos mensuales (OK / Al límite ≥ 90 % / Superado), avisos (presupuesto superado, gasto muy por encima de la media de 3 meses, nuevo recurrente), detección de recurrentes (mismo concepto, importe ±10 %, periodicidad mensual o anual), selector de mes y comparativa con el anterior, objetivo de patrimonio con hitos. Con tests de recurrentes y avisos.
 - **Hecho cuando:** Movimientos y Patrimonio se parecen a la maqueta completa con datos reales.
+  - **Hecho (2026-11-02):** detalle en `docs/fases/FASE_2.md`. Aplazado a la revisión final: la comprobación con datos reales (DISENO §17, pendiente 11).
 - **Mensaje para empezar:** `Empezamos la Fase 2 de Caudal (control del gasto). Sigue CLAUDE.md.`
 
 ---
@@ -235,7 +236,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 - **Prerrequisitos:** 2.
 - **Necesito de Gerard:** la lista de productos que tiene (ISIN o ticker y tipo: ETF o cripto), **sin cantidades**, para probar el buscador y los precios. Opcional: su `cartera.json` de RUMBO **con valores inventados** para probar el importador.
 - **Entregables:**
-  - Modelos `products`, `investment_operations`, `prices`, `manual_valuations`, `goals`; cuentas `mixed` (Trade Republic) e `investment` (Scalable), las dos con **alta manual** (sin importador).
+  - Modelos `products`, `investment_operations`, `prices`, `manual_valuations` (la tabla `goals` ya existe desde la Fase 2); cuentas `mixed` (Trade Republic) e `investment` (Scalable), las dos con **alta manual** (sin importador).
   - `app/prices/`: clientes de Yahoo, Morningstar y CoinGecko con tiempo de espera, reintentos y caché; histórico; tarea cada `PRICE_REFRESH_MIN`; actualización al abrir si los precios tienen más de `PRICE_MAX_AGE_HOURS`; "último precio conocido" + aviso si está desactualizado. Solo se envían identificadores.
   - Buscador por ISIN, ticker o nombre, que comprueba que hay precio antes de guardar.
   - `app/investments/`: FIFO (lotes), plusvalía latente y realizada, **XIRR** (Newton con bisección de respaldo, o `pyxirr`), rentabilidad por año, peor caída, comparativa con IWDA / SXR8 / XEON repitiendo los flujos, TER anual, aportaciones y racha.

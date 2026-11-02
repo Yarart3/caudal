@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 1d terminada (backups cifrados y accesos directos). Siguiente: Fase 2
+- **Estado:** Fase 2 terminada (presupuestos, avisos, recurrentes, objetivo y selector de mes). Siguiente: Fase 3
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -312,7 +312,7 @@ cuentas
   saldo_referencia (NUMERIC), saldo_referencia_fecha
 
 categorias
-  id, usuario_id, nombre, tipo ("gasto" | "ingreso"), color, presupuesto_mensual (Fase 2)
+  id, usuario_id, nombre, tipo ("gasto" | "ingreso"), color, presupuesto_mensual (NUMERIC(12,2) > 0, opcional; solo categorías de gasto)
 
 movimientos
   id, cuenta_id → cuentas, fecha, concepto, importe NUMERIC(12,2),
@@ -345,7 +345,7 @@ valores_manuales        (plan de pensiones, depósitos…)
   id, producto_id, fecha, valor_eur, aportado_eur (nullable)
 
 objetivos
-  id, usuario_id, importe_meta, nombre
+  id, usuario_id (único: un objetivo por usuario), importe_meta NUMERIC(12,2) > 0, nombre, actualizado_en
 
 registro_backups
   id, fecha_hora, destino ("pendrive" | "onedrive"), resultado ("ok" | "error"), mensaje
@@ -404,8 +404,13 @@ Sin esa confirmación **no** se emparejan (decisión de la Fase 1b): un pago con
 
 Las categorías y reglas iniciales se crean para cada usuario al crearlo (asistente de primer arranque). Los usuarios que ya existían antes de la Fase 1c las recibieron con la migración `0002`.
 
-### 9.5 Pagos recurrentes (Fase 2)
-Mismo concepto e importe parecido (±10 %) con periodicidad mensual o anual → pago recurrente, con el total al mes.
+### 9.5 Presupuestos, avisos, recurrentes y objetivo (Fase 2)
+Todo se **calcula al pedirlo** (no hay tablas de avisos ni de recurrentes) y excluye las transferencias internas.
+- **Presupuesto:** fijo por categoría de gasto. Estado según lo gastado en el mes: **OK** (< 90 %), **Al límite** (90 % a 100 %), **Superado** (> 100 %). Una categoría de ingreso no tiene presupuesto.
+- **Pagos recurrentes:** se agrupan por concepto normalizado (mayúsculas, sin acentos, sin palabras con números). Importe dentro de ±10 % de la mediana y un pago por día. **Mensual:** al menos 3 pagos con huecos de 25 a 35 días y el último hace ≤ 62 días. **Anual:** al menos 2 pagos con huecos de 350 a 380 días y el último hace ≤ 400 días. Se excluyen los conceptos con una regla sin categoría (Bizum). Se dan el total al mes (los anuales, entre 12), el próximo pago y si es **nuevo** en el mes elegido.
+- **Avisos** (por este orden): presupuesto superado · gasto alto (categoría con más de 1,5× la media de los hasta 3 meses anteriores con datos y al menos 30 € más; no se repite si ya superó su presupuesto) · cambio del gasto frente al mes anterior · recurrente nuevo · total de recurrentes.
+- **Objetivo de patrimonio:** uno por usuario. Porcentaje redondeado hacia abajo (mínimo 0), lo que falta (mínimo 0) e hitos de 1.000, 2.500, 5.000, 10.000, 25.000, 50.000, 100.000, 250.000, 500.000 y 1.000.000 €; se enseñan los 3 siguientes.
+- **Selector de mes:** `?mes=AAAA-MM` en la URL. Sin él, el mes del último movimiento.
 
 ---
 
@@ -522,7 +527,7 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 **Decisiones de implementación (Fase 1c):**
 - **Reglas por palabra entera**, con prioridades y reglas sin categoría para Bizum (sección 9.4). Migración `0002`: `rules.category_id` pasa a ser opcional y crea la semilla de los usuarios que ya existían.
 - **Saldo de una cuenta a una fecha D** (se calcula, no se guarda): `saldo de referencia + S(D) − S(fecha de referencia)`, donde `S(x)` es la suma de sus movimientos hasta `x`. Funciona hacia delante y hacia atrás. Una cuenta sin saldo de referencia (a mano) suma todos sus movimientos. Antes del primer extracto, la evolución enseña el saldo con el que empezaba ese extracto.
-- **Mes de los paneles:** el del último movimiento del usuario (si importas septiembre en octubre, ves septiembre). El selector de mes llega en la Fase 2.
+- **Mes de los paneles:** el del último movimiento del usuario (si importas septiembre en octubre, ves septiembre). El selector de mes (`?mes=AAAA-MM`) se añadió en la Fase 2.
 - **Devoluciones como ingreso** (sección 9.1).
 - **Gráficos en CSS**, como la maqueta, sin Recharts: son barras y donuts sencillos y así no se añade ninguna dependencia.
 - **Rutas del frontend:** `/patrimonio`, `/movimientos`, `/movimientos/importar`, `/movimientos/revisar`, `/inversiones` y `/ajustes`. `/panel` e `/importar` redirigen a las nuevas.
@@ -690,7 +695,7 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 ### Fase 2: control del gasto
 - Presupuestos (OK / Al límite ≥ 90 % / Superado), avisos y pagos recurrentes.
 - Selector de mes y comparativa con el anterior. Objetivo de patrimonio con hitos.
-- **Hecho cuando:** Movimientos se parece a la maqueta completa con datos reales.
+- **Hecho (2026-11-02):** detalle en `docs/fases/FASE_2.md`. Aplazado a la revisión final: comprobar con datos reales que Movimientos y Patrimonio se parecen a la maqueta completa (sección 17, pendiente 11).
 
 ### Fase 3: patrimonio e inversiones (Gerard)
 - Tablas de inversiones (sección 8.4), cuentas **mixtas** (Trade Republic) y de **inversión** (Scalable).
@@ -758,12 +763,12 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 3 | ~~Qué exportan Trade Republic y Scalable~~ → se llevan a mano (sección 6.3) | ✅ Fase 0 |
 | 4 | Ejemplos de CaixaBank y Sabadell | Antes de la Fase 4 |
 | 5 | ~~Confirmar las categorías iniciales~~ → se quedan las de la sección 9.4 | ✅ Fase 1c |
-| 6 | Objetivo de patrimonio de cada usuario | Fase 2 |
+| 6 | ~~Objetivo de patrimonio de cada usuario~~ → cada usuario lo pone en Patrimonio → Objetivo | ✅ Fase 2 |
 | 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
 | 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`), separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev`, elegir la `BACKUP_PASSWORD` definitiva y apuntarla en papel | Antes del primer uso real (revisión final) |
 | 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
-| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar). **1d** → restauración completa desde el **pendrive real** y desde OneDrive en el PC; con el pendrive desconectado, aviso y OneDrive sigue; los cuatro `.bat` en el PC (primero, el pendrive: pendiente 12) | Antes del 1.0 |
+| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar). **1d** → restauración completa desde el **pendrive real** y desde OneDrive en el PC; con el pendrive desconectado, aviso y OneDrive sigue; los cuatro `.bat` en el PC (primero, el pendrive: pendiente 12). **2** → con extractos reales, Movimientos y Patrimonio se parecen a la maqueta; los Bizum no salen como recurrentes; los umbrales de los avisos (1,5× la media y 30 €) y la ventana de recurrentes (62 días) son razonables | Antes del 1.0 |
 | 12 | En Windows, comprobar que Docker Desktop (WSL2) monta el pendrive (`E:\CaudalBackups`) como el disco `C:`. Si sale «Pendrive ✗» con el pendrive conectado, cambiar el script para que copie el backup de OneDrive al pendrive en lugar de montarlo | Revisión final, en el PC |
 
 ---
