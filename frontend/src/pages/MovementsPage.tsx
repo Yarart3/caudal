@@ -8,14 +8,18 @@ import {
   type TransactionFilters,
 } from '../api';
 import { AppShell } from '../AppShell';
+import { AlertsCard } from '../components/AlertsCard';
+import { BudgetsCard } from '../components/BudgetsCard';
 import { CategorySelect } from '../components/CategorySelect';
 import { MovementsSummary } from '../components/MovementsSummary';
+import { RecurringCard } from '../components/RecurringCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { TransactionDialog } from '../components/TransactionDialog';
 import { onDataChanged } from '../events';
 import { formatDate, formatMonth, formatSigned, recentMonths } from '../format';
 import { useDebounced } from '../hooks/useDebounced';
 import { useLookups } from '../hooks/useLookups';
+import { useMonthParam } from '../hooks/useMonthParam';
 
 const PAGE_SIZE = 100;
 const MONTHS = recentMonths(24);
@@ -45,6 +49,7 @@ type Editing = null | 'new' | Transaction;
  */
 export function MovementsPage() {
   const navigate = useNavigate();
+  const [month, setMonth] = useMonthParam();
   const { lookups, error: lookupError } = useLookups();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const q = useDebounced(filters.q.trim(), 300);
@@ -144,7 +149,12 @@ export function MovementsPage() {
         </div>
       )}
 
-      <MovementsSummary />
+      <MovementsSummary month={month} onMonth={setMonth} />
+      <section className="r2e">
+        <BudgetsCard month={month} />
+        <AlertsCard month={month} />
+      </section>
+      <RecurringCard month={month} />
       <section className="card panel">
         <div className="between">
           <h2>Movimientos</h2>

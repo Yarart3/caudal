@@ -176,6 +176,80 @@ export type Cashflow = {
   by_category: CategorySpend[];
 };
 
+export type BudgetStatus = 'ok' | 'near' | 'over';
+
+export type BudgetLine = {
+  category_id: number;
+  name: string;
+  color: string;
+  budget: string | null; // null = sin presupuesto
+  spent: string;
+  remaining: string | null;
+  percent: number | null;
+  status: BudgetStatus | null;
+};
+
+export type Budgets = {
+  month: string;
+  total_budget: string;
+  total_spent: string;
+  lines: BudgetLine[]; // todas las categorías de gasto; las que tienen presupuesto, primero
+};
+
+/** amount null = quitar el presupuesto de esa categoría. */
+export type BudgetChange = { category_id: number; amount: string | null };
+
+export type AlertLevel = 'danger' | 'warning' | 'positive' | 'info';
+
+export type Alert = {
+  kind: 'budget_over' | 'spending_high' | 'expense_change' | 'recurring_new' | 'recurring_total';
+  level: AlertLevel;
+  title: string;
+  message: string;
+  category_id: number | null;
+  amount: string | null;
+};
+
+export type Alerts = { month: string; items: Alert[] };
+
+export type RecurringPayment = {
+  key: string;
+  description: string;
+  frequency: 'monthly' | 'annual';
+  amount: string;
+  monthly_amount: string;
+  occurrences: number;
+  first_date: string;
+  last_date: string;
+  next_date: string;
+  detected_on: string;
+  is_new: boolean;
+  category_id: number | null;
+  category_name: string;
+  category_color: string;
+  account_name: string;
+};
+
+export type RecurringSummary = {
+  month: string;
+  monthly_total: string;
+  items: RecurringPayment[];
+};
+
+export type Milestone = { amount: string; reached: boolean };
+
+export type Goal = {
+  month: string;
+  net_worth: string;
+  name: string | null; // null = sin objetivo
+  target_amount: string | null;
+  percent: number | null;
+  remaining: string | null;
+  last_milestone: string | null;
+  next_milestones: string[];
+  milestones: Milestone[];
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -186,7 +260,7 @@ export class ApiError extends Error {
   }
 }
 
-type RequestOptions = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
+type RequestOptions = { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown };
 
 // Aviso de "la sesión ya no vale" (401). Lo registra AuthProvider para volver a "¿Quién entra?".
 // El login no cuenta: ahí un 401 es "contraseña incorrecta".
@@ -289,6 +363,19 @@ export const api = {
     request<NetWorth>(`/api/dashboard/net-worth${queryString({ month })}`),
   cashflow: (month?: string) =>
     request<Cashflow>(`/api/dashboard/cashflow${queryString({ month })}`),
+  budgets: (month?: string) => request<Budgets>(`/api/budgets${queryString({ month })}`),
+  saveBudgets: (items: BudgetChange[], month?: string) =>
+    request<Budgets>(`/api/budgets${queryString({ month })}`, { method: 'PUT', body: { items } }),
+  alerts: (month?: string) => request<Alerts>(`/api/alerts${queryString({ month })}`),
+  recurring: (month?: string) =>
+    request<RecurringSummary>(`/api/recurring${queryString({ month })}`),
+  goal: (month?: string) => request<Goal>(`/api/goals${queryString({ month })}`),
+  saveGoal: (name: string, targetAmount: string, month?: string) =>
+    request<Goal>(`/api/goals${queryString({ month })}`, {
+      method: 'PUT',
+      body: { name, target_amount: targetAmount },
+    }),
+  deleteGoal: () => request<void>('/api/goals', { method: 'DELETE' }),
   backupStatus: () => request<BackupStatus>('/api/backups/status'),
   runBackup: () => request<BackupRun>('/api/backups/run', { method: 'POST' }),
   applyRules: (includeAuto: boolean) =>

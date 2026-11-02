@@ -3,9 +3,12 @@ import { api } from '../api';
 import { AppShell } from '../AppShell';
 import { useAuth } from '../auth/AuthContext';
 import { Donut, EntityBars, NetWorthChart, type Slice } from '../components/Charts';
+import { GoalCard } from '../components/GoalCard';
 import { Kpi } from '../components/Kpi';
+import { MonthSelect } from '../components/MonthSelect';
 import { formatEurRounded, formatSignedRounded, monthName } from '../format';
 import { useDashboard } from '../hooks/useDashboard';
+import { useMonthParam } from '../hooks/useMonthParam';
 
 const loadNetWorth = (month?: string) => api.netWorth(month);
 
@@ -13,7 +16,8 @@ const loadNetWorth = (month?: string) => api.netWorth(month);
 export function PanelPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, error } = useDashboard(loadNetWorth);
+  const [month, setMonth] = useMonthParam();
+  const { data, error } = useDashboard(loadNetWorth, month);
 
   return (
     <AppShell title="Patrimonio" current="Patrimonio" tabs>
@@ -49,6 +53,7 @@ export function PanelPage() {
 
       {data && data.accounts.length > 0 && (
         <>
+          <MonthSelect month={data.month} onChange={setMonth} />
           <section className="k4">
             <Kpi
               label="Patrimonio neto"
@@ -85,6 +90,7 @@ export function PanelPage() {
               <h2>Reparto por tipo</h2>
               <TypeDonut byType={data.by_type} />
             </div>
+            <GoalCard month={month} />
           </section>
         </>
       )}

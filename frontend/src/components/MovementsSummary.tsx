@@ -3,13 +3,20 @@ import { useDashboard } from '../hooks/useDashboard';
 import { addMonths, formatEurRounded, monthName } from '../format';
 import { Donut, IncomeExpenseChart } from './Charts';
 import { Kpi } from './Kpi';
+import { MonthSelect } from './MonthSelect';
 
 // Fuera del componente: useDashboard necesita una función estable
 const loadCashflow = (month?: string) => api.cashflow(month);
 
 /** Parte de arriba de Movimientos: 4 indicadores, ingresos vs gastos y gasto por categoría.
  * Sin transferencias internas (DISENO 9.1). */
-export function MovementsSummary({ month }: { month?: string }) {
+export function MovementsSummary({
+  month,
+  onMonth,
+}: {
+  month?: string;
+  onMonth: (month: string) => void;
+}) {
   const { data, error } = useDashboard(loadCashflow, month);
 
   if (error) {
@@ -25,6 +32,7 @@ export function MovementsSummary({ month }: { month?: string }) {
   const change = data.expense_change;
   return (
     <>
+      <MonthSelect month={data.month} onChange={onMonth} />
       <section className="k4">
         <Kpi
           label="Dinero en cuentas"

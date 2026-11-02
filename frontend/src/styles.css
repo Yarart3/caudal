@@ -980,3 +980,69 @@ td {
     min-width: 18px;
   }
 }
+
+/* --- Presupuestos, avisos, recurrentes y objetivo (Fase 2, parte 2.6b) --- */
+.month-select {
+  gap: 8px;
+}
+
+.month-select select {
+  min-width: 190px;
+}
+
+.budget-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alert-row {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.budget-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 52vh;
+  padding-right: 4px;
+}
+
+.budget-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 150px);
+  align-items: center;
+  gap: 12px;
+}
+
+.budget-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .r2e {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .month-select select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--soft);
+}
