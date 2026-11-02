@@ -132,6 +132,50 @@ export type BackupStatus = {
 
 export type BackupRun = { ok: boolean; filename: string; status: BackupStatus };
 
+// Paneles (Fase 1c, parte 1.5). `month` = "AAAA-MM"; sin él, el mes del último movimiento.
+export type AccountBalance = {
+  id: number;
+  name: string;
+  kind: Account['kind'];
+  liquidity_type: Account['liquidity_type'];
+  balance: string;
+};
+
+export type NetWorthMonth = { month: string; liquidity: string; investments: string };
+
+export type NetWorth = {
+  month: string;
+  net_worth: string;
+  liquidity: string;
+  investments: string; // Fase 3: de momento siempre 0
+  savings: string; // ingresos − gastos del mes
+  accounts: AccountBalance[];
+  by_type: Record<Account['liquidity_type'], string>;
+  history: NetWorthMonth[]; // 12 meses, del más antiguo al elegido
+};
+
+export type CashflowMonth = { month: string; income: string; expense: string };
+
+export type CategorySpend = {
+  category_id: number | null; // null = sin categoría
+  name: string;
+  color: string;
+  amount: string;
+};
+
+export type Cashflow = {
+  month: string;
+  cash_total: string;
+  income: string;
+  expense: string; // en positivo
+  savings: string;
+  savings_rate: number | null; // % entero; null si no hay ingresos
+  previous_expense: string;
+  expense_change: number | null; // % frente al mes anterior; null si el anterior no tiene gastos
+  history: CashflowMonth[];
+  by_category: CategorySpend[];
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -241,6 +285,10 @@ export const api = {
   updateRule: (id: number, changes: Partial<Pick<Rule, 'pattern' | 'category_id' | 'priority'>>) =>
     request<Rule>(`/api/rules/${id}`, { method: 'PATCH', body: changes }),
   deleteRule: (id: number) => request<void>(`/api/rules/${id}`, { method: 'DELETE' }),
+  netWorth: (month?: string) =>
+    request<NetWorth>(`/api/dashboard/net-worth${queryString({ month })}`),
+  cashflow: (month?: string) =>
+    request<Cashflow>(`/api/dashboard/cashflow${queryString({ month })}`),
   backupStatus: () => request<BackupStatus>('/api/backups/status'),
   runBackup: () => request<BackupRun>('/api/backups/run', { method: 'POST' }),
   applyRules: (includeAuto: boolean) =>

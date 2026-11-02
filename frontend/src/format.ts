@@ -13,6 +13,19 @@ export function formatEur(amount: string): string {
   return eur.format(Number(amount));
 }
 
+const eurRounded = new Intl.NumberFormat('es-ES', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  useGrouping: 'always',
+});
+
+/** "1234.56" → "1.235 €": sin céntimos, para los indicadores y los gráficos (como la maqueta). */
+export function formatEurRounded(amount: string): string {
+  return eurRounded.format(Number(amount));
+}
+
 /** "2026-09-29" → "29/09/2026" */
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
@@ -57,6 +70,32 @@ export function formatMonth(month: string): string {
   const [year, number] = month.split('-').map(Number);
   const text = monthNames.format(new Date(year, number - 1, 1)).replace(' de ', ' ');
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const monthLong = new Intl.DateTimeFormat('es-ES', { month: 'long' });
+
+/** "2026-08" → "agosto" */
+export function monthName(month: string): string {
+  const [year, number] = month.split('-').map(Number);
+  return monthLong.format(new Date(year, number - 1, 1));
+}
+
+/** "2026-09" → "Sep" (las tres primeras letras: Intl da «sept.» para septiembre). */
+export function formatMonthShort(month: string): string {
+  const name = monthName(month);
+  return name.charAt(0).toUpperCase() + name.slice(1, 3);
+}
+
+/** "2026-01" y -1 → "2025-12": suma (o resta) meses a un "AAAA-MM". */
+export function addMonths(month: string, count: number): string {
+  const [year, number] = month.split('-').map(Number);
+  const d = new Date(year, number - 1 + count, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** "120.4" → "+120 €" · "-35" → "-35 €": sin céntimos y con el + de los positivos. */
+export function formatSignedRounded(amount: string): string {
+  return Number(amount) > 0 ? `+${formatEurRounded(amount)}` : formatEurRounded(amount);
 }
 
 /** Los últimos `count` meses hasta el actual, del más reciente al más antiguo ("AAAA-MM"). */

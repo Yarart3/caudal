@@ -819,3 +819,164 @@ td {
 .backup-mark.bad {
   color: var(--bad);
 }
+
+/* --- Indicadores y gráficos (Fase 1c, parte 1.5; como en la maqueta) --- */
+.k4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.r2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.kpi {
+  gap: 8px;
+  padding: 18px;
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-hint {
+  font-size: 13px;
+}
+
+.legend {
+  font-size: 13px;
+  gap: 16px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.bar-col {
+  flex: 1 1 0;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  height: 190px;
+  width: 100%;
+  border-bottom: 1px solid var(--line);
+}
+
+.bar-pair div {
+  width: 40%;
+  max-width: 16px;
+  border-radius: 3px 3px 0 0;
+}
+
+.stackbar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 200px;
+  width: 70%;
+  max-width: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.bar-label.on {
+  color: var(--ink);
+}
+
+.donut {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.donut-in {
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 160px;
+  font-size: 14px;
+}
+
+.donut-legend li {
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.entity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 1180px) {
+  .k4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .r2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .k4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Que quepan los 12 meses sin desplazarse (y se vea el mes elegido, que es el último) */
+  .bars {
+    gap: 4px !important;
+  }
+
+  .bar-col {
+    min-width: 18px;
+  }
+}

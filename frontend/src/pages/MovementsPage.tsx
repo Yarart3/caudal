@@ -9,6 +9,7 @@ import {
 } from '../api';
 import { AppShell } from '../AppShell';
 import { CategorySelect } from '../components/CategorySelect';
+import { MovementsSummary } from '../components/MovementsSummary';
 import { StatusBadge } from '../components/StatusBadge';
 import { TransactionDialog } from '../components/TransactionDialog';
 import { onDataChanged } from '../events';
@@ -39,8 +40,8 @@ type Loaded = { key: string; items: Transaction[]; total: number };
 type Editing = null | 'new' | Transaction;
 
 /**
- * Pestaña Movimientos (Fase 1c, parte 1.4): tabla con buscador y filtros, alta, edición y
- * borrado. Los indicadores y gráficos de arriba llegan en la parte 1.5.
+ * Pestaña Movimientos (DISENO 3.2): indicadores y gráficos del mes (MovementsSummary) y tabla
+ * con buscador y filtros, alta, edición y borrado.
  */
 export function MovementsPage() {
   const navigate = useNavigate();
@@ -143,6 +144,7 @@ export function MovementsPage() {
         </div>
       )}
 
+      <MovementsSummary />
       <section className="card panel">
         <div className="between">
           <h2>Movimientos</h2>
