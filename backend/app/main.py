@@ -18,6 +18,7 @@ from app.api import (
     categories,
     dashboard,
     imports,
+    recurring,
     rules,
     setup,
     transactions,
@@ -57,6 +58,7 @@ app.include_router(rules.router)
 app.include_router(dashboard.router)
 app.include_router(backups.router)
 app.include_router(budgets.router)
+app.include_router(recurring.router)
 
 
 @app.exception_handler(RequestValidationError)
