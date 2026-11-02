@@ -179,6 +179,14 @@ def test_weekly_purchases_are_not_recurring(
     assert _get(gerard)["items"] == []
 
 
+def test_very_different_amounts_do_not_fail(
+    gerard: TestClient, db: Session, account: Account
+) -> None:
+    # Mediana 22,50: ni 10 ni 35 quedan a ±10 % (antes daba un error 500)
+    _add(db, account, "2026-08-05", "CINE", "-10.00")
+    _add(db, account, "2026-09-05", "CINE", "-35.00")
+    assert _get(gerard)["items"] == []
+
 def test_irregular_gaps_are_not_monthly(gerard: TestClient, db: Session, account: Account) -> None:
     _add(db, account, "2026-05-10", "PELUQUERIA", "-15.00")
     _add(db, account, "2026-07-10", "PELUQUERIA", "-15.00")

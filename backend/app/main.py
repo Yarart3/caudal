@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import (
     accounts,
+    alerts,
     auth,
     backups,
     budgets,
@@ -59,6 +60,7 @@ app.include_router(dashboard.router)
 app.include_router(backups.router)
 app.include_router(budgets.router)
 app.include_router(recurring.router)
+app.include_router(alerts.router)
 
 
 @app.exception_handler(RequestValidationError)

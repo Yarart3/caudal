@@ -135,6 +135,8 @@ def _detect(
     key: str, payments: list[_Payment], end: date, first_day: date, categories: dict
 ) -> RecurringPayment | None:
     cluster = _cluster(payments)
+    if not cluster:  # importes tan distintos que ninguno queda a ±10 % de la mediana
+        return None
     for pattern in PATTERNS:
         chain = _chain(cluster, pattern)
         if len(chain) < pattern.min_count:
