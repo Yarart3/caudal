@@ -18,6 +18,7 @@ from app.api import (
     budgets,
     categories,
     dashboard,
+    goals,
     imports,
     recurring,
     rules,
@@ -61,6 +62,7 @@ app.include_router(backups.router)
 app.include_router(budgets.router)
 app.include_router(recurring.router)
 app.include_router(alerts.router)
+app.include_router(goals.router)
 
 
 @app.exception_handler(RequestValidationError)

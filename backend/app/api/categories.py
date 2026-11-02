@@ -134,7 +134,7 @@ def update_category(
     if category.kind == "income":
         category.monthly_budget = None  # las categorías de ingreso no tienen presupuesto
     _commit_or_duplicate(db)
-    
+
     tx_counts, rule_counts = _counts(db, user)
     return _out(category, tx_counts, rule_counts)
 

@@ -187,6 +187,7 @@ def test_very_different_amounts_do_not_fail(
     _add(db, account, "2026-09-05", "CINE", "-35.00")
     assert _get(gerard)["items"] == []
 
+
 def test_irregular_gaps_are_not_monthly(gerard: TestClient, db: Session, account: Account) -> None:
     _add(db, account, "2026-05-10", "PELUQUERIA", "-15.00")
     _add(db, account, "2026-07-10", "PELUQUERIA", "-15.00")
