@@ -12,7 +12,7 @@
 | 3.2c | Refresco automático (al abrir y cada `PRICE_REFRESH_MIN`) y `GET /api/prices/status` · `POST /api/prices/refresh` | ✅ |
 | 3.3a | API de productos: buscador, vista previa del precio, alta (comprueba el precio), edición y borrado | ✅ |
 | 3.3b | API de operaciones: compra, venta, dividendo y comisión, sin vender más de lo que se tiene | ✅ |
-| 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ⬜ |
+| 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ✅ |
 | 3.3d | Pantallas: cuentas de Trade Republic y Scalable, productos y «+ Añadir compra / venta» con «duplicar» | ⬜ |
 | 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
@@ -40,5 +40,8 @@
 - Compras y ventas llevan participaciones; dividendos y comisiones, no. La fecha no puede ser futura y la comisión no puede superar el importe.
 - «Duplicar operación» lo hace el formulario copiando los campos: no hay API propia.
 - Las participaciones viajan en el JSON con 8 decimales fijos (`0.00000012`), nunca en notación científica.
+- Plantilla: el producto tiene que existir antes (crear productos desde la plantilla obligaría a adivinar el símbolo de Xetra). El `.xlsx` trae la hoja «Operaciones» vacía, instrucciones y un ejemplo inventado en otra hoja, que no se importa.
+- Importar: vista previa sin guardar y después confirmar; entra todo o nada, con la misma validación que el formulario y la comprobación de ventas. Huella por fila: el mismo archivo dos veces no duplica, y dos filas idénticas del mismo archivo entran las dos.
+- Las operaciones escritas a mano no tienen huella: si luego se importa ese mismo historial, saldría repetido (la vista previa lo enseña antes de confirmar).
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

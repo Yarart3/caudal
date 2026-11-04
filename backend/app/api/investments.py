@@ -3,81 +3,71 @@
 - GET  /api/investments/operations?account_id=&product_id=  (las más recientes primero)
 - POST /api/investments/operations
 - GET/PATCH/DELETE /api/investments/operations/{id}
+- GET  /api/investments/template?format=xlsx|csv  (plantilla vacía para el historial)
+- POST /api/investments/import  (multipart: account_id, file, confirm)
 
 Importes siempre en positivo; el sentido lo da el tipo: en una compra, lo que salió de la cuenta
 (comisiones incluidas); en una venta o un dividendo, lo que entró; en una comisión suelta, lo que
 se pagó. Las compras y ventas llevan participaciones; los dividendos y las comisiones, no.
-Nunca se puede haber vendido más de lo que había en esa cuenta (se comprueba al crear, editar y
-borrar). "Duplicar operación" lo hace el formulario copiando los campos: no necesita API.
+Nunca se puede haber vendido más de lo que había en esa cuenta (se comprueba al crear, editar,
+borrar e importar). "Duplicar operación" lo hace el formulario copiando los campos.
 Nadie ve ni toca las operaciones de otro usuario.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
-from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from pydantic import (
-    BaseModel,
-    Field,
-    ValidationError,
-    field_serializer,
-    field_validator,
-    model_validator,
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
 )
+from pydantic import BaseModel, ValidationError, field_serializer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth.deps import current_user
+from app.backup.auto import auto_backup
 from app.db import get_db
-from app.investments.holdings import first_shortfall
+from app.importers.base import ImportFormatError
+from app.importers.plantilla_inversiones import build_template
+from app.investments.holdings import first_shortfall, format_shares
+from app.investments.importer import import_template
+from app.investments.operations import (
+    FIELDS,
+    INVESTMENT_ACCOUNTS,
+    TZ,
+    Amount,
+    Fee,
+    OperationCreate,
+    OperationKind,
+    Shares,
+    first_error,
+)
 from app.models import Account, InvestmentOperation, Product, User
+
+__all__ = ["TZ", "router"]
 
 router = APIRouter(prefix="/api/investments", tags=["investments"])
 
 # Alias: dentro de las clases, un campo llamado `date` con valor por defecto taparía al tipo
 Day = date
 
-TZ = ZoneInfo("Europe/Madrid")
-INVESTMENT_ACCOUNTS = ("investment", "mixed")
-
-OperationKind = Literal["buy", "sell", "dividend", "fee"]
-Shares = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=8)]
-Amount = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=2)]
-Fee = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=2)]
-
 NOT_FOUND = "Operación no encontrada"
 ACCOUNT_NOT_FOUND = "Cuenta no encontrada"
 PRODUCT_NOT_FOUND = "Producto no encontrado"
 NOT_AN_INVESTMENT_ACCOUNT = "Esa cuenta no es de inversión (elige Trade Republic, Scalable…)"
-
-
-class OperationCreate(BaseModel):
-    account_id: int
-    product_id: int
-    date: date
-    kind: OperationKind
-    shares: Shares = Decimal(0)
-    amount_eur: Amount
-    fee_eur: Fee | None = None
-
-    @field_validator("date")
-    @classmethod
-    def _not_in_the_future(cls, value: date) -> date:
-        if value > datetime.now(TZ).date():
-            raise ValueError("La fecha no puede ser posterior a hoy")
-        return value
-
-    @model_validator(mode="after")
-    def _shares_and_fee(self):
-        if self.kind in ("buy", "sell") and self.shares <= 0:
-            raise ValueError("Indica cuántas participaciones has comprado o vendido")
-        if self.kind in ("dividend", "fee") and self.shares != 0:
-            raise ValueError("Un dividendo o una comisión no lleva participaciones")
-        if self.fee_eur is not None and self.fee_eur > self.amount_eur:
-            raise ValueError("La comisión no puede ser mayor que el importe")
-        return self
+# La plantilla de un historial largo ocupa unos KB: 2 MB sobra (y frena archivos enormes)
+MAX_BYTES = 2 * 1024 * 1024
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 class OperationUpdate(BaseModel):
@@ -90,6 +80,11 @@ class OperationUpdate(BaseModel):
     shares: Shares | None = None
     amount_eur: Amount | None = None
     fee_eur: Fee | None = None
+
+
+def _plain(value: Decimal) -> str:
+    # Sin notación científica: Decimal("0E-8") o Decimal("1.2E-7") saldrían así en el JSON
+    return format(value, "f")
 
 
 class OperationOut(BaseModel):
@@ -106,11 +101,38 @@ class OperationOut(BaseModel):
 
     @field_serializer("shares")
     def _plain_shares(self, value: Decimal) -> str:
-        # Sin notación científica: Decimal("0E-8") o Decimal("1.2E-7") saldrían así en el JSON
-        return format(value, "f")
+        return _plain(value)
 
 
-FIELDS = ("account_id", "product_id", "date", "kind", "shares", "amount_eur", "fee_eur")
+class RowErrorOut(BaseModel):
+    row: int
+    field: str
+    value: str
+    message: str
+
+
+class PreviewRowOut(BaseModel):
+    row: int
+    date: date
+    product_id: int
+    product_name: str
+    kind: str
+    shares: Decimal
+    amount_eur: Decimal
+    fee_eur: Decimal | None
+
+    @field_serializer("shares")
+    def _plain_shares(self, value: Decimal) -> str:
+        return _plain(value)
+
+
+class ImportOut(BaseModel):
+    read: int
+    new: int
+    duplicates: int
+    saved: bool
+    errors: list[RowErrorOut]
+    operations: list[PreviewRowOut]
 
 
 def _out(db: Session, op: InvestmentOperation) -> OperationOut:
@@ -133,23 +155,23 @@ def _own_operation(db: Session, user: User, operation_id: int) -> InvestmentOper
     return op
 
 
-def _check_refs(db: Session, user: User, account_id: int, product_id: int) -> None:
-    """Cuenta de inversión y producto, los dos del usuario (si son de otro: 404)."""
+def _own_investment_account(db: Session, user: User, account_id: int) -> Account:
     account = db.scalar(select(Account).where(Account.id == account_id, Account.user_id == user.id))
     if account is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=ACCOUNT_NOT_FOUND)
     if account.kind not in INVESTMENT_ACCOUNTS:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=NOT_AN_INVESTMENT_ACCOUNT)
+    return account
+
+
+def _check_refs(db: Session, user: User, account_id: int, product_id: int) -> None:
+    """Cuenta de inversión y producto, los dos del usuario (si son de otro: 404)."""
+    _own_investment_account(db, user, account_id)
     if (
         db.scalar(select(Product.id).where(Product.id == product_id, Product.user_id == user.id))
         is None
     ):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=PRODUCT_NOT_FOUND)
-
-
-def _format_shares(value: Decimal) -> str:
-    text = f"{value.normalize():f}"
-    return text.replace(".", ",")
 
 
 def _commit_if_holdings_ok(db: Session, pairs: set[tuple[int, int]]) -> None:
@@ -163,7 +185,7 @@ def _commit_if_holdings_ok(db: Session, pairs: set[tuple[int, int]]) -> None:
                 status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Venderías más participaciones de las que tienes en esa cuenta: el "
-                    f"{shortfall.date:%d/%m/%Y} quedarían {_format_shares(shortfall.shares)}"
+                    f"{shortfall.date:%d/%m/%Y} quedarían {format_shares(shortfall.shares)}"
                 ),
             )
     db.commit()
@@ -221,13 +243,9 @@ def update_operation(
     try:
         valid = OperationCreate.model_validate(merged)
     except ValidationError as error:
-        first = error.errors()[0]
-        message = first["msg"].removeprefix("Value error, ")
-        if first.get("type") != "value_error":
-            message = (
-                f"Datos no válidos: revisa {first['loc'][-1]}" if first.get("loc") else message
-            )
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=message) from None
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, detail=first_error(error)
+        ) from None
     _check_refs(db, user, valid.account_id, valid.product_id)
     for field, value in valid.model_dump().items():
         setattr(op, field, value)
@@ -245,3 +263,52 @@ def delete_operation(
     db.delete(op)
     _commit_if_holdings_ok(db, {pair})
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/template")
+def download_template(
+    format: Literal["xlsx", "csv"] = "xlsx", _: User = Depends(current_user)
+) -> Response:
+    media = XLSX if format == "xlsx" else "text/csv; charset=utf-8"
+    return Response(
+        content=build_template(format),
+        media_type=media,
+        headers={"Content-Disposition": f'attachment; filename="plantilla_inversiones.{format}"'},
+    )
+
+
+@router.post("/import")
+def import_file(
+    account_id: Annotated[int, Form()],
+    file: Annotated[UploadFile, File()],
+    background: BackgroundTasks,
+    confirm: Annotated[bool, Form()] = False,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> ImportOut:
+    """Sin `confirm`: vista previa (no guarda). Con `confirm=true`: guarda todo o nada; mira
+    `saved` en la respuesta."""
+    account = _own_investment_account(db, user, account_id)
+    data = file.file.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
+        raise HTTPException(
+            status.HTTP_413_CONTENT_TOO_LARGE, detail="El archivo es demasiado grande (máximo 2 MB)"
+        )
+    if not data.strip():
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El archivo está vacío")
+    try:
+        result = import_template(db, user, account, data, confirm)
+    except ImportFormatError as error:
+        db.rollback()
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from None
+    if result.saved and result.new > 0:
+        background.add_task(auto_backup.run_quietly, "import")  # como al importar extractos
+    # El archivo no se guarda en ningún sitio: se descarta al acabar la petición
+    return ImportOut(
+        read=result.read,
+        new=result.new,
+        duplicates=result.duplicates,
+        saved=result.saved,
+        errors=[RowErrorOut(**vars(e)) for e in result.errors],
+        operations=[PreviewRowOut(**vars(o)) for o in result.operations],
+    )

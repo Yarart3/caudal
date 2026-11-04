@@ -248,7 +248,7 @@ ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro�
 
 ### 7.4 Cómo entran los datos
 1. **A mano (vía principal):** formulario "+ Añadir compra / venta" con fecha, cuenta, producto (buscador por ISIN, ticker o nombre), participaciones, importe total en euros y comisión. Se puede **duplicar una operación anterior** para repetir una compra habitual cambiando solo la fecha y las cifras.
-2. **Plantilla de Excel/CSV** propia, sobre todo para cargar el historial de golpe: `fecha; identificador; nombre; tipo_producto; tipo_movimiento; unidades; importe; moneda; comision; nota`.
+2. **Plantilla de Excel/CSV** propia, sobre todo para cargar el historial de golpe: `fecha; identificador; nombre; tipo_producto; tipo_movimiento; unidades; importe; moneda; comision; nota`. Se importa en una cuenta concreta. El `identificador` (ISIN, símbolo de Yahoo o ticker) tiene que ser de un producto ya creado; `nombre`, `tipo_producto` y `nota` son de ayuda y no se guardan. Primero una **vista previa** (qué entra, qué está repetido, qué filas fallan) y luego **confirmar**: entra todo o nada. Importar dos veces el mismo archivo no duplica.
 3. **Posición inicial:** si no se recuerda cada compra antigua, se puede apuntar **una sola operación por producto** con el total de participaciones y el total invertido (o el precio medio del broker) a una fecha. El valor actual y la plusvalía salen exactos; la TIR, aproximada.
 4. ~~Importar desde RUMBO~~: descartado en la Fase 3 (Gerard no ha usado RUMBO).
 

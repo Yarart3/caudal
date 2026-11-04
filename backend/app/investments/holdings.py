@@ -53,3 +53,8 @@ def shares_held(db: Session, account_id: int, product_id: int, on: date | None =
             break
         running += shares if kind == "buy" else -shares
     return running
+
+
+def format_shares(value: Decimal) -> str:
+    """Participaciones para un mensaje: -0,5 (sin ceros de más y con coma decimal)."""
+    return f"{value.normalize():f}".replace(".", ",")
