@@ -11,7 +11,7 @@
 | 3.2b | Migración `0005` (`exchange_rates`) y servicio de precios: histórico, divisas y aviso de precio desactualizado | ✅ |
 | 3.2c | Refresco automático (al abrir y cada `PRICE_REFRESH_MIN`) y `GET /api/prices/status` · `POST /api/prices/refresh` | ✅ |
 | 3.3a | API de productos: buscador, vista previa del precio, alta (comprueba el precio), edición y borrado | ✅ |
-| 3.3b | API de operaciones: compra, venta, dividendo y comisión, sin vender más de lo que se tiene | ⬜ |
+| 3.3b | API de operaciones: compra, venta, dividendo y comisión, sin vender más de lo que se tiene | ✅ |
 | 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ⬜ |
 | 3.3d | Pantallas: cuentas de Trade Republic y Scalable, productos y «+ Añadir compra / venta» con «duplicar» | ⬜ |
 | 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
@@ -36,5 +36,9 @@
 - Productos: al crear uno con precio de Yahoo se comprueba que el símbolo tiene precio y se toma su divisa; si Yahoo no responde, no se guarda. El símbolo no se cambia después (se borra y se crea otro, si no tiene operaciones).
 - El tipo que propone Yahoo es orientativo: Stuttgart da `MUTUALFUND` para un ETF. Decide el usuario.
 - Si se apunta una operación anterior al primer precio guardado, el siguiente refresco descarga el histórico desde esa fecha.
+- Operaciones: no se vende más de lo que hay **en esa cuenta** (comprar en Scalable y vender en Trade Republic no cuadra). El mismo día, las compras cuentan antes que las ventas. Se comprueba al crear, editar y borrar.
+- Compras y ventas llevan participaciones; dividendos y comisiones, no. La fecha no puede ser futura y la comisión no puede superar el importe.
+- «Duplicar operación» lo hace el formulario copiando los campos: no hay API propia.
+- Las participaciones viajan en el JSON con 8 decimales fijos (`0.00000012`), nunca en notación científica.
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).
