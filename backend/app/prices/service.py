@@ -2,6 +2,7 @@
 
 - Histórico diario de cada producto: desde su último precio guardado (se vuelve a pedir ese día,
   por si era de una sesión a medias) o, si no tiene, desde su primera operación o hace un año.
+  Si se apunta una operación anterior al primer precio guardado, se pide desde esa operación.
 - Un símbolo que tengan varios usuarios se descarga una sola vez.
 - Divisas: cada precio se guarda en su divisa (los peniques GBp/GBX, pasados a libras) y los
   tipos de cambio a EUR se guardan aparte, por día (`{DIVISA}EUR=X` de Yahoo, como en RUMBO).
@@ -70,15 +71,19 @@ def fx_symbol(currency: str) -> str:
 
 
 def _product_start(db: Session, product: Product, today: date) -> date:
-    last = db.scalar(select(func.max(Price.date)).where(Price.product_id == product.id))
-    if last is not None:
-        return last
-    first = db.scalar(
+    first_price, last_price = db.execute(
+        select(func.min(Price.date), func.max(Price.date)).where(Price.product_id == product.id)
+    ).one()
+    first_operation = db.scalar(
         select(func.min(InvestmentOperation.date)).where(
             InvestmentOperation.product_id == product.id
         )
     )
-    return first if first is not None else today - timedelta(days=DEFAULT_HISTORY_DAYS)
+    if first_operation is not None and (first_price is None or first_operation < first_price):
+        return first_operation
+    if last_price is not None:
+        return last_price
+    return today - timedelta(days=DEFAULT_HISTORY_DAYS)
 
 
 def _refresh_symbol(
@@ -207,7 +212,7 @@ def price_status(db: Session, user_id: int, now: datetime, max_age: timedelta) -
     products = db.scalars(
         select(Product)
         .where(Product.user_id == user_id, Product.price_source != "manual")
-        .order_by(Product.name, Product.id)
+        .order_by(func.lower(Product.name), Product.id)
     ).all()
     rows: list[ProductPrice] = []
     for product in products:

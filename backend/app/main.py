@@ -21,6 +21,7 @@ from app.api import (
     goals,
     imports,
     prices,
+    products,
     recurring,
     rules,
     setup,
@@ -69,6 +70,7 @@ app.include_router(recurring.router)
 app.include_router(alerts.router)
 app.include_router(goals.router)
 app.include_router(prices.router)
+app.include_router(products.router)
 
 
 @app.exception_handler(RequestValidationError)

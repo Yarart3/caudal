@@ -115,6 +115,37 @@ def test_history_starts_at_the_first_operation(db: Session, make_user) -> None:
     assert yahoo.calls == [("SXR8.DE", date(2021, 3, 15), TODAY)]
 
 
+def test_an_operation_older_than_the_prices_brings_older_history(db: Session, make_user) -> None:
+    user = make_user("gerard")
+    item = product(db, user, "SXR8.DE")
+    db.add(
+        Price(
+            product_id=item.id,
+            date=date(2026, 11, 3),
+            price=Decimal("725"),
+            currency="EUR",
+            source="yahoo",
+        )
+    )
+    account = Account(user_id=user.id, name="Scalable", kind="investment")
+    db.add(account)
+    db.commit()
+    db.add(
+        InvestmentOperation(
+            account_id=account.id,
+            product_id=item.id,
+            date=date(2024, 6, 3),
+            kind="buy",
+            shares=Decimal(1),
+            amount_eur=Decimal("500.00"),
+        )
+    )
+    db.commit()
+    yahoo = FakeYahoo({"SXR8.DE": series("EUR")})
+    refresh_prices(db, yahoo, TODAY, NOW)
+    assert yahoo.calls == [("SXR8.DE", date(2024, 6, 3), TODAY)]
+
+
 def test_refresh_continues_from_the_last_price_and_overwrites_it(db: Session, make_user) -> None:
     item = product(db, make_user("gerard"), "SXR8.DE")
     earlier = NOW - timedelta(days=1)

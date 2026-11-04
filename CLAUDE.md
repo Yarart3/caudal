@@ -129,7 +129,7 @@
 | 1c | `GET /api/dashboard/net-worth?month=` · `GET /api/dashboard/cashflow?month=` | Datos de Patrimonio y Movimientos (sin `month`: el del último movimiento) |
 | 1d | `GET /api/backups/status` · `POST /api/backups/run` | Indicador y backup manual (los backups son de la BD entera: cualquier usuario con sesión ve el mismo estado; 409 si falta la contraseña o hay otro en marcha) |
 | 2 | `GET/PUT /api/budgets?month=` · `GET /api/alerts?month=` · `GET /api/recurring?month=` · `GET/PUT/DELETE /api/goals` | Control del gasto (sin `month`: el del último movimiento). `PUT /api/budgets` recibe `{items: [{category_id, amount}]}` y `amount: null` quita el presupuesto; `PUT /api/goals` recibe `{name, target_amount}` |
-| 3 | `GET /api/products/search?q=` · `GET/POST/PATCH /api/products` | Productos |
+| 3 | `GET /api/products/search?q=` · `GET /api/products/preview?symbol=` · `GET/POST /api/products` · `GET/PATCH/DELETE /api/products/{id}` | Productos: buscador, vista previa del precio y alta (comprueba que hay precio; 502 si Yahoo no responde). El símbolo no se cambia; un producto con operaciones no se borra (409) |
 | 3 | `GET/POST/PATCH/DELETE /api/investments/operations` · `POST /api/investments/import` | Operaciones |
 | 3 | `GET /api/investments/summary` · `GET /api/investments/positions` · `GET /api/investments/benchmark` | Pestaña Inversiones |
 | 3 | `GET /api/prices/status` · `POST /api/prices/refresh` | Último precio de cada producto del usuario (y si está desactualizado) y actualización manual de **sus** productos; 409 si ya hay una actualización en marcha |
@@ -238,13 +238,13 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 
 ### Fase 3: patrimonio e inversiones
 - **Prerrequisitos:** 2.
-- **Necesito de Gerard:** la lista de productos que tiene (ISIN o ticker y tipo: ETF o cripto), **sin cantidades**, para probar el buscador y los precios. Opcional: su `cartera.json` de RUMBO **con valores inventados** para probar el importador.
+- **Necesito de Gerard:** la lista de productos que tiene (ISIN o ticker y tipo: ETF o cripto), **sin cantidades**, para probar el buscador y los precios.
 - **Entregables:**
   - Modelos `products`, `investment_operations`, `prices`, `manual_valuations` (la tabla `goals` ya existe desde la Fase 2); cuentas `mixed` (Trade Republic) e `investment` (Scalable), las dos con **alta manual** (sin importador).
   - `app/prices/`: cliente de Yahoo (Morningstar y CoinGecko solo cuando haya un fondo o una cripto) con tiempo de espera, reintentos y caché; histórico; tarea cada `PRICE_REFRESH_MIN`; actualización al abrir si los precios tienen más de `PRICE_MAX_AGE_HOURS`; "último precio conocido" + aviso si está desactualizado. Solo se envían identificadores.
   - Buscador por ISIN, ticker o nombre, que comprueba que hay precio antes de guardar.
   - `app/investments/`: FIFO (lotes), plusvalía latente y realizada, **XIRR** (Newton con bisección de respaldo, o `pyxirr`), rentabilidad por año, peor caída, comparativa con IWDA / SXR8 / XEON repitiendo los flujos, TER anual, aportaciones y racha.
-  - Formulario "+ Añadir compra / venta" (vía principal) con **duplicar operación**. Importadores: plantilla Excel/CSV (`plantilla_inversiones.py`, para el historial) y `rumbo.py` (`cartera.json`). **No** hay importadores de Trade Republic ni Scalable. Si se copia código de RUMBO: mantener su aviso MIT en `THIRD_PARTY_NOTICES.md`.
+  - Formulario "+ Añadir compra / venta" (vía principal) con **duplicar operación**. Importador: plantilla Excel/CSV (`plantilla_inversiones.py`, para el historial). El de RUMBO (`cartera.json`) se descartó: Gerard no ha usado RUMBO. **No** hay importadores de Trade Republic ni Scalable. Si se copia código de RUMBO: mantener su aviso MIT en `THIRD_PARTY_NOTICES.md`.
   - **Pestaña Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, entidades con invertido + efectivo, reparto por tipo).
   - Tests: FIFO con ventas parciales, XIRR contra casos calculados a mano (y contra `XIRR` de Excel), dividendos, precio desactualizado, divisas.
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día; los tests de FIFO y XIRR pasan; la pestaña se parece a la maqueta.

@@ -68,6 +68,7 @@ def test_quote_returns_last_close_as_exact_decimal() -> None:
         fullExchangeName="XETRA",
         longName="iShares Core S&P 500",
         exchangeTimezoneName="Europe/Berlin",
+        instrumentType="ETF",
     )
     yahoo, fetch = client(body)
     quote = yahoo.quote("SXR8.DE")
@@ -75,7 +76,7 @@ def test_quote_returns_last_close_as_exact_decimal() -> None:
     assert isinstance(quote.price, Decimal)
     assert quote.date == date(2026, 11, 3)
     assert (quote.symbol, quote.currency) == ("SXR8.DE", "EUR")
-    assert (quote.exchange, quote.name) == ("XETRA", "iShares Core S&P 500")
+    assert (quote.exchange, quote.name, quote.kind) == ("XETRA", "iShares Core S&P 500", "ETF")
     assert fetch.urls[0].startswith("https://query1.finance.yahoo.com/v8/finance/chart/SXR8.DE?")
     assert fetch.query == {"range": ["1mo"], "interval": ["1d"]}
 

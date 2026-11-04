@@ -10,7 +10,10 @@
 | 3.2a | `app/prices/yahoo.py`: precio, histórico y búsqueda por ISIN, y el comando `python -m app.prices` | ✅ |
 | 3.2b | Migración `0005` (`exchange_rates`) y servicio de precios: histórico, divisas y aviso de precio desactualizado | ✅ |
 | 3.2c | Refresco automático (al abrir y cada `PRICE_REFRESH_MIN`) y `GET /api/prices/status` · `POST /api/prices/refresh` | ✅ |
-| 3.3 | Productos y operaciones: buscador, API, formulario con «duplicar», plantilla y RUMBO | ⬜ |
+| 3.3a | API de productos: buscador, vista previa del precio, alta (comprueba el precio), edición y borrado | ✅ |
+| 3.3b | API de operaciones: compra, venta, dividendo y comisión, sin vender más de lo que se tiene | ⬜ |
+| 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ⬜ |
+| 3.3d | Pantallas: cuentas de Trade Republic y Scalable, productos y «+ Añadir compra / venta» con «duplicar» | ⬜ |
 | 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
@@ -29,5 +32,9 @@
 - Precio desactualizado: se mira **cuándo se descargó** (`fetched_at`), no la fecha del precio. El sábado, el precio del viernes bajado hoy no está desactualizado.
 - Un símbolo que tengan varios usuarios se descarga una sola vez.
 - Commits como en las fases 1 y 2, con la fase al final: `… (phase 3, step 3.2c)` (petición de Gerard).
+- Sin importador de RUMBO: Gerard no lo ha usado. Las operaciones entran por el formulario o por la plantilla.
+- Productos: al crear uno con precio de Yahoo se comprueba que el símbolo tiene precio y se toma su divisa; si Yahoo no responde, no se guarda. El símbolo no se cambia después (se borra y se crea otro, si no tiene operaciones).
+- El tipo que propone Yahoo es orientativo: Stuttgart da `MUTUALFUND` para un ETF. Decide el usuario.
+- Si se apunta una operación anterior al primer precio guardado, el siguiente refresco descarga el histórico desde esa fecha.
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

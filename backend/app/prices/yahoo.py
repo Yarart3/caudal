@@ -47,6 +47,7 @@ class Quote:
     currency: str
     exchange: str | None
     name: str | None
+    kind: str | None = None  # instrumentType de Yahoo: ETF, EQUITY, MUTUALFUND… (orientativo)
 
 
 @dataclass(frozen=True)
@@ -184,6 +185,7 @@ class YahooClient:
             currency=str(meta.get("currency") or "EUR"),
             exchange=meta.get("fullExchangeName") or meta.get("exchangeName"),
             name=meta.get("longName") or meta.get("shortName"),
+            kind=meta.get("instrumentType"),
         )
 
     def history(self, symbol: str, start: date, end: date) -> History:

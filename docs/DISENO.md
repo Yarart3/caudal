@@ -250,7 +250,7 @@ ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro�
 1. **A mano (vía principal):** formulario "+ Añadir compra / venta" con fecha, cuenta, producto (buscador por ISIN, ticker o nombre), participaciones, importe total en euros y comisión. Se puede **duplicar una operación anterior** para repetir una compra habitual cambiando solo la fecha y las cifras.
 2. **Plantilla de Excel/CSV** propia, sobre todo para cargar el historial de golpe: `fecha; identificador; nombre; tipo_producto; tipo_movimiento; unidades; importe; moneda; comision; nota`.
 3. **Posición inicial:** si no se recuerda cada compra antigua, se puede apuntar **una sola operación por producto** con el total de participaciones y el total invertido (o el precio medio del broker) a una fecha. El valor actual y la plusvalía salen exactos; la TIR, aproximada.
-4. **Importar desde RUMBO:** si se ha usado RUMBO mientras tanto, se importa su `mis_datos/cartera.json` (productos y movimientos) para no perder nada.
+4. ~~Importar desde RUMBO~~: descartado en la Fase 3 (Gerard no ha usado RUMBO).
 
 ### 7.5 Cálculos
 - **Valor actual** = participaciones × último precio (en EUR).
@@ -468,7 +468,7 @@ caudal/
 │   └── app/
 │       ├── main.py
 │       ├── auth/               ← login, sesiones, usuarios
-│       ├── importers/          ← imagin.py, wise.py, caixabank.py, sabadell.py, generico.py, plantilla_inversiones.py, rumbo.py
+│       ├── importers/          ← imagin.py, wise.py, caixabank.py, sabadell.py, generico.py, plantilla_inversiones.py
 │       ├── categories/         ← categorías y reglas iniciales, motor de reglas
 │       ├── dashboard/          ← totales de Patrimonio y Movimientos
 │       ├── transfers/
@@ -704,7 +704,7 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 ### Fase 3: patrimonio e inversiones (Gerard)
 - Tablas de inversiones (sección 8.4), cuentas **mixtas** (Trade Republic) y de **inversión** (Scalable).
 - Buscador de productos y **servicio de precios** (Yahoo; Morningstar y CoinGecko cuando haya un fondo o una cripto) con caché, histórico, avisos de precio desactualizado y actualización cada 15 min.
-- **Alta manual** de operaciones (vía principal, con "duplicar operación"), **plantilla de Excel** para el historial e **importación de RUMBO**. Sin importadores de Trade Republic ni Scalable (sección 6.3).
+- **Alta manual** de operaciones (vía principal, con "duplicar operación"), **plantilla de Excel** para el historial. Sin importadores de Trade Republic ni Scalable (sección 6.3).
 - Cálculos: valor, FIFO, plusvalía latente y realizada, **XIRR**, rentabilidad anual, peor caída, comparativa con indexado, comisiones (TER), aportaciones y racha.
 - Pestaña **Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, por entidad, reparto por tipo).
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día, y los tests de FIFO y XIRR pasan con casos calculados a mano.
@@ -780,7 +780,6 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 ## 18. Referencias
 
 - **RUMBO** (Dani Dominguez Quant), https://github.com/danidm98/rumbo, **licencia MIT**. App local de patrimonio e inversiones (Python + Flask) que inspiró la parte de inversiones de Caudal: fuentes de precios (Morningstar, Yahoo, CoinGecko), FIFO, TIR, comparativa con indexado, valores anotados a mano, plantilla de importación. **Si se reutiliza código suyo, hay que mantener su aviso de copyright y licencia MIT** en los archivos copiados o en un `THIRD_PARTY_NOTICES.md`.
-- Mientras Caudal no tenga la Fase 3, se puede usar RUMBO para las inversiones y luego importar su `cartera.json`.
 
 ---
 
