@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 2 terminada (presupuestos, avisos, recurrentes, objetivo y selector de mes). Siguiente: Fase 3
+- **Estado:** Fase 2 terminada (presupuestos, avisos, recurrentes, objetivo y selector de mes). En curso: Fase 3 (parte 3.1 hecha: esquema de inversiones)
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -229,7 +229,7 @@ Para cualquier banco nuevo: se sube el archivo y se indica qué columna es la **
 ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro… Para lo que no cotiza o no tiene precio en internet (plan de pensiones, depósito), se usa **"valor anotado a mano"**: se anota su valor con fecha, por ejemplo una vez al mes.
 
 ### 7.2 Productos y operaciones
-- **Producto:** nombre, **ISIN** o ticker, tipo (ETF, acción, fondo, cripto, plan, otro), divisa, fuente del precio y TER (comisión anual) si se conoce.
+- **Producto:** nombre, **ISIN** o ticker, tipo (ETF, acción, fondo, cripto, plan, materia prima, otro), divisa, fuente del precio y TER (comisión anual) si se conoce.
 - **Operación:** fecha, cuenta (broker), producto, tipo (**compra**, **venta**, **dividendo**, **comisión**), participaciones e **importe total en euros** (en una compra, lo que salió de la cuenta con comisiones incluidas; en una venta o dividendo, lo que entró).
 - **Buscador por ISIN, ticker o nombre:** antes de guardar comprueba que el producto tiene precio y rellena tipo, divisa y TER.
 
@@ -328,7 +328,7 @@ formatos_importacion   (asistente genérico)
 
 -- Inversiones (Fase 3) --
 productos
-  id, usuario_id, nombre, isin, ticker, tipo ("etf" | "accion" | "fondo" | "cripto" | "pension" | "otro"),
+  id, usuario_id, nombre, isin, ticker, tipo ("etf" | "accion" | "fondo" | "cripto" | "pension" | "materia_prima" | "otro"),
   divisa, fuente_precio ("yahoo" | "morningstar" | "coingecko" | "manual"), id_fuente, ter (NUMERIC, nullable),
   largo_plazo (bool)
 
@@ -339,7 +339,7 @@ operaciones_inversion
   huella, UNIQUE (cuenta_id, huella)
 
 precios
-  producto_id → productos, fecha, precio NUMERIC(18,6), divisa, fuente, PRIMARY KEY (producto_id, fecha)
+  producto_id → productos, fecha, precio NUMERIC(18,6), divisa, fuente, descargado_en, PRIMARY KEY (producto_id, fecha)
 
 valores_manuales        (plan de pensiones, depósitos…)
   id, producto_id, fecha, valor_eur, aportado_eur (nullable)

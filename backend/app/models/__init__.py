@@ -4,6 +4,10 @@ from app.models.account import Account
 from app.models.backup_log import BackupLog
 from app.models.category import Category
 from app.models.goal import Goal
+from app.models.investment_operation import InvestmentOperation
+from app.models.manual_valuation import ManualValuation
+from app.models.price import Price
+from app.models.product import Product
 from app.models.rule import Rule
 from app.models.session import UserSession
 from app.models.transaction import Transaction
@@ -14,6 +18,10 @@ __all__ = [
     "BackupLog",
     "Category",
     "Goal",
+    "InvestmentOperation",
+    "ManualValuation",
+    "Price",
+    "Product",
     "Rule",
     "Transaction",
     "User",

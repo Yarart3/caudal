@@ -2,7 +2,6 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
-## [0.4.0] – 2026-10-30 · Fase 1d
 ## [0.5.0] – 2026-11-02 · Fase 2
 ### Añadido
 - **Presupuestos mensuales** por categoría de gasto (migración `0003`): estado OK (< 90 %), Al límite (90–100 %) y Superado (> 100 %). `GET/PUT /api/budgets`.
@@ -23,6 +22,7 @@ Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (secc
 - **Aplazado** a la revisión final (DISENO §17, pendiente 11): comprobar con extractos reales que se parece a la maqueta, que los Bizum no salen como recurrentes y que los umbrales de los avisos son razonables.
 - En móvil (390 px) la tabla de Movimientos desborda a lo ancho: se arregla en la Fase 4.
 
+## [0.4.0] – 2026-10-30 · Fase 1d
 ### Añadido
 - Backups cifrados (`backend/app/backup/`): `pg_dump -Fc` → **AES-256-GCM** con la clave derivada de `BACKUP_PASSWORD` por **scrypt** (sal y nonce aleatorios en la cabecera) → `caudal_AAAA-MM-DD_HHMM.dump.enc`, en el pendrive y en OneDrive, con rotación de las 30 últimas y registro en `backup_log`.
 - Los 4 momentos: **tras importar** (si entra algo nuevo), **cada 60 min** si hubo cambios, **al cerrar** (script) y **al arrancar** si la última copia buena tiene más de 7 días.

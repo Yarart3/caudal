@@ -56,6 +56,9 @@
 | operaciones_inversion | `investment_operations` |
 | precios | `prices` |
 | valores_manuales | `manual_valuations` |
+| productos.tipo (etf / accion / fondo / cripto / pension / materia_prima / otro) | `products.kind` (`etf` / `stock` / `fund` / `crypto` / `pension` / `commodity` / `other`) |
+| operaciones_inversion.tipo (compra / venta / dividendo / comision) | `investment_operations.kind` (`buy` / `sell` / `dividend` / `fee`) |
+| fuente_precio · id_fuente · largo_plazo | `price_source` · `source_id` · `long_term` |
 | objetivos | `goals` |
 | registro_backups | `backup_log` (destino → `destination`: `usb` / `onedrive`) |
 | sesiones | `sessions` (`token_hash`, `last_seen_at`) |
