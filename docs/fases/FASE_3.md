@@ -8,7 +8,8 @@
 |---|---|---|
 | 3.1 | Migración `0004`: `products`, `investment_operations`, `prices`, `manual_valuations` | ✅ |
 | 3.2a | `app/prices/yahoo.py`: precio, histórico y búsqueda por ISIN, y el comando `python -m app.prices` | ✅ |
-| 3.2b | Servicio de precios: guardar en `prices`, caché, aviso de precio desactualizado, refresco y `/api/prices/*` | ⬜ |
+| 3.2b | Migración `0005` (`exchange_rates`) y servicio de precios: histórico, divisas y aviso de precio desactualizado | ✅ |
+| 3.2c | Refresco automático (al abrir y cada `PRICE_REFRESH_MIN`) y `GET /api/prices/status` · `POST /api/prices/refresh` | ⬜ |
 | 3.3 | Productos y operaciones: buscador, API, formulario con «duplicar», plantilla y RUMBO | ⬜ |
 | 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
@@ -23,3 +24,8 @@
 - Solo Yahoo por ahora: todos sus productos son ETF o ETC. Morningstar (fondos) y CoinGecko (cripto) se añaden cuando haga falta; el esquema ya los admite.
 - Cliente con `urllib` (biblioteca estándar) y no con `httpx`: `httpx` solo está en la imagen de desarrollo y añadirlo obligaría a regenerar `uv.lock`.
 - Plaza por defecto: Xetra, en euros. Se ajusta al probar con `python -m app.prices`.
+- Buscar por ISIN en Yahoo da una sola cotización (Londres o Milán), no la de Xetra: el formulario de productos (3.3) dejará escribir el símbolo y enseñará su precio y divisa antes de guardar.
+- Tipos de cambio en su propia tabla (`exchange_rates`), sin usuario: son datos públicos. Símbolo `{DIVISA}EUR=X`; los precios en peniques (`GBp`/`GBX`) se guardan en libras.
+- Precio desactualizado: se mira **cuándo se descargó** (`fetched_at`), no la fecha del precio. El sábado, el precio del viernes bajado hoy no está desactualizado.
+- Un símbolo que tengan varios usuarios se descarga una sola vez.
+- Commits con la parte de la fase como ámbito: `feat(phase-3.2b): …` (petición de Gerard).

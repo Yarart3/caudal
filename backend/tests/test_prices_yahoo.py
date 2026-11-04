@@ -11,6 +11,7 @@ import pytest
 from app.prices import __main__ as cli
 from app.prices.yahoo import (
     DailyClose,
+    History,
     Listing,
     SymbolNotFoundError,
     YahooClient,
@@ -169,12 +170,15 @@ def test_network_errors_pass_through() -> None:
 
 def test_history_asks_for_dates_and_returns_sorted_closes() -> None:
     stamps = [T0, T0 - DAY, T0 + DAY]  # desordenadas a propósito
-    yahoo, fetch = client(chart([2.5, 1.5, None], stamps, dataGranularity="1d"))
-    closes = yahoo.history("X", date(2026, 10, 1), date(2026, 10, 31))
-    assert closes == [
-        DailyClose(date(2026, 11, 2), Decimal("1.500000")),
-        DailyClose(date(2026, 11, 3), Decimal("2.500000")),
-    ]
+    yahoo, fetch = client(chart([2.5, 1.5, None], stamps, dataGranularity="1d", currency="USD"))
+    history = yahoo.history("X", date(2026, 10, 1), date(2026, 10, 31))
+    assert history == History(
+        "USD",
+        [
+            DailyClose(date(2026, 11, 2), Decimal("1.500000")),
+            DailyClose(date(2026, 11, 3), Decimal("2.500000")),
+        ],
+    )
     assert fetch.query["interval"] == ["1d"]
     assert fetch.query["period1"] == [str(int(datetime(2026, 10, 1, tzinfo=UTC).timestamp()))]
     # period2 es exclusivo: se pide hasta el día siguiente para incluir el último
@@ -183,9 +187,8 @@ def test_history_asks_for_dates_and_returns_sorted_closes() -> None:
 
 def test_history_keeps_the_last_bar_of_each_day() -> None:
     yahoo, _ = client(chart([1.0, 2.0], [T0, T0 + 3600], exchangeTimezoneName="Europe/Berlin"))
-    assert yahoo.history("X", date(2026, 11, 1), date(2026, 11, 3)) == [
-        DailyClose(date(2026, 11, 3), Decimal("2.000000"))
-    ]
+    history = yahoo.history("X", date(2026, 11, 1), date(2026, 11, 3))
+    assert history == History("EUR", [DailyClose(date(2026, 11, 3), Decimal("2.000000"))])
 
 
 def test_history_rejects_non_daily_granularity() -> None:

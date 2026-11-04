@@ -3,6 +3,7 @@
 from app.models.account import Account
 from app.models.backup_log import BackupLog
 from app.models.category import Category
+from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal
 from app.models.investment_operation import InvestmentOperation
 from app.models.manual_valuation import ManualValuation
@@ -17,6 +18,7 @@ __all__ = [
     "Account",
     "BackupLog",
     "Category",
+    "ExchangeRate",
     "Goal",
     "InvestmentOperation",
     "ManualValuation",

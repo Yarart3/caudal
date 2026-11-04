@@ -56,6 +56,7 @@
 | operaciones_inversion | `investment_operations` |
 | precios | `prices` |
 | valores_manuales | `manual_valuations` |
+| tipos_cambio | `exchange_rates` |
 | productos.tipo (etf / accion / fondo / cripto / pension / materia_prima / otro) | `products.kind` (`etf` / `stock` / `fund` / `crypto` / `pension` / `commodity` / `other`) |
 | operaciones_inversion.tipo (compra / venta / dividendo / comision) | `investment_operations.kind` (`buy` / `sell` / `dividend` / `fee`) |
 | fuente_precio · id_fuente · largo_plazo | `price_source` · `source_id` · `long_term` |
@@ -71,7 +72,7 @@
 - **Migraciones:** todo cambio de esquema va con una migración de Alembic. Nunca `create_all` en producción.
 - **Configuración:** solo por `.env`. Nada escrito a fuego (rutas, contraseñas, puertos).
 - **Calidad:** `ruff check` + `ruff format`, `pytest`, `npm run lint`, `npm run build` sin errores antes de dar una fase por buena. Todo se ejecuta en Docker: `docker compose run --rm tests`, `docker compose run --rm tests ruff check .`, `docker compose run --rm tests ruff format --check .` y `docker compose run --rm web`.
-- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits: `feat: …`, `fix: …`, `docs: …`, `test: …`, `chore: …` (por ejemplo, `docs: keep USB volume label Gerard`). Se hace commit y push **al final de cada parte** de la fase, directamente en `main`. Si Gerard cambia de equipo a mitad de una parte: commit `wip: …` y push.
+- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits y **la parte de la fase como ámbito**: `feat(phase-3.2b): …`, `fix(phase-3.2a): …`, `docs(phase-3): …`, `test(…)`, `chore(…)` (por ejemplo, `feat(phase-3.2b): add price service with exchange rates`). Los commits anteriores a la Fase 3.2b no lo llevan. Se hace commit y push **al final de cada parte** de la fase, directamente en `main`. Si Gerard cambia de equipo a mitad de una parte: commit `wip(phase-…): …` y push.
 
 ## 4. Protocolo de cada conversación
 

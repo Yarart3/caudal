@@ -56,6 +56,14 @@ class DailyClose:
 
 
 @dataclass(frozen=True)
+class History:
+    """Cierres diarios de un símbolo y la divisa en la que vienen (tal cual la da Yahoo)."""
+
+    currency: str
+    closes: list[DailyClose]
+
+
+@dataclass(frozen=True)
 class Listing:
     """Un resultado del buscador: todavía sin precio (eso lo da `quote`)."""
 
@@ -178,7 +186,7 @@ class YahooClient:
             name=meta.get("longName") or meta.get("shortName"),
         )
 
-    def history(self, symbol: str, start: date, end: date) -> list[DailyClose]:
+    def history(self, symbol: str, start: date, end: date) -> History:
         """Cierres diarios entre dos fechas. Se pide por fechas (`period1`/`period2`) porque con
         `range=max` Yahoo devuelve un dato al mes aunque se pida `interval=1d`."""
         period1 = int(datetime(start.year, start.month, start.day, tzinfo=UTC).timestamp())
@@ -191,7 +199,8 @@ class YahooClient:
             raise YahooError(f"Yahoo ha devuelto precios cada {granularity} en vez de diarios")
         tz = _timezone(meta)
         by_day = {_day(stamp, tz): price for stamp, price in series}  # el último del día gana
-        return [DailyClose(day, by_day[day]) for day in sorted(by_day)]
+        closes = [DailyClose(day, by_day[day]) for day in sorted(by_day)]
+        return History(str(meta.get("currency") or "EUR"), closes)
 
     def search(self, text: str, count: int = 10) -> list[Listing]:
         """Símbolos que Yahoo asocia a un ISIN, ticker o nombre."""

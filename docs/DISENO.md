@@ -341,6 +341,9 @@ operaciones_inversion
 precios
   producto_id → productos, fecha, precio NUMERIC(18,6), divisa, fuente, descargado_en, PRIMARY KEY (producto_id, fecha)
 
+tipos_cambio            (datos públicos de mercado: no van por usuario)
+  divisa, fecha, tipo (1 unidad = tipo EUR), fuente, descargado_en, PRIMARY KEY (divisa, fecha)
+
 valores_manuales        (plan de pensiones, depósitos…)
   id, producto_id, fecha, valor_eur, aportado_eur (nullable)
 
