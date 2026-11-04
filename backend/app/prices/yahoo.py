@@ -148,11 +148,14 @@ class YahooClient:
             raise SymbolNotFoundError(f"Yahoo no tiene datos de {symbol}")
         result = results[0]
         meta = result.get("meta") if isinstance(result.get("meta"), dict) else {}
+        # Algunas plazas (como Stuttgart) solo dan `meta`, sin serie diaria
         try:
             closes = result["indicators"]["quote"][0]["close"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise YahooError(f"Yahoo ha devuelto {symbol} en un formato inesperado") from exc
-        stamps = result.get("timestamp") or []
+        except (KeyError, IndexError, TypeError):
+            closes = None
+        stamps = result.get("timestamp")
+        if not isinstance(closes, list) or not isinstance(stamps, list):
+            raise SymbolNotFoundError(f"Yahoo no tiene cotizaciones diarias de {symbol}")
         series = []
         for stamp, close in zip(stamps, closes, strict=False):
             price = _price(close)

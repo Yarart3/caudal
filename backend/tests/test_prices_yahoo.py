@@ -136,13 +136,21 @@ def test_symbol_without_quotes_is_not_found() -> None:
 
 
 @pytest.mark.parametrize(
-    "body",
+    "result",
     [
-        b"<html>Too Many Requests</html>",
-        b"[1, 2]",
-        json.dumps({"chart": {"result": [{"meta": {}, "timestamp": [1]}]}}).encode(),
+        # Como responde Stuttgart (IE00BNRQM384.SG): solo meta, sin serie diaria
+        {"meta": {"currency": "EUR", "regularMarketPrice": 78.44}, "indicators": {"quote": [{}]}},
+        {"meta": {}, "timestamp": [1]},
+        {"meta": {}, "indicators": {"quote": [{"close": [1.0]}]}},
     ],
 )
+def test_result_without_daily_series_is_not_found(result: dict) -> None:
+    yahoo, _ = client(json.dumps({"chart": {"result": [result], "error": None}}).encode())
+    with pytest.raises(SymbolNotFoundError, match="diarias"):
+        yahoo.quote("IE00BNRQM384.SG")
+
+
+@pytest.mark.parametrize("body", [b"<html>Too Many Requests</html>", b"[1, 2]"])
 def test_unexpected_format_is_an_error(body: bytes) -> None:
     yahoo, _ = client(body)
     with pytest.raises(YahooError) as info:
