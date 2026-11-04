@@ -10,6 +10,8 @@ import os
 os.environ["POSTGRES_DB"] = os.environ.get("POSTGRES_DB", "caudal") + "_test"
 # Sin backups automáticos en los tests (los que los prueban los activan a propósito)
 os.environ["BACKUP_AUTO"] = "false"
+# Ni refresco automático de precios: los tests nunca salen a internet
+os.environ["PRICE_AUTO"] = "false"
 
 from collections.abc import Iterator  # noqa: E402
 

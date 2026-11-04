@@ -72,7 +72,7 @@
 - **Migraciones:** todo cambio de esquema va con una migración de Alembic. Nunca `create_all` en producción.
 - **Configuración:** solo por `.env`. Nada escrito a fuego (rutas, contraseñas, puertos).
 - **Calidad:** `ruff check` + `ruff format`, `pytest`, `npm run lint`, `npm run build` sin errores antes de dar una fase por buena. Todo se ejecuta en Docker: `docker compose run --rm tests`, `docker compose run --rm tests ruff check .`, `docker compose run --rm tests ruff format --check .` y `docker compose run --rm web`.
-- **Commits:** en **inglés**, en imperativo y con el estilo Conventional Commits y **la parte de la fase como ámbito**: `feat(phase-3.2b): …`, `fix(phase-3.2a): …`, `docs(phase-3): …`, `test(…)`, `chore(…)` (por ejemplo, `feat(phase-3.2b): add price service with exchange rates`). Los commits anteriores a la Fase 3.2b no lo llevan. Se hace commit y push **al final de cada parte** de la fase, directamente en `main`. Si Gerard cambia de equipo a mitad de una parte: commit `wip(phase-…): …` y push.
+- **Commits:** en **inglés**, en minúsculas e imperativo, sin prefijo de tipo y **con la fase al final**, como en las fases 1 y 2: `add price refresh thread and prices api (phase 3, step 3.2c)`. El cierre de una fase va como `docs: close phase 3`. Se hace commit y push **al final de cada parte** de la fase, directamente en `main`. Si Gerard cambia de equipo a mitad de una parte: commit `wip: … (phase 3, step 3.2c)` y push.
 
 ## 4. Protocolo de cada conversación
 
@@ -132,7 +132,7 @@
 | 3 | `GET /api/products/search?q=` · `GET/POST/PATCH /api/products` | Productos |
 | 3 | `GET/POST/PATCH/DELETE /api/investments/operations` · `POST /api/investments/import` | Operaciones |
 | 3 | `GET /api/investments/summary` · `GET /api/investments/positions` · `GET /api/investments/benchmark` | Pestaña Inversiones |
-| 3 | `POST /api/prices/refresh` · `GET /api/prices/status` | Precios |
+| 3 | `GET /api/prices/status` · `POST /api/prices/refresh` | Último precio de cada producto del usuario (y si está desactualizado) y actualización manual de **sus** productos; 409 si ya hay una actualización en marcha |
 | 4 | `GET/POST/PATCH /api/admin/users` · `POST /api/admin/users/{id}/reset-password` · `GET/POST /api/import-formats` | Administración y asistente genérico |
 
 Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta tabla.

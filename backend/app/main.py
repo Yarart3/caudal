@@ -20,6 +20,7 @@ from app.api import (
     dashboard,
     goals,
     imports,
+    prices,
     recurring,
     rules,
     setup,
@@ -27,6 +28,7 @@ from app.api import (
 )
 from app.backup.auto import auto_backup
 from app.db import get_db
+from app.prices.auto import auto_prices
 
 # El Dockerfile copia aquí el frontend compilado (frontend/dist)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -34,10 +36,13 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Al arrancar: hilo de backups automáticos (backup si el último es antiguo y luego cada
-    BACKUP_INTERVAL_MIN si hubo cambios). Al parar: lo detiene."""
+    """Al arrancar: hilos de backups automáticos (backup si el último es antiguo y luego cada
+    BACKUP_INTERVAL_MIN si hubo cambios) y de precios (si son antiguos y luego cada
+    PRICE_REFRESH_MIN). Al parar: los detiene."""
     auto_backup.start()
+    auto_prices.start()
     yield
+    auto_prices.stop()
     auto_backup.stop()
 
 
@@ -63,6 +68,7 @@ app.include_router(budgets.router)
 app.include_router(recurring.router)
 app.include_router(alerts.router)
 app.include_router(goals.router)
+app.include_router(prices.router)
 
 
 @app.exception_handler(RequestValidationError)

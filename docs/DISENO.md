@@ -497,6 +497,7 @@ LOGIN_LOCKOUT_MIN=5
 
 PRICE_REFRESH_MIN=15
 PRICE_MAX_AGE_HOURS=6
+PRICE_AUTO=true              # false: sin refresco automático (los tests lo apagan)
 
 BACKUP_PASSWORD=<la eliges tú y la apuntas en papel>
 BACKUP_INTERVAL_MIN=60

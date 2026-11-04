@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     backup_usb_dir: Path = Path("/backups/usb")
     backup_onedrive_dir: Path = Path("/backups/onedrive")
 
+    # Precios (Fase 3, DISENO §7.3): refresco al arrancar si son antiguos y luego cada
+    # PRICE_REFRESH_MIN minutos. Los tests desactivan el refresco automático.
+    price_auto: bool = True
+    price_refresh_min: int = 15
+    price_max_age_hours: int = 6
+
     @property
     def database_url(self) -> URL:
         # URL.create escapa la contraseña, por si lleva caracteres como @ o /
