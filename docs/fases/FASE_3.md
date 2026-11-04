@@ -15,7 +15,9 @@
 | 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ✅ |
 | 3.3d1 | Pestaña Inversiones: cuentas de broker, productos (buscar, comprobar precio, guardar) y operaciones con «+ Añadir compra / venta», «duplicar» y editar | ✅ |
 | 3.3d2 | Pestaña Inversiones: importar la plantilla (descargar, vista previa y confirmar) | ✅ |
-| 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
+| 3.4a | `app/investments/calc.py`: FIFO, TIR (XIRR), rentabilidad por año, peor caída, aportaciones, racha y TER (sin base de datos) | ✅ |
+| 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ⬜ |
+| 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
 | 3.7 | Cierre | ⬜ |
@@ -47,5 +49,11 @@
 - Consultas a Yahoo desde la pantalla (buscar, comprobar precio, crear producto): un solo intento de 8 s, para no dejar a nadie esperando casi un minuto. El refresco en segundo plano sigue con 3 intentos. El error técnico va al log; la pantalla dice «No se ha podido consultar Yahoo. Prueba en un momento.».
 - Indicadores, «Mis posiciones», aportaciones y comparativa llegan en la 3.5, cuando existan los cálculos (3.4).
 - Importar en la pantalla: el archivo se sube dos veces (vista previa y confirmar) y no se guarda en ningún sitio. Con errores, el botón de importar queda desactivado y se listan las filas que fallan. Tras importar se actualizan los precios, para traer el histórico desde las compras antiguas.
+- FIFO **por producto**, sumando todas las cuentas: un mismo ISIN en Trade Republic y en Scalable es un solo historial a efectos de Hacienda (criterio publicado; no es asesoría fiscal). La comprobación de no vender de más sigue siendo por cuenta.
+- Coste del lote = importe de la compra (comisiones incluidas); lo cobrado en una venta ya va sin comisiones. Un lote vendido a medias reparte su coste en proporción y redondea al céntimo; lo que queda se calcula por resta, así la suma siempre cuadra.
+- TIR propia (Newton desde el 10 % y bisección de respaldo), con la convención de `XIRR` de Excel (días / 365). Sin `pyxirr`: no hace falta otra dependencia. La tasa se resuelve con `float` (no es un importe); los importes siguen en `Decimal`.
+- Rentabilidad por año natural con el método **Dietz modificado** (no anualizada): una aportación grande en diciembre no cuenta como ganancia. El año en curso, hasta hoy.
+- Peor caída sobre la rentabilidad diaria encadenada, no sobre el valor: comprar más taparía las caídas. Para el valor diario, un dividendo es dinero que sale de la cartera y una comisión suelta, dinero que entra.
+- Aportación del mes = compras − ventas. Racha = meses seguidos con aportación > 0; si este mes aún no hay, se cuenta desde el anterior (no se rompe a mitad de mes).
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).
