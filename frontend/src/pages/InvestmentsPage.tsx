@@ -9,6 +9,7 @@ import {
   type Product,
 } from '../api';
 import { InvestmentAccountDialog } from '../components/InvestmentAccountDialog';
+import { InvestmentImportCard } from '../components/InvestmentImportCard';
 import { OperationDialog, type OperationMode } from '../components/OperationDialog';
 import { ProductDialog } from '../components/ProductDialog';
 import { notifyDataChanged, onDataChanged } from '../events';
@@ -30,8 +31,9 @@ type Dialog =
 const STALE_BADGE = { background: '#FBE6D4', color: '#8A3A0C' };
 
 /**
- * Pestaña Inversiones (Fase 3, parte 3.3d1): cuentas de broker, productos con su último precio
- * y operaciones (añadir, duplicar, editar). Indicadores y posiciones llegan en la parte 3.5.
+ * Pestaña Inversiones (Fase 3, partes 3.3d1 y 3.3d2): cuentas de broker, productos con su último
+ * precio, operaciones (añadir, duplicar, editar) e importar el historial con la plantilla.
+ * Indicadores y posiciones llegan en la parte 3.5.
  */
 export function InvestmentsPage() {
   const [data, setData] = useState<Data | null>(null);
@@ -125,6 +127,11 @@ export function InvestmentsPage() {
             onEdit={(product) => setDialog({ kind: 'product', product })}
           />
           <OperationsCard data={data} onOpen={(mode) => setDialog({ kind: 'operation', mode })} />
+          <InvestmentImportCard
+            accounts={data.accounts}
+            hasProducts={data.products.length > 0}
+            onImported={(text) => finish(text, true)}
+          />
         </>
       )}
 

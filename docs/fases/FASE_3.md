@@ -14,7 +14,7 @@
 | 3.3b | API de operaciones: compra, venta, dividendo y comisión, sin vender más de lo que se tiene | ✅ |
 | 3.3c | Plantilla Excel/CSV: descarga e importación del historial | ✅ |
 | 3.3d1 | Pestaña Inversiones: cuentas de broker, productos (buscar, comprobar precio, guardar) y operaciones con «+ Añadir compra / venta», «duplicar» y editar | ✅ |
-| 3.3d2 | Pestaña Inversiones: importar la plantilla (descargar, vista previa y confirmar) | ⬜ |
+| 3.3d2 | Pestaña Inversiones: importar la plantilla (descargar, vista previa y confirmar) | ✅ |
 | 3.4 | Cálculos: FIFO, plusvalías, XIRR, comparativa, TER, aportaciones | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
@@ -46,5 +46,6 @@
 - Las operaciones escritas a mano no tienen huella: si luego se importa ese mismo historial, saldría repetido (la vista previa lo enseña antes de confirmar).
 - Consultas a Yahoo desde la pantalla (buscar, comprobar precio, crear producto): un solo intento de 8 s, para no dejar a nadie esperando casi un minuto. El refresco en segundo plano sigue con 3 intentos. El error técnico va al log; la pantalla dice «No se ha podido consultar Yahoo. Prueba en un momento.».
 - Indicadores, «Mis posiciones», aportaciones y comparativa llegan en la 3.5, cuando existan los cálculos (3.4).
+- Importar en la pantalla: el archivo se sube dos veces (vista previa y confirmar) y no se guarda en ningún sitio. Con errores, el botón de importar queda desactivado y se listan las filas que fallan. Tras importar se actualizan los precios, para traer el histórico desde las compras antiguas.
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

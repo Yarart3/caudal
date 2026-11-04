@@ -337,6 +337,26 @@ export type OperationCreate = {
   fee_eur: string | null;
 };
 
+export type InvestmentImportRow = {
+  row: number;
+  date: string;
+  product_id: number;
+  product_name: string;
+  kind: OperationKind;
+  shares: string;
+  amount_eur: string;
+  fee_eur: string | null;
+};
+
+export type InvestmentImportResult = {
+  read: number;
+  new: number;
+  duplicates: number;
+  saved: boolean;
+  errors: RowError[];
+  operations: InvestmentImportRow[]; // las nuevas (hasta 200)
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -487,6 +507,17 @@ export const api = {
     request<Operation>(`/api/investments/operations/${id}`, { method: 'PATCH', body: changes }),
   deleteOperation: (id: number) =>
     request<void>(`/api/investments/operations/${id}`, { method: 'DELETE' }),
+  /** Sin `confirm`: vista previa (no guarda). Con `confirm`: guarda todo o nada (`saved`). */
+  importInvestments: (accountId: number, file: File, confirm: boolean) => {
+    const form = new FormData();
+    form.append('account_id', String(accountId));
+    form.append('file', file);
+    form.append('confirm', String(confirm));
+    return request<InvestmentImportResult>('/api/investments/import', {
+      method: 'POST',
+      body: form,
+    });
+  },
   priceStatus: () => request<PriceStatus>('/api/prices/status'),
   refreshPrices: () =>
     request<{ items: unknown[]; status: PriceStatus }>('/api/prices/refresh', { method: 'POST' }),
