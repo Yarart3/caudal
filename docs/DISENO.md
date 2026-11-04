@@ -437,7 +437,7 @@ Todo se **calcula al pedirlo** (no hay tablas de avisos ni de recurrentes) y exc
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic. Tareas periódicas: un hilo de la app para los backups (Fase 1d); APScheduler solo si hace falta para los precios (Fase 3) |
 | Lectura de extractos | openpyxl (`.xlsx`). Sin pandas ni xlrd (Fase 1b) |
 | Contraseñas | argon2-cffi |
-| Precios | httpx (con caché, tiempo de espera y reintentos) |
+| Precios | `urllib` de la biblioteca estándar, con caché, tiempo de espera y reintentos (`httpx` solo está en la imagen de desarrollo) |
 | Cálculos financieros | `Decimal`; XIRR implementado y testeado (o `pyxirr`) |
 | Cifrado de backups | `cryptography` (AES-256-GCM, clave derivada con scrypt) |
 | Frontend | React + Vite + TypeScript. Gráficos con CSS (barras y `conic-gradient`), como la maqueta; Recharts solo si hace falta en la Fase 3 |
@@ -699,7 +699,7 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 
 ### Fase 3: patrimonio e inversiones (Gerard)
 - Tablas de inversiones (sección 8.4), cuentas **mixtas** (Trade Republic) y de **inversión** (Scalable).
-- Buscador de productos y **servicio de precios** (Yahoo, Morningstar, CoinGecko) con caché, histórico, avisos de precio desactualizado y actualización cada 15 min.
+- Buscador de productos y **servicio de precios** (Yahoo; Morningstar y CoinGecko cuando haya un fondo o una cripto) con caché, histórico, avisos de precio desactualizado y actualización cada 15 min.
 - **Alta manual** de operaciones (vía principal, con "duplicar operación"), **plantilla de Excel** para el historial e **importación de RUMBO**. Sin importadores de Trade Republic ni Scalable (sección 6.3).
 - Cálculos: valor, FIFO, plusvalía latente y realizada, **XIRR**, rentabilidad anual, peor caída, comparativa con indexado, comisiones (TER), aportaciones y racha.
 - Pestaña **Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, por entidad, reparto por tipo).
