@@ -250,6 +250,93 @@ export type Goal = {
   milestones: Milestone[];
 };
 
+// --- Inversiones (Fase 3) ---
+
+export type ProductKind = 'etf' | 'stock' | 'fund' | 'crypto' | 'pension' | 'commodity' | 'other';
+
+export type Product = {
+  id: number;
+  name: string;
+  isin: string | null;
+  ticker: string | null;
+  kind: ProductKind;
+  currency: string;
+  price_source: 'yahoo' | 'manual' | 'morningstar' | 'coingecko';
+  source_id: string | null;
+  ter: string | null; // fracción: "0.00070" = 0,07 %
+  long_term: boolean;
+};
+
+export type ProductCreate = {
+  name: string;
+  isin: string | null;
+  ticker: string | null;
+  kind: ProductKind;
+  price_source: 'yahoo' | 'manual';
+  source_id: string | null;
+  ter: string | null;
+  long_term: boolean;
+};
+
+export type ProductUpdate = Partial<
+  Pick<ProductCreate, 'name' | 'isin' | 'ticker' | 'kind' | 'ter' | 'long_term'>
+>;
+
+export type Listing = { symbol: string; name: string | null; kind: ProductKind | null };
+
+export type PricePreview = {
+  symbol: string;
+  name: string | null;
+  exchange: string | null;
+  price: string;
+  currency: string;
+  price_date: string;
+  kind: ProductKind | null;
+};
+
+export type ProductPrice = {
+  product_id: number;
+  name: string;
+  symbol: string | null;
+  price: string | null;
+  currency: string | null;
+  date: string | null;
+  fetched_at: string | null;
+  stale: boolean;
+};
+
+export type PriceStatus = {
+  last_refresh: string | null;
+  stale: boolean;
+  max_age_hours: number;
+  products: ProductPrice[];
+};
+
+export type OperationKind = 'buy' | 'sell' | 'dividend' | 'fee';
+
+export type Operation = {
+  id: number;
+  account_id: number;
+  account_name: string;
+  product_id: number;
+  product_name: string;
+  date: string;
+  kind: OperationKind;
+  shares: string; // "1.50000000"
+  amount_eur: string;
+  fee_eur: string | null;
+};
+
+export type OperationCreate = {
+  account_id: number;
+  product_id: number;
+  date: string;
+  kind: OperationKind;
+  shares: string;
+  amount_eur: string;
+  fee_eur: string | null;
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -382,4 +469,25 @@ export const api = {
     request<RulesApplied>(`/api/rules/apply${queryString({ include_auto: includeAuto })}`, {
       method: 'POST',
     }),
+
+  products: () => request<Product[]>('/api/products'),
+  searchProducts: (q: string) => request<Listing[]>(`/api/products/search${queryString({ q })}`),
+  previewProduct: (symbol: string) =>
+    request<PricePreview>(`/api/products/preview${queryString({ symbol })}`),
+  createProduct: (product: ProductCreate) =>
+    request<Product>('/api/products', { method: 'POST', body: product }),
+  updateProduct: (id: number, changes: ProductUpdate) =>
+    request<Product>(`/api/products/${id}`, { method: 'PATCH', body: changes }),
+  deleteProduct: (id: number) => request<void>(`/api/products/${id}`, { method: 'DELETE' }),
+  operations: (filters: { account_id?: number; product_id?: number } = {}) =>
+    request<Operation[]>(`/api/investments/operations${queryString(filters)}`),
+  createOperation: (op: OperationCreate) =>
+    request<Operation>('/api/investments/operations', { method: 'POST', body: op }),
+  updateOperation: (id: number, changes: Partial<OperationCreate>) =>
+    request<Operation>(`/api/investments/operations/${id}`, { method: 'PATCH', body: changes }),
+  deleteOperation: (id: number) =>
+    request<void>(`/api/investments/operations/${id}`, { method: 'DELETE' }),
+  priceStatus: () => request<PriceStatus>('/api/prices/status'),
+  refreshPrices: () =>
+    request<{ items: unknown[]; status: PriceStatus }>('/api/prices/refresh', { method: 'POST' }),
 };

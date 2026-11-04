@@ -145,3 +145,53 @@ export function formatMoment(iso: string, now: Date = new Date()): string {
 export function daysSince(iso: string, now: Date = new Date()): number {
   return Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);
 }
+
+/**
+ * Participaciones escritas a la española ("0,25", "1,5", "3") → texto con punto ("0.25").
+ * También vale con punto ("0.25"). Hasta 8 decimales. Devuelve null si no es mayor que 0.
+ */
+export function parseEsShares(text: string): string | null {
+  const clean = text.trim().replace(/\s/g, '');
+  const match = /^(\d+)(?:[,.](\d{1,8}))?$/.exec(clean);
+  if (!match) return null;
+  const value = `${match[1]}.${match[2] ?? '0'}`;
+  return Number(value) > 0 ? value : null;
+}
+
+/** "1.50000000" → "1,5" · "0.00000012" → "0,00000012": sin ceros de más y con coma. */
+export function formatShares(shares: string): string {
+  const [integer, fraction = ''] = shares.split('.');
+  const trimmed = fraction.replace(/0+$/, '');
+  return trimmed ? `${integer},${trimmed}` : integer;
+}
+
+/** "731.400024" y "EUR" → "731,40 €" · con otra divisa, en esa divisa ("9,37 US$"). */
+export function formatPrice(price: string, currency: string): string {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+    useGrouping: 'always',
+  }).format(Number(price));
+}
+
+/**
+ * TER escrito en porcentaje ("0,07" o "0,07 %") → fracción con 5 decimales ("0.00070"),
+ * que es como lo guarda el backend. Vacío → null; inválido → undefined.
+ */
+export function parseTerPercent(text: string): string | null | undefined {
+  const clean = text.trim().replace(/\s|%/g, '');
+  if (clean === '') return null;
+  const match = /^(\d{1,2})(?:[,.](\d{1,3}))?$/.exec(clean);
+  if (!match) return undefined;
+  const thousandths = Number(match[1]) * 1000 + Number((match[2] ?? '').padEnd(3, '0'));
+  // porcentaje con 3 decimales → fracción con 5: 0,070 % = 70 milésimas = 0.00070
+  return `0.${String(thousandths).padStart(5, '0')}`;
+}
+
+/** "0.00070" → "0,07 %" (para enseñar o para rellenar el campo). */
+export function formatTerPercent(ter: string): string {
+  const percent = (Number(ter) * 100).toFixed(3).replace(/0$/, '');
+  return `${percent.replace('.', ',')} %`;
+}

@@ -10,6 +10,7 @@ divisa se toma de Yahoo. El tipo que propone Yahoo es orientativo: decide el usu
 Nadie ve ni toca los productos de otro usuario.
 """
 
+import logging
 import re
 from datetime import date
 from decimal import Decimal
@@ -25,9 +26,10 @@ from app.auth.deps import current_user
 from app.db import get_db
 from app.models import InvestmentOperation, Product, User
 from app.prices.service import normalize_currency
-from app.prices.yahoo import Quote, SymbolNotFoundError, YahooClient, YahooError
+from app.prices.yahoo import Quote, SymbolNotFoundError, YahooClient, YahooError, http_get
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+log = logging.getLogger(__name__)
 
 ProductName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 ISIN_RE = re.compile(r"[A-Z]{2}[A-Z0-9]{9}[0-9]")
@@ -54,13 +56,23 @@ Ter = Annotated[Decimal, Field(ge=0, lt=1, max_digits=7, decimal_places=5)]
 YAHOO_KINDS = {"ETF": "etf", "EQUITY": "stock", "MUTUALFUND": "fund", "CRYPTOCURRENCY": "crypto"}
 
 NOT_FOUND = "Producto no encontrado"
+YAHOO_DOWN = "No se ha podido consultar Yahoo. Prueba en un momento."
 DUPLICATE_ISIN = "Ya tienes un producto con ese ISIN"
 HAS_OPERATIONS = "Este producto tiene operaciones: bórralas antes de borrar el producto"
 
 
+# Alguien está esperando delante del formulario: un solo intento de 8 s (y no 3 de 15 s, como
+# el refresco en segundo plano). Si Yahoo no responde, el error llega enseguida.
+INTERACTIVE_TIMEOUT = 8.0
+
+
+def _interactive_get(url: str, timeout: float) -> bytes:
+    return http_get(url, timeout, retries=1)
+
+
 def yahoo_client() -> YahooClient:
     """Dependencia aparte para que los tests usen un Yahoo simulado."""
-    return YahooClient()
+    return YahooClient(_interactive_get, timeout=INTERACTIVE_TIMEOUT)
 
 
 class ProductCreate(BaseModel):
@@ -143,10 +155,8 @@ def _quote(client: YahooClient, symbol: str) -> Quote:
             status.HTTP_404_NOT_FOUND, detail=f"Yahoo no tiene precio para {symbol}"
         ) from None
     except YahooError as error:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            detail=f"No se ha podido consultar Yahoo ({error}). Prueba en un momento.",
-        ) from None
+        log.warning("Yahoo no responde: %s", error)  # el detalle técnico, al log
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=YAHOO_DOWN) from None
 
 
 def _commit_or_duplicate(db: Session) -> None:
@@ -166,10 +176,8 @@ def search(
     try:
         listings = client.search(q.strip())
     except YahooError as error:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            detail=f"No se ha podido consultar Yahoo ({error}). Prueba en un momento.",
-        ) from None
+        log.warning("Yahoo no responde: %s", error)  # el detalle técnico, al log
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=YAHOO_DOWN) from None
     return [
         ListingOut(symbol=item.symbol, name=item.name, kind=YAHOO_KINDS.get(item.kind or ""))
         for item in listings

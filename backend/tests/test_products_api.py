@@ -104,7 +104,8 @@ def test_search_when_yahoo_is_down(login, yahoo: FakeYahoo) -> None:
     yahoo.searches["SP500"] = YahooError("Yahoo no responde (sin red)")
     res = login("gerard").get("/api/products/search", params={"q": "SP500"})
     assert res.status_code == 502
-    assert "No se ha podido consultar Yahoo" in res.json()["detail"]
+    # Sin el detalle técnico (va al log): un mensaje que se entienda
+    assert res.json() == {"detail": "No se ha podido consultar Yahoo. Prueba en un momento."}
 
 
 def test_preview_shows_price_currency_and_exchange(login, yahoo: FakeYahoo) -> None:
@@ -327,3 +328,17 @@ def test_product_with_operations_cannot_be_deleted(login, yahoo) -> None:
     assert res.json() == {
         "detail": "Este producto tiene operaciones: bórralas antes de borrar el producto"
     }
+
+
+def test_interactive_yahoo_client_tries_once_and_quickly(monkeypatch) -> None:
+    from app.api import products as products_api
+
+    calls = []
+
+    def fake_get(url, timeout, *, retries=3, sleep=None):
+        calls.append((timeout, retries))
+        return b'{"quotes": []}'
+
+    monkeypatch.setattr(products_api, "http_get", fake_get)
+    assert products_api.yahoo_client().search("SXR8") == []
+    assert calls == [(8.0, 1)]
