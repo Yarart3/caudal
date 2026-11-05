@@ -139,7 +139,7 @@ Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta 
 
 ## 7. Las fases, de principio a fin
 
-Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6 → 7**. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
+Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5 → 6 → 7**. La Fase R (puesta en marcha) se añadió el 2026-11-05: Gerard empieza a usar lo suyo antes de la parte de los padres. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
 
 ---
 
@@ -253,6 +253,21 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
 
 ---
 
+### Fase R: puesta en marcha (uso real de Gerard)
+- **Por qué:** decisión de Gerard (2026-11-05): antes de la parte de los padres, dejar funcionando y en uso **lo suyo** (imagin, Wise, Trade Republic y Scalable) en la instancia real del **PC de casa (Windows)**. La Fase 4 queda para después.
+- **Prerrequisitos:** 3. El pendrive `Gerard` y la carpeta de OneDrive del PC.
+- **Necesito de Gerard:** las salidas de los comandos y, si algo falla con datos reales, **una fila de ejemplo inventada** con el mismo formato (nunca datos reales en el chat). La `BACKUP_PASSWORD` definitiva solo en su `.env` y apuntada en papel.
+- **Pasos (cada uno con su commit si cambia código):**
+  1. **R.1 · Preparar el PC:** `git pull`, `.env` definitivo, borrar la BD de pruebas y separar el desarrollo (pendiente 9), comprobar que Docker monta el pendrive (pendiente 12) y probar los cuatro `.bat`.
+  2. **R.2 · Backups de verdad:** copia manual, restauración completa desde el pendrive y desde OneDrive, y aviso con el pendrive desconectado (criterios aplazados de la 1d).
+  3. **R.3 · Movimientos reales:** importar varios meses de imagin y Wise, pasar por Revisar y ajustar reglas (pendiente 10 y criterios de la 1c y la 2).
+  4. **R.4 · Inversiones reales:** cuentas, productos y el historial con la plantilla; comparar con Trade Republic y Scalable el mismo día (criterio de la 3).
+  5. **R.5 · Arreglos:** corregir lo que falle o moleste en el uso real, con tests y ejemplos inventados.
+- **Hecho cuando:** Gerard usa Caudal en el PC con sus datos reales; se ha restaurado un backup real desde el pendrive y desde OneDrive; tras importar un mes, todo lo que no es Bizum queda categorizado; el valor de la cartera difiere menos del 1 % del de los brokers. Los criterios de los padres y del Mac siguen en el pendiente 11.
+- **Mensaje para empezar:** `Empezamos la Fase R de Caudal (puesta en marcha en el PC de casa). Sigue CLAUDE.md.`
+
+---
+
 ### Fase 4: los padres
 - **Prerrequisitos:** 3 (o 2, si se quiere adelantar; no depende de inversiones).
 - **Necesito de Gerard:** ejemplos **inventados** de CaixaBank y Sabadell.
@@ -312,7 +327,7 @@ El proyecto se da por **terminado** (v1.0) cuando:
 - Decisiones o pendientes que salen de esta fase.
 ```
 
-Versiones: Fase 0 = `0.0.1`, Fase 1a = `0.1.0`, 1b = `0.2.0`, 1c = `0.3.0`, 1d = `0.4.0`, 2 = `0.5.0`, 3 = `0.6.0`, 4 = `0.7.0`, 5 = `0.8.0`, proyecto terminado = `1.0.0`.
+Versiones: Fase 0 = `0.0.1`, Fase 1a = `0.1.0`, 1b = `0.2.0`, 1c = `0.3.0`, 1d = `0.4.0`, 2 = `0.5.0`, 3 = `0.6.0`, R = `0.6.1`, 4 = `0.7.0`, 5 = `0.8.0`, proyecto terminado = `1.0.0`.
 
 ## 10. Reglas que no se rompen nunca
 

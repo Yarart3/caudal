@@ -348,6 +348,7 @@ caudal/
 | 1d | Backups + accesos directos | ✅ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ✅ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ✅ |
+| R | Puesta en marcha: instancia real en el PC y revisión con datos reales | ⬜ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
 | 6 | Migración a Mac | ⬜ |
