@@ -46,6 +46,9 @@ def decide(
             f"{lock.at:%d/%m/%Y a las %H:%M}. Ciérralo allí con «Cerrar Caudal».",
         )
 
+    if not lock.version_id:
+        # El otro equipo abrió antes de que hubiera ninguna versión: no hay nada que traer
+        return Decision(Action.OPEN, "Todavía no hay ninguna versión guardada", unclean)
     if lock.version_id == local.version_id:
         return Decision(Action.OPEN, f"Ya tienes la última versión ({lock.version})", unclean)
     if lock.version_id in local.lineage:

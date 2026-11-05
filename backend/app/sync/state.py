@@ -23,8 +23,8 @@ class LocalState:
 
     @property
     def is_empty(self) -> bool:
-        """Base recién creada: nunca ha tenido datos ni ha recibido ninguna copia."""
-        return self.version_id is None and not self.has_data
+        """Sin usuarios: base recién creada, sin nada que perder si se restaura otra encima."""
+        return not self.has_data
 
 
 def extend_lineage(lineage: tuple[str, ...], *ids: str) -> tuple[str, ...]:

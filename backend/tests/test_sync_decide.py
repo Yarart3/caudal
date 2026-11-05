@@ -50,6 +50,12 @@ def test_sin_candado_abre_lo_local() -> None:
     assert d.action is Action.OPEN
 
 
+def test_candado_sin_version_no_trae_nada() -> None:
+    # El otro equipo abrió y se cerró sin llegar a guardar ninguna versión
+    d = decide(LocalState(), lock("", (), device="mac"), "pc", REVS)
+    assert d.action is Action.OPEN
+
+
 def test_misma_version_abre() -> None:
     d = decide(local("b", ("a", "b")), lock("b", ("a", "b")), "mac", REVS)
     assert d.action is Action.OPEN

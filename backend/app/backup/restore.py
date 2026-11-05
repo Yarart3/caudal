@@ -10,6 +10,7 @@ arrancar (`alembic upgrade head`).
 """
 
 import os
+import re
 import subprocess
 import tempfile
 from collections.abc import Iterator
@@ -36,6 +37,11 @@ from app.backup.service import (
 from app.config import Settings
 
 RESTORE_TIMEOUT_S = 1800
+# Subcarpeta de Google Drive (y del pendrive) donde la sincronización guarda las dos versiones
+# cuando los dos equipos tenían cambios (Fase R). La rotación no la toca.
+CONFLICTS_DIR = "conflictos"
+# En conflictos/ cada copia lleva delante de qué equipo y versión es: pc-v12_caudal_….dump.enc
+CONFLICT_RE = re.compile(r"^[a-z0-9-]+-v\d+_caudal_\d{4}-\d{2}-\d{2}_\d{4}\.dump\.enc$")
 
 
 @dataclass
@@ -44,10 +50,11 @@ class BackupFile:
     path: Path
     size: int
     modified_at: datetime
+    conflict: bool = False
 
     @property
     def label(self) -> str:
-        return LABELS[self.destination]
+        return LABELS[self.destination] + (" (conflicto)" if self.conflict else "")
 
 
 def available_backups(settings: Settings) -> list[BackupFile]:
@@ -56,12 +63,20 @@ def available_backups(settings: Settings) -> list[BackupFile]:
     for dest, directory in destination_dirs(settings).items():
         if not is_available(directory):
             continue
-        for path in list_backup_files(directory):
-            st = path.stat()
-            found.append(
-                BackupFile(dest, path, st.st_size, datetime.fromtimestamp(st.st_mtime, TZ))
+        folders = [(directory, False), (directory / CONFLICTS_DIR, True)]
+        for folder, conflict in folders:
+            if not folder.is_dir():
+                continue
+            files = (
+                sorted(p for p in folder.iterdir() if p.is_file() and CONFLICT_RE.match(p.name))
+                if conflict
+                else list_backup_files(folder)
             )
-    found.sort(key=lambda b: (b.path.name, b.destination), reverse=True)
+            for path in files:
+                st = path.stat()
+                modified = datetime.fromtimestamp(st.st_mtime, TZ)
+                found.append(BackupFile(dest, path, st.st_size, modified, conflict))
+    found.sort(key=lambda b: (b.path.name, b.destination, b.conflict), reverse=True)
     return found
 
 
