@@ -55,7 +55,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Tema | Decisión |
 |---|---|
 | Nombre | **Caudal** |
-| Dónde funciona | La instancia real, en el PC de casa de Gerard (Windows). Se desarrolla sobre todo en un MacBook Air M5 (macOS, Apple Silicon) y también en el portátil con Windows, siempre con datos inventados. Nada en la nube ni en un servidor. |
+| Dónde funciona | Desde la Fase R, instancia real en el **PC de casa (Windows)** y en el **MacBook Air M5**, sincronizadas por los backups cifrados en Google Drive (Fase R, sección 15). Se desarrolla sobre todo en el Mac, con una instancia aparte y datos inventados. Nada en un servidor: la nube solo guarda backups cifrados. |
 | Cómo se ejecuta | Docker (Docker Desktop). **No arranca solo al encender el PC**: se abre con el acceso directo "Caudal" y se cierra con "Cerrar Caudal". |
 | Acceso | Navegador en `http://localhost:8080`. Desde otros dispositivos de casa, `http://<IP-del-PC>:8080`, solo con el PC encendido y la app abierta. |
 | Usuarios | Inicio de sesión con usuario y contraseña. Dos usuarios: `gerard` (admin) y `padres`. Se pueden añadir más. |
@@ -710,10 +710,15 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día, y los tests de FIFO y XIRR pasan con casos calculados a mano.
 - **Hecho (2026-11-05):** detalle en `docs/fases/FASE_3.md`. Aplazado a la revisión final: comparar con los brokers con las operaciones reales y probar con Yahoo real la búsqueda y los índices de la comparativa (sección 17, pendiente 11).
 
-### Fase R: puesta en marcha (Gerard)
-- Decisión del 2026-11-05: **antes de la Fase 4**, la instancia real se instala en el **PC de casa** y Gerard empieza a usarla con lo suyo (imagin, Wise, Trade Republic y Scalable).
-- Se hace la parte de Gerard de la **revisión final** (pendiente 11): backups y restauración reales, pendrive en WSL2 (pendiente 12), BD de pruebas fuera y desarrollo separado (pendiente 9), extractos reales de Wise (pendiente 10), categorización con datos reales y comparación de la cartera con los brokers.
-- **Hecho cuando:** Gerard usa Caudal en el PC con sus datos reales y los criterios aplazados de su parte (1c, 1d, 2 y 3) están revisados.
+### Fase R: puesta en marcha (Gerard, en el Mac y en el PC)
+- Decisión del 2026-11-05: **antes de la Fase 4**, Gerard empieza a usar lo suyo (imagin, Wise, Trade Republic y Scalable) con datos reales **en los dos equipos**, el MacBook y el PC de casa.
+- **Sincronización por backups**, no por un servidor: cada equipo tiene su instancia y se pasan los datos con los backups cifrados de una carpeta de **Google Drive**, con una cuenta de Google solo para Caudal (verificación en dos pasos) y Drive para ordenadores en modo «duplicar archivos» (todo siempre en el disco). Sustituye a OneDrive UdL como destino de los backups en la nube.
+  - Al **cerrar**: backup con número de versión, equipo y versión del esquema, y un **candado** en la carpeta («cerrado en el Mac, versión N»).
+  - Al **abrir**: si el candado dice «abierto en el otro equipo», no arranca (se puede forzar). Si dice «cerrado, versión N» y esa copia aún no ha bajado, espera. Si hay una versión más nueva y no hay cambios locales sin copia, **restaura sola**. Si los dos equipos tienen cambios, **no decide**: enseña las dos versiones, se elige una y se guardan las dos. Si la copia viene de un esquema más nuevo, pide actualizar el código antes.
+  - **Riesgo aceptado:** si se cambia de equipo antes de que Google Drive suba el candado (uno o dos minutos), el otro equipo no sabe que hay algo nuevo. La pantalla de inicio enseña «Última copia: equipo, fecha y hora» para notarlo, y los conflictos nunca borran copias.
+  - Se descartaron: una sola instancia (obliga a estar en un equipo), el PC como servidor con VPN (PC siempre encendido), un servidor en la nube (los datos saldrían de casa), OneDrive personal (una sola cuenta personal por equipo), iCloud (espacio compartido con el iPhone y app de Windows más floja) y Syncthing (necesita los dos equipos encendidos a la vez).
+- Además, la parte de Gerard de la **revisión final** (pendiente 11): backups y restauración reales, pendrive en WSL2 (pendiente 12), BD de pruebas fuera y desarrollo separado (pendiente 9), extractos reales de Wise (pendiente 10), categorización con datos reales y comparación de la cartera con los brokers.
+- **Hecho cuando:** Gerard usa Caudal con sus datos reales en los dos equipos y al cambiar de uno a otro ve lo último que hizo, y los criterios aplazados de su parte (1c, 1d, 2 y 3) están revisados.
 
 ### Fase 4: los padres
 - Importadores de **CaixaBank** y **Sabadell** + **asistente genérico**.
@@ -739,7 +744,7 @@ Instancia **separada** con datos **100 % inventados**, README público para GitH
 
 ### 16.1 Preparar el Mac para desarrollar (hecho el 2026-10-11)
 
-MacBook Air M5 (Apple Silicon). En el Mac solo se desarrolla y se prueba con los ejemplos inventados; la instancia real sigue en el PC de casa.
+MacBook Air M5 (Apple Silicon). En el Mac se desarrolla con una instancia aparte y los ejemplos inventados; desde la Fase R tiene además una instancia real, sincronizada con el PC.
 
 1. **Docker Desktop**, versión *Apple chip*; al abrirlo por primera vez, instalar Rosetta si lo pide y desactivar *"Start Docker Desktop when you sign in"*. Comprobar con `docker run hello-world`.
 2. **Git:** `xcode-select --install` y `git config --global user.name/user.email`.
@@ -774,7 +779,7 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 4 | Ejemplos de CaixaBank y Sabadell | Antes de la Fase 4 |
 | 5 | ~~Confirmar las categorías iniciales~~ → se quedan las de la sección 9.4 | ✅ Fase 1c |
 | 6 | ~~Objetivo de patrimonio de cada usuario~~ → cada usuario lo pone en Patrimonio → Objetivo | ✅ Fase 2 |
-| 7 | Destino de los backups tras graduarse (sustituir OneDrive UdL) | Antes de acabar la carrera |
+| 7 | ~~Destino de los backups tras graduarse (sustituir OneDrive UdL)~~ → Google Drive con una cuenta de Google solo para Caudal (también sirve para sincronizar el Mac y el PC); se configura en la R.1 | ✅ Decidido en la Fase R |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
 | 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`), separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev`, elegir la `BACKUP_PASSWORD` definitiva y apuntarla en papel | Antes del primer uso real (revisión final) |
 | 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
@@ -792,7 +797,7 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 ## 19. Instrucciones para Claude en este proyecto
 
 - **Idioma:** español.
-- **Sistema:** se desarrolla sobre todo en **macOS** (Apple Silicon, zsh); todo debe funcionar también en **Windows**, donde está la instancia real (scripts para los dos y rutas en `.env`). Los comandos, primero en zsh y, si cambian, en PowerShell.
+- **Sistema:** se desarrolla sobre todo en **macOS** (Apple Silicon, zsh); todo debe funcionar también en **Windows** (las dos tienen instancia real desde la Fase R; scripts para los dos y rutas en `.env`). Los comandos, primero en zsh y, si cambian, en PowerShell.
 - **Forma de trabajar:** una fase o bloque por conversación. Seguir `CLAUDE.md`, leer este documento al empezar y respetar sus decisiones. Si algo cambia, proponer la actualización de este documento.
 - **Entregables:** archivos completos, listos para usar, con **pasos exactos** para ejecutarlos. Sin TODOs ni plantillas a medias.
 - **Diseño:** seguir la maqueta (`maqueta/caudal-maqueta.html`) y el estilo de la sección 14.

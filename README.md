@@ -146,7 +146,7 @@ Abre **http://localhost:8080**. La primera vez aparece el **asistente** para cre
 El código se desarrolla en varios equipos (MacBook Air, portátil con Windows y PC de casa) y se sincroniza **solo con Git a través de GitHub**. Hay que tener claras tres cosas:
 
 - **Git solo lleva el código y la documentación.** Los datos de la app (la base de datos, en el volumen de Docker) y el archivo `.env` **no viajan con Git**, y nunca deben subirse.
-- **La instancia real, con los datos de verdad, solo funciona en el PC de casa** (ver `docs/DISENO.md`). En el resto de equipos solo se desarrolla y se prueba con los ejemplos inventados de `samples/`. Para mover los datos de un ordenador a otro se usa el script *Restaurar backup*.
+- **Desde la Fase R, la instancia real funciona en el Mac y en el PC de casa**, sincronizadas por los backups cifrados en Google Drive: al cerrar en uno y abrir en el otro, se restaura sola la última copia (ver `docs/DISENO.md`, Fase R). Para desarrollar se usa una instancia aparte con los ejemplos inventados de `samples/`.
 - **Regla de oro:** antes de empezar, `git pull`; al terminar, `git commit` + `git push`. Así nunca hay dos equipos con cambios distintos sin subir.
 
 Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal, y la preparación del equipo está en la sección 16.1 de `docs/DISENO.md`.
@@ -348,7 +348,7 @@ caudal/
 | 1d | Backups + accesos directos | ✅ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ✅ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ✅ |
-| R | Puesta en marcha: instancia real en el PC y revisión con datos reales | ⬜ |
+| R | Puesta en marcha: uso real en el Mac y en el PC, sincronizados por Google Drive | ⬜ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
 | 6 | Migración a Mac | ⬜ |

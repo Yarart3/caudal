@@ -19,7 +19,7 @@
 ## 2. Con quién trabajas
 
 - **Gerard**, estudiante de 4º de Ingeniería Informática. Sabe programar; no hace falta explicar lo básico, pero sí **por qué** se elige cada cosa cuando no es obvio.
-- Desarrolla sobre todo en un **MacBook Air M5** (macOS, Apple Silicon, zsh). También tiene un portátil y el PC de casa con **Windows** (PowerShell); la instancia real, con los datos de verdad, funciona en el PC de casa. Todo tiene que funcionar en los dos sistemas.
+- Desarrolla sobre todo en un **MacBook Air M5** (macOS, Apple Silicon, zsh). También tiene un portátil y el PC de casa con **Windows** (PowerShell); desde la Fase R hay instancia real, con los datos de verdad, **en el Mac y en el PC de casa**, sincronizadas por los backups en Google Drive. Todo tiene que funcionar en los dos sistemas.
 - Prefiere **archivos completos y comandos exactos para copiar y pegar**, paso a paso, en **español**.
 - Valora la **honestidad**: si algo es mala idea o tiene riesgos, díselo y propón una alternativa.
 - Los usuarios finales son **Gerard** y **sus padres** (que no son técnicos).
@@ -139,7 +139,7 @@ Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta 
 
 ## 7. Las fases, de principio a fin
 
-Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5 → 6 → 7**. La Fase R (puesta en marcha) se añadió el 2026-11-05: Gerard empieza a usar lo suyo antes de la parte de los padres. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
+Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5 → 6 → 7**. La Fase R (puesta en marcha) se añadió el 2026-11-05: Gerard empieza a usar lo suyo, en el Mac y en el PC, antes de la parte de los padres. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
 
 ---
 
@@ -253,18 +253,20 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5
 
 ---
 
-### Fase R: puesta en marcha (uso real de Gerard)
-- **Por qué:** decisión de Gerard (2026-11-05): antes de la parte de los padres, dejar funcionando y en uso **lo suyo** (imagin, Wise, Trade Republic y Scalable) en la instancia real del **PC de casa (Windows)**. La Fase 4 queda para después.
-- **Prerrequisitos:** 3. El pendrive `Gerard` y la carpeta de OneDrive del PC.
-- **Necesito de Gerard:** las salidas de los comandos y, si algo falla con datos reales, **una fila de ejemplo inventada** con el mismo formato (nunca datos reales en el chat). La `BACKUP_PASSWORD` definitiva solo en su `.env` y apuntada en papel.
+### Fase R: puesta en marcha (uso real de Gerard en el Mac y en el PC)
+- **Por qué:** decisión de Gerard (2026-11-05): antes de la parte de los padres, usar ya **lo suyo** (imagin, Wise, Trade Republic y Scalable) con datos reales, **tanto en el MacBook como en el PC de casa**. La Fase 4 queda para después.
+- **Cómo (DISENO §15, Fase R):** una instancia real en cada equipo, sincronizadas por los **backups cifrados** en una carpeta de **Google Drive** (cuenta de Google solo para Caudal, en modo «duplicar archivos»): al cerrar se hace backup y se deja un **candado** «cerrado en el Mac, versión N»; al abrir, si hay una versión más nueva y no hay cambios locales sin copia, **se restaura sola**. Si el candado dice «abierto en el otro equipo», no arranca (salvo forzar). Si la última copia aún no ha bajado, espera. Si los dos tienen cambios, pregunta y guarda las dos. Si la copia es de un esquema más nuevo, pide `git pull` antes.
+- **Prerrequisitos:** 3. El pendrive `Gerard`. La cuenta de Google de Caudal creada (con verificación en dos pasos).
+- **Necesito de Gerard:** las salidas de los comandos y, si algo falla con datos reales, **una fila de ejemplo inventada** con el mismo formato (nunca datos reales en el chat). La `BACKUP_PASSWORD` definitiva solo en sus `.env` (la misma en los dos equipos) y apuntada en papel.
 - **Pasos (cada uno con su commit si cambia código):**
-  1. **R.1 · Preparar el PC:** `git pull`, `.env` definitivo, borrar la BD de pruebas y separar el desarrollo (pendiente 9), comprobar que Docker monta el pendrive (pendiente 12) y probar los cuatro `.bat`.
-  2. **R.2 · Backups de verdad:** copia manual, restauración completa desde el pendrive y desde OneDrive, y aviso con el pendrive desconectado (criterios aplazados de la 1d).
-  3. **R.3 · Movimientos reales:** importar varios meses de imagin y Wise, pasar por Revisar y ajustar reglas (pendiente 10 y criterios de la 1c y la 2).
-  4. **R.4 · Inversiones reales:** cuentas, productos y el historial con la plantilla; comparar con Trade Republic y Scalable el mismo día (criterio de la 3).
-  5. **R.5 · Arreglos:** corregir lo que falle o moleste en el uso real, con tests y ejemplos inventados.
-- **Hecho cuando:** Gerard usa Caudal en el PC con sus datos reales; se ha restaurado un backup real desde el pendrive y desde OneDrive; tras importar un mes, todo lo que no es Bizum queda categorizado; el valor de la cartera difiere menos del 1 % del de los brokers. Los criterios de los padres y del Mac siguen en el pendiente 11.
-- **Mensaje para empezar:** `Empezamos la Fase R de Caudal (puesta en marcha en el PC de casa). Sigue CLAUDE.md.`
+  1. **R.1 · Preparar los dos equipos:** Drive para ordenadores con la cuenta de Caudal en modo «duplicar» y la carpeta `CaudalBackups`; comprobar que Docker la monta en el Mac y en el PC; `.env` real en cada uno (`DEVICE_NAME=mac` / `pc`, ruta de Google Drive en lugar de OneDrive UdL); borrar las BD de pruebas; separar en el Mac la instancia de desarrollo de la real (pendiente 9); comprobar que Docker monta el pendrive en Windows (pendiente 12).
+  2. **R.2 · Sincronización:** candado, número de versión, espera a Google Drive, conflictos y versión del esquema, en los scripts de abrir y cerrar del Mac y del PC, con tests de cada caso.
+  3. **R.3 · Backups de verdad:** restauración real desde el pendrive y desde Google Drive, y el cambio Mac → PC → Mac probado de punta a punta (criterios aplazados de la 1d).
+  4. **R.4 · Movimientos reales:** importar varios meses de imagin y Wise, pasar por Revisar y ajustar reglas (pendiente 10 y criterios de la 1c y la 2).
+  5. **R.5 · Inversiones reales:** cuentas, productos y el historial con la plantilla; comparar con Trade Republic y Scalable el mismo día (criterio de la 3).
+  6. **R.6 · Arreglos:** corregir lo que falle o moleste en el uso real, con tests y ejemplos inventados.
+- **Hecho cuando:** Gerard usa Caudal con sus datos reales en el Mac y en el PC, y al pasar de uno a otro ve lo último que hizo; se ha restaurado un backup real desde el pendrive y desde Google Drive; tras importar un mes, todo lo que no es Bizum queda categorizado; el valor de la cartera difiere menos del 1 % del de los brokers. Lo de los padres sigue en el pendiente 11.
+- **Mensaje para empezar:** `Empezamos la Fase R de Caudal (puesta en marcha en el Mac y en el PC, con sincronización por Google Drive). Sigue CLAUDE.md.`
 
 ---
 
@@ -286,7 +288,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5
 ---
 
 ### Fase 6: migración a Mac
-- **Estado:** el Mac ya está preparado para desarrollar (sección 16.1 de DISENO). Esta fase es solo para pasar al Mac la **instancia real**, que hasta entonces sigue en el PC de casa.
+- **Estado:** el Mac ya está preparado para desarrollar (sección 16.1 de DISENO) y desde la **Fase R** tiene también instancia real, sincronizada con el PC. Esta fase queda solo si algún día se deja el PC y todo pasa al Mac.
 - **Prerrequisitos:** 1d como mínimo.
 - **Pasos:** sección 16.2 de DISENO. Comprobar los scripts `.command`, la ruta de OneDrive en el Mac, `/Volumes/Gerard` y que las imágenes de Docker funcionan en ARM.
 - **Hecho cuando:** se restaura el último backup en el Mac y los totales coinciden con los del PC.
