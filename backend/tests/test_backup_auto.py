@@ -40,15 +40,15 @@ def quiet_stats() -> None:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    usb, onedrive = tmp_path / "pendrive", tmp_path / "onedrive"
-    for d in (usb, onedrive):
+    usb, cloud = tmp_path / "pendrive", tmp_path / "cloud"
+    for d in (usb, cloud):
         d.mkdir()
         (d / MARKER).touch()
     return get_settings().model_copy(
         update={
             "backup_password": SecretStr(PASSWORD),
             "backup_usb_dir": usb,
-            "backup_onedrive_dir": onedrive,
+            "backup_cloud_dir": cloud,
             "backup_auto": True,
         }
     )
@@ -142,7 +142,7 @@ def test_al_arrancar_con_un_backup_reciente_no_hace_nada(auto, db):
 def test_al_arrancar_con_un_backup_de_hace_mas_de_7_dias_hace_uno(auto, db):
     old = datetime.now(TZ) - timedelta(days=8)
     db.add(BackupLog(created_at=old, destination="usb", result="ok", message="x (manual)"))
-    db.add(BackupLog(destination="onedrive", result="error", message="no (manual)"))
+    db.add(BackupLog(destination="cloud", result="error", message="no (manual)"))
     db.commit()
     result = auto.startup_check()
     assert result is not None and result.ok

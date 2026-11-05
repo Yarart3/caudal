@@ -25,7 +25,7 @@
 9. [Lógica automática](#9-lógica-automática)
 10. [Arquitectura y stack](#10-arquitectura-y-stack)
 11. [Arranque y parada (Docker solo cuando quieras)](#11-arranque-y-parada-docker-solo-cuando-quieras)
-12. [Copias de seguridad (pendrive + OneDrive)](#12-copias-de-seguridad-pendrive--onedrive)
+12. [Copias de seguridad (pendrive + Google Drive)](#12-copias-de-seguridad-pendrive--google-drive)
 13. [Seguridad y privacidad](#13-seguridad-y-privacidad)
 14. [La maqueta](#14-la-maqueta)
 15. [Roadmap por fases](#15-roadmap-por-fases)
@@ -66,7 +66,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Datos visibles por movimiento | **Cuenta, Concepto, Fecha, Importe** (+ Categoría, asignada automáticamente) |
 | Gasto o ingreso | Lo deduce la app por el **signo del importe** |
 | Precios de inversiones | Automáticos (Morningstar, Yahoo Finance, CoinGecko), con retraso de ~15 min en bolsa; fondos, una vez al día |
-| Backups | Automáticos y **cifrados**, en el **pendrive** (siempre conectado, 250 GB) y en **OneDrive** (cuenta de la universidad) |
+| Backups | Automáticos y **cifrados**, en el **pendrive** (siempre conectado, 250 GB) y en **Google Drive** (cuenta solo para Caudal; hasta la Fase R, OneDrive de la UdL) |
 | IA | En las primeras fases no se usa IA externa con datos reales. Si más adelante se usa un modelo, será **local**. |
 | Stack | PostgreSQL + FastAPI (Python) + React (Vite; gráficos en CSS como la maqueta), con Docker Compose |
 
@@ -351,7 +351,7 @@ objetivos
   id, usuario_id (único: un objetivo por usuario), importe_meta NUMERIC(12,2) > 0, nombre, actualizado_en
 
 registro_backups
-  id, fecha_hora, destino ("pendrive" | "onedrive"), resultado ("ok" | "error"), mensaje
+  id, fecha_hora, destino ("pendrive" | "nube"), resultado ("ok" | "error"), mensaje
 ```
 
 - Dinero en **`NUMERIC`**, nunca `float`. En Python, **`Decimal`**.
@@ -431,7 +431,7 @@ Todo se **calcula al pedirlo** (no hay tablas de avisos ni de recurrentes) y exc
  └─────────────────────────────┘
       │ backups cifrados            │ precios (solo ISIN/ticker)
       ▼                             ▼
-  pendrive + OneDrive         Yahoo / Morningstar / CoinGecko
+  pendrive + Google Drive     Yahoo / Morningstar / CoinGecko
 ```
 
 | Capa | Tecnología |
@@ -504,14 +504,19 @@ BACKUP_INTERVAL_MIN=60
 BACKUP_KEEP=30
 BACKUP_MAX_AGE_DAYS=7
 USB_LABEL=Gerard
-# Windows (PC de casa y portátil). Siempre entre comillas:
-ONEDRIVE_DIR="C:\Users\gerar\OneDrive - udl.cat\Proyectos\CaudalBackups"
-# macOS (el nombre exacto de la carpeta `OneDrive-...` sale con `ls ~/Library/CloudStorage/`).
+
+# Qué equipo es (Fase R): mac o pc. Va en el candado y en «Última copia: …».
+DEVICE_NAME=mac
+
+# Carpeta de backups en la nube (Google Drive, modo «Replicar archivos»). Siempre entre comillas.
+# Mac:     CLOUD_DIR="/Users/gerard/Library/CloudStorage/GoogleDrive-<correo>/Mi unidad/CaudalBackups"
+# Windows: la ruta de «Mi unidad» que indica Google Drive en el PC, más \CaudalBackups
 # En el Mac de DESARROLLO, una carpeta aparte (nunca la real: se mezclarían y la rotación borraría copias buenas):
-# ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackupsDev"
+# CLOUD_DIR="/Users/gerard/Library/CloudStorage/GoogleDrive-<correo>/Mi unidad/CaudalBackupsDev"
+CLOUD_DIR=""
 ```
 
-El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_SECRET`: las sesiones se guardan en la base de datos (sección 4).
+El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_SECRET`: las sesiones se guardan en la base de datos (sección 4). El destino en la nube es una carpeta de **Google Drive** (Fase R). En el código se llama `cloud` (`CLOUD_DIR`, `/backups/cloud`, `backup_log.destination = 'cloud'`) para no depender del proveedor; la etiqueta visible es «Google Drive».
 
 **Decisiones de implementación (Fase 1a):**
 - **Migraciones automáticas:** la app ejecuta `alembic upgrade head` al arrancar, así que nadie tiene que acordarse de migrar.
@@ -544,7 +549,7 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Formato del archivo de backup** (`.dump.enc`): cabecera de 40 bytes (`CAUDALBK`, versión, parámetros de scrypt N = 2^17, r = 8, p = 1, sal de 16 bytes y nonce de 12) + datos cifrados con AES-256-GCM. La cabecera va como datos asociados: cambiar un solo byte hace fallar el descifrado. Al leer, se rechazan parámetros de scrypt abusivos.
 - **Cliente de PostgreSQL 16** en la imagen, del repositorio oficial PGDG: el `pg_dump` de Debian es de otra versión.
 - **Marcador `.caudal-backups`:** la app solo escribe en una carpeta que lo tenga. Lo crean los scripts de arranque. Así, sin pendrive (o desconectado con la app abierta) sale «Pendrive ✗» en lugar de escribir en una carpeta vacía que monta Docker.
-- **Destinos montados** en `/backups/usb` y `/backups/onedrive`. `USB_BACKUP_DIR` no va en el `.env`: lo pone el script si encuentra el pendrive. Si no existe la carpeta de OneDrive, el script no deja que Docker la cree.
+- **Destinos montados** en `/backups/usb` y `/backups/cloud` (hasta la Fase R, `/backups/onedrive`). `USB_BACKUP_DIR` no va en el `.env`: lo pone el script si encuentra el pendrive. Si no existe la carpeta de la nube, el script no deja que Docker la cree.
 - **Escritura atómica** (archivo temporal + renombrar) y **bloqueo de PostgreSQL** (`pg_try_advisory_lock`) para que no haya dos copias a la vez, aunque una la lance la app y otra el script.
 - **«Si hubo cambios»** se mira con los contadores de `pg_stat_user_tables` (sin `sessions` ni `backup_log`). PostgreSQL los publica con hasta unos segundos de retraso: como mucho sale una copia de más, nunca una de menos.
 - **Sin APScheduler:** un hilo de la app hace la copia de arranque y la periódica. Tras importar, la copia va en segundo plano después de responder.
@@ -581,7 +586,7 @@ Los accesos directos están en `scripts/windows/` (`.bat`, que llaman a un `.ps1
 
 ---
 
-## 12. Copias de seguridad (pendrive + OneDrive)
+## 12. Copias de seguridad (pendrive + Google Drive)
 
 ### Cuándo (automático)
 
@@ -596,7 +601,7 @@ Los accesos directos están en `scripts/windows/` (`.bat`, que llaman a un `.ps1
 
 ### Dónde
 1. **Pendrive** (siempre conectado, 250 GB), detectado por **nombre de volumen** (`USB_LABEL`, ahora `Gerard`) → carpeta `CaudalBackups/`. El pendrive puede tener más archivos: Caudal solo escribe en esa carpeta.
-2. **OneDrive** (cuenta de la universidad) → carpeta sincronizada `CaudalBackups/`.
+2. **Google Drive** (cuenta de Google solo para Caudal, modo «Replicar archivos») → carpeta `Mi unidad/CaudalBackups/`, la misma en el Mac y en el PC. Hasta la Fase R era OneDrive de la UdL.
 
 Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
 
@@ -604,18 +609,18 @@ Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
 - `pg_dump` (formato custom) → **AES-256-GCM** con clave derivada de `BACKUP_PASSWORD` por **scrypt** → `caudal_AAAA-MM-DD_HHMM.dump.enc`. Formato en la sección 10 (decisiones de la Fase 1d).
 - **Rotación:** las **30 últimas** por destino. Solo se tocan los archivos con ese nombre; el resto del pendrive no.
 - **Registro:** cada intento, por destino, en `backup_log`.
-- **Indicador:** `Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓` en la cabecera, y **Ajustes → Copias de seguridad** con «Hacer copia ahora». En rojo si falta la contraseña, si la última copia tiene más de 7 días o si un destino tiene ✗.
+- **Indicador:** `Último backup: hoy 18:42 · Pendrive ✓ · Google Drive ✓` en la cabecera, y **Ajustes → Copias de seguridad** con «Hacer copia ahora». En rojo si falta la contraseña, si la última copia tiene más de 7 días o si un destino tiene ✗.
 
 ### Contraseña de backup
 - **Distinta** de las de inicio de sesión.
-- Está en el `.env` para que los backups sean automáticos. Protege las copias del pendrive y de OneDrive, pero no a quien tenga acceso al propio PC.
+- Está en el `.env` para que los backups sean automáticos. Protege las copias del pendrive y de Google Drive, pero no a quien tenga acceso al propio PC.
 - **Apuntarla en papel en un sitio seguro.** Si se pierde, las copias no se pueden abrir.
 
 ### Restaurar
-Script **"Restaurar backup"**: enseña una lista numerada con las copias del pendrive y de OneDrive, se elige una, se escribe la contraseña (Enter = la del `.env`) y se confirma escribiendo `RESTAURAR`. Antes de tocar nada descifra y comprueba el archivo; después hace una copia de lo actual, borra la base y hace `pg_restore` en una sola transacción. Probado en la Fase 1d con datos inventados y OneDrive; con el pendrive real y en el PC, en la revisión final (sección 17, pendiente 11) y en la mudanza al Mac.
+Script **"Restaurar backup"**: enseña una lista numerada con las copias del pendrive y de Google Drive, se elige una, se escribe la contraseña (Enter = la del `.env`) y se confirma escribiendo `RESTAURAR`. Antes de tocar nada descifra y comprueba el archivo; después hace una copia de lo actual, borra la base y hace `pg_restore` en una sola transacción. Probado en la Fase 1d con datos inventados y OneDrive; con el pendrive real y en el PC, en la revisión final (sección 17, pendiente 11) y en la mudanza al Mac.
 
 ### Avisos
-- **OneDrive de la universidad:** al acabar la carrera la UdL desactivará la cuenta. **Antes de graduarse** hay que mover los backups a otro sitio. Conviene revisar las normas de uso de la UdL sobre archivos personales. Al ir cifrados, nadie puede leerlos.
+- **Google Drive:** cuenta de Google solo para Caudal, con verificación en dos pasos. Sustituye a OneDrive de la UdL, que se desactivará al acabar la carrera. Al ir cifrados, Google no puede leer los backups.
 - **Pendrive:** es fiable, pero falla más que un disco. Por eso hay dos destinos.
 
 ---
@@ -751,7 +756,7 @@ MacBook Air M5 (Apple Silicon). En el Mac se desarrolla con una instancia aparte
 3. **GitHub:** Homebrew, `brew install gh` y `gh auth login`.
 4. **Proyecto:** `git clone https://github.com/Yarart3/caudal.git` en `~/Proyectos/caudal` (fuera de OneDrive).
 5. **VS Code:** las mismas extensiones que en Windows y *Shell Command: Install 'code' command in PATH*.
-6. **OneDrive:** la app con la cuenta de la UdL. La carpeta queda en `~/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/OneDrive-*/Proyectos/CaudalBackups`) y se marca *"Mantener siempre en este dispositivo"*.
+6. **Google Drive** (desde la Fase R): Google Drive para ordenadores con la cuenta de Caudal, en modo *«Replicar archivos»*. La carpeta queda en `~/Library/CloudStorage/GoogleDrive-<correo>/Mi unidad/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/GoogleDrive-*/Mi\ unidad`). Antes era OneDrive de la UdL.
 7. **Pendrive:** no hace falta para desarrollar. Si se conecta, aparece en `/Volumes/Gerard`.
 
 ### 16.2 Pasar la instancia real al Mac (Fase 6, después de la 1d)
@@ -761,7 +766,7 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 1. En Windows: **"Cerrar Caudal"** (hace el backup final).
 2. En el Mac, ya preparado (16.1): `git pull`.
 3. Crear el `.env` del Mac con la misma `BACKUP_PASSWORD` y:
-   - `ONEDRIVE_DIR="/Users/gerard/Library/CloudStorage/OneDrive-udl.cat/Proyectos/CaudalBackups"`.
+   - `CLOUD_DIR="/Users/gerard/Library/CloudStorage/GoogleDrive-<correo>/Mi unidad/CaudalBackups"`.
    - El pendrive aparece en `/Volumes/Gerard`.
 4. **"Restaurar backup"** con el último backup.
 5. Abrir con `Caudal.command` (la primera vez, `chmod +x` y permitirlo en *Privacidad y seguridad*).

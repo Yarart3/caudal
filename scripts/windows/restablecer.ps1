@@ -8,7 +8,7 @@ Comprobar-Env
 Esperar-Docker
 # Solo para que Docker no cree carpetas de backup que no existen (aquí no se hacen copias)
 Preparar-Pendrive *> $null
-Preparar-OneDrive *> $null
+Preparar-Nube *> $null
 
 Write-Host ''
 & docker compose run --rm app python -m app.auth.reset

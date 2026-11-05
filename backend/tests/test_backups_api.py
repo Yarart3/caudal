@@ -21,7 +21,7 @@ PASSWORD = "clave-de-prueba-1d"
 
 @pytest.fixture
 def dirs(tmp_path: Path) -> dict[str, Path]:
-    result = {"usb": tmp_path / "pendrive", "onedrive": tmp_path / "onedrive"}
+    result = {"usb": tmp_path / "pendrive", "cloud": tmp_path / "cloud"}
     for d in result.values():
         d.mkdir()
         (d / MARKER).touch()
@@ -34,7 +34,7 @@ def settings(dirs) -> Iterator[Settings]:
         update={
             "backup_password": SecretStr(PASSWORD),
             "backup_usb_dir": dirs["usb"],
-            "backup_onedrive_dir": dirs["onedrive"],
+            "backup_cloud_dir": dirs["cloud"],
         }
     )
     app.dependency_overrides[backup_settings] = lambda: current
@@ -58,7 +58,7 @@ def test_estado_sin_backups(login, settings) -> None:
     assert status["stale"] is True
     assert status["max_age_days"] == 7
     dests = by_dest(status)
-    assert [d["label"] for d in status["destinations"]] == ["Pendrive", "OneDrive"]
+    assert [d["label"] for d in status["destinations"]] == ["Pendrive", "Google Drive"]
     assert dests["usb"]["available"] is True
     assert dests["usb"]["ok"] is False  # disponible, pero todavía sin backups
     assert dests["usb"]["last_at"] is None
@@ -71,7 +71,7 @@ def test_copia_manual(login, settings, dirs) -> None:
     body = res.json()
     assert body["ok"] is True
     assert (dirs["usb"] / body["filename"]).is_file()
-    assert (dirs["onedrive"] / body["filename"]).is_file()
+    assert (dirs["cloud"] / body["filename"]).is_file()
     status = body["status"]
     assert status["stale"] is False
     assert status["last_backup_at"] is not None
@@ -83,7 +83,7 @@ def test_copia_manual(login, settings, dirs) -> None:
 def test_pendrive_no_conectado(login, settings, dirs) -> None:
     (dirs["usb"] / MARKER).unlink()
     body = login("gerard").post("/api/backups/run").json()
-    assert body["ok"] is True  # OneDrive sí
+    assert body["ok"] is True  # Google Drive sí
     dests = by_dest(body["status"])
     assert dests["usb"] | {"last_at": None} == {
         "destination": "usb",
@@ -94,7 +94,7 @@ def test_pendrive_no_conectado(login, settings, dirs) -> None:
         "last_ok_at": None,
         "message": "Pendrive no conectado",
     }
-    assert dests["onedrive"]["ok"] is True
+    assert dests["cloud"]["ok"] is True
 
 
 def test_pendrive_desconectado_despues_de_un_backup_bueno(login, settings, dirs) -> None:

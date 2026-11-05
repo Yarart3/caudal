@@ -89,7 +89,7 @@ function Preparar-Pendrive {
     $discos = @(Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction SilentlyContinue |
             Where-Object { $_.VolumeName -eq $etiqueta })
     if ($discos.Count -eq 0) {
-        Aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a OneDrive"
+        Aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a Google Drive"
         return
     }
     if ($discos.Count -gt 1) {
@@ -109,25 +109,25 @@ function Preparar-Pendrive {
     Ok "Pendrive «$etiqueta» conectado ($($discos[0].DeviceID))"
 }
 
-# OneDrive: la carpeta de ONEDRIVE_DIR tiene que existir (la crea la app de OneDrive). Si no
+# Google Drive: la carpeta de CLOUD_DIR tiene que existir (la crea la app de Google Drive). Si no
 # existe, NO se deja que Docker la cree (sería una carpeta normal, sin sincronizar): se monta
 # una carpeta vacía sin marcador y la app avisa.
-function Preparar-OneDrive {
-    $dir = Env-Valor 'ONEDRIVE_DIR'
+function Preparar-Nube {
+    $dir = Env-Valor 'CLOUD_DIR'
     if ($dir -ne '' -and (Test-Path -LiteralPath $dir -PathType Container)) {
         try {
             New-Item -ItemType File -Force -Path (Join-Path $dir '.caudal-backups') -ErrorAction Stop | Out-Null
-            Ok 'Carpeta de OneDrive disponible'
+            Ok 'Carpeta de Google Drive disponible'
             return
         } catch {
-            Aviso "No se puede escribir en la carpeta de OneDrive: $dir"
+            Aviso "No se puede escribir en la carpeta de Google Drive: $dir"
         }
     } elseif ($dir -eq '') {
-        Aviso 'ONEDRIVE_DIR está vacío en el .env: las copias no irán a OneDrive'
+        Aviso 'CLOUD_DIR está vacío en el .env: las copias no irán a Google Drive'
     } else {
-        Aviso "No existe la carpeta de OneDrive: $dir"
+        Aviso "No existe la carpeta de Google Drive: $dir"
     }
-    $env:ONEDRIVE_DIR = Join-Path $Root 'backups\sin-onedrive'
+    $env:CLOUD_DIR = Join-Path $Root 'backups\sin-nube'
 }
 
 function App-En-Marcha {

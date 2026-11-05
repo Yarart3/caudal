@@ -85,31 +85,31 @@ preparar_pendrive() {
     aviso "El pendrive «$etiqueta» está conectado, pero no se puede escribir en él"
     return 1
   fi
-  aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a OneDrive"
+  aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a Google Drive"
   if mount | grep -qF " on $volumen 1 ("; then
     aviso "Hay un volumen «$etiqueta 1»: macOS cambia el nombre si dos discos se llaman igual."
   fi
   return 1
 }
 
-# OneDrive: la carpeta de ONEDRIVE_DIR tiene que existir (la crea la app de OneDrive). Si no
+# Google Drive: la carpeta de CLOUD_DIR tiene que existir (la crea la app de Google Drive). Si no
 # existe, NO se deja que Docker la cree (sería una carpeta normal, sin sincronizar): se monta
 # una carpeta vacía sin marcador y la app avisa.
-preparar_onedrive() {
+preparar_nube() {
   local dir
-  dir="$(env_valor ONEDRIVE_DIR)"
+  dir="$(env_valor CLOUD_DIR)"
   if [ -n "$dir" ] && [ -d "$dir" ]; then
     if touch "$dir/.caudal-backups"; then
-      ok "Carpeta de OneDrive disponible"
+      ok "Carpeta de Google Drive disponible"
       return 0
     fi
-    aviso "No se puede escribir en la carpeta de OneDrive: $dir"
+    aviso "No se puede escribir en la carpeta de Google Drive: $dir"
   elif [ -z "$dir" ]; then
-    aviso "ONEDRIVE_DIR está vacío en el .env: las copias no irán a OneDrive"
+    aviso "CLOUD_DIR está vacío en el .env: las copias no irán a Google Drive"
   else
-    aviso "No existe la carpeta de OneDrive: $dir"
+    aviso "No existe la carpeta de Google Drive: $dir"
   fi
-  export ONEDRIVE_DIR="$ROOT/backups/sin-onedrive"
+  export CLOUD_DIR="$ROOT/backups/sin-nube"
   return 1
 }
 

@@ -8,7 +8,7 @@ comprobar_env
 esperar_docker
 # Solo para que Docker no cree carpetas de backup que no existen (aquí no se hacen copias)
 preparar_pendrive >/dev/null
-preparar_onedrive >/dev/null
+preparar_nube >/dev/null
 
 echo
 docker compose run --rm app python -m app.auth.reset

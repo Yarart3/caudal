@@ -1,7 +1,7 @@
 import { useBackupStatus } from '../hooks/useBackupStatus';
 import { lastBackupText } from './backupText';
 
-/** «Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓», debajo del título (maqueta).
+/** «Último backup: hoy 18:42 · Pendrive ✓ · Google Drive ✓», debajo del título (maqueta).
  * En rojo lo que necesita atención: sin contraseña, copia antigua o un destino con ✗. */
 export function BackupIndicator() {
   const { status } = useBackupStatus();

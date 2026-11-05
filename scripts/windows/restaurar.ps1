@@ -1,4 +1,4 @@
-﻿# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y OneDrive),
+﻿# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y Google Drive),
 # pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de lo actual.
 # Se lanza con «Restaurar backup.bat».
 . (Join-Path $PSScriptRoot '_comun.ps1')
@@ -7,7 +7,7 @@ Titulo 'Restaurar un backup de Caudal'
 Comprobar-Env
 Esperar-Docker
 Preparar-Pendrive
-Preparar-OneDrive
+Preparar-Nube
 
 # Mientras se restaura, la app tiene que estar parada (nadie puede estar usando la base)
 $estabaAbierta = App-En-Marcha

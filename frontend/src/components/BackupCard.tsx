@@ -22,7 +22,7 @@ export function BackupCard() {
         const failed = result.status.destinations.filter((d) => !d.ok).map((d) => d.label);
         setMessage(
           failed.length === 0
-            ? 'Copia hecha en el pendrive y en OneDrive.'
+            ? 'Copia hecha en el pendrive y en Google Drive.'
             : `Copia hecha, pero no en: ${failed.join(', ')}.`,
         );
       } else {

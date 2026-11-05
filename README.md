@@ -64,7 +64,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - Aportaciones mes a mes y racha, comisiones anuales (TER) y dividendos.
 - Precios con su etiqueta (~15 min, cierre, a mano o desactualizado) y botón para actualizarlos.
 
-**Además:** usuarios con contraseña, copias de seguridad cifradas en el pendrive y en OneDrive, y funcionamiento en Windows y Mac.
+**Además:** usuarios con contraseña, copias de seguridad cifradas en el pendrive y en Google Drive, y funcionamiento en Windows y Mac.
 
 ## Lenguajes y tecnologías
 
@@ -90,7 +90,7 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
              │ app (Python + web)  ◀──▶  base de datos   │   ← todo en tu PC
              └─────────────────────┬─────────────────────┘
                                    │ copias cifradas
-                         pendrive  +  OneDrive
+                         pendrive  +  Google Drive
 ```
 
 - **Solo se ejecuta cuando tú la abres.** Docker no arranca al encender el PC.
@@ -126,7 +126,7 @@ Abre **http://localhost:8080**. La primera vez aparece el **asistente** para cre
 3. Copiar `.env.example` a `.env` y rellenar:
    - `POSTGRES_PASSWORD`: una contraseña aleatoria (el comando está en el propio archivo).
    - `BACKUP_PASSWORD`: la contraseña de las copias, **distinta** de las de inicio de sesión y **apuntada en papel** (si se pierde, las copias no se pueden abrir). Solo letras sin acentos, números y guiones.
-   - `ONEDRIVE_DIR`: la carpeta `CaudalBackups` de OneDrive, entre comillas. En un equipo de desarrollo, una carpeta aparte (`CaudalBackupsDev`), nunca la real.
+   - `CLOUD_DIR`: la carpeta `CaudalBackups` de Google Drive (modo «Replicar archivos»), entre comillas. En un equipo de desarrollo, una carpeta aparte (`CaudalBackupsDev`), nunca la real.
    - `USB_LABEL`: el nombre del pendrive (`Gerard`).
 4. `docker compose build` (y otra vez después de cada `git pull` que cambie el código).
 5. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`; la primera vez, clic derecho → **Abrir**).
@@ -136,7 +136,7 @@ Abre **http://localhost:8080**. La primera vez aparece el **asistente** para cre
 |---|---|
 | **Caudal** | Abre Docker Desktop si hace falta, busca el pendrive por su nombre, arranca la app y abre el navegador |
 | **Cerrar Caudal** | Hace la copia final, para la app y, si quieres, cierra Docker Desktop |
-| **Restaurar backup** | Elige una copia (del pendrive o de OneDrive), pide la contraseña y la restaura. Antes guarda una copia de lo que hay |
+| **Restaurar backup** | Elige una copia (del pendrive o de Google Drive), pide la contraseña y la restaura. Antes guarda una copia de lo que hay |
 | **Restablecer contraseña** | Cambia la contraseña de un usuario y lo desbloquea |
 
 > Cierra siempre con **Cerrar Caudal** antes de cerrar Docker Desktop. Si Docker se cierra con la app abierta, un contenedor puede quedar dañado (`RWLayer … unexpectedly nil`): se arregla con `docker compose down` (**sin** `-v`) y volviendo a abrir. Los datos están en el volumen `pgdata` y no se pierden.
@@ -301,9 +301,9 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 ## Copias de seguridad
 
 - **Automáticas:** después de cada importación, cada hora si hubo cambios, al cerrar y al abrir si la última tiene más de una semana. También a mano: **Ajustes → Copias de seguridad → Hacer copia ahora**.
-- **En dos sitios:** el pendrive (detectado por su nombre, no por la letra) y OneDrive. Si uno falla, se guarda en el otro.
+- **En dos sitios:** el pendrive (detectado por su nombre, no por la letra) y Google Drive. Si uno falla, se guarda en el otro.
 - **Cifradas** (AES-256-GCM, clave derivada con scrypt) con una contraseña propia. Se guardan las 30 últimas en cada sitio.
-- **Indicador** en la cabecera: «Último backup: hoy 18:42 · Pendrive ✓ · OneDrive ✓». En rojo, lo que necesita atención.
+- **Indicador** en la cabecera: «Último backup: hoy 18:42 · Pendrive ✓ · Google Drive ✓». En rojo, lo que necesita atención.
 - **Restaurar:** script *Restaurar backup*. Sirve también para pasar a otro ordenador.
 
 Desde la terminal: `docker compose exec app python -m app.backup run` (copia ahora) y `docker compose exec app python -m app.backup list` (copias disponibles).

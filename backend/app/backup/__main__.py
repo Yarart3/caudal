@@ -56,7 +56,7 @@ def _print_list(backups: list[BackupFile]) -> None:
 def cmd_list() -> int:
     backups = available_backups(get_settings())
     if not backups:
-        print("No hay backups (o el pendrive y OneDrive no están disponibles).")
+        print("No hay backups (o el pendrive y Google Drive no están disponibles).")
         return 1
     _print_list(backups)
     return 0
@@ -73,7 +73,7 @@ def cmd_restore() -> int:
     settings = get_settings()
     backups = available_backups(settings)
     if not backups:
-        print("No hay backups (o el pendrive y OneDrive no están disponibles).")
+        print("No hay backups (o el pendrive y Google Drive no están disponibles).")
         return 1
     print("Backups disponibles (el 1 es el más reciente):")
     _print_list(backups)

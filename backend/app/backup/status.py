@@ -1,4 +1,4 @@
-"""Estado de los backups para el indicador «Último backup · Pendrive ✓ · OneDrive ✓»."""
+"""Estado de los backups para el indicador «Último backup · Pendrive ✓ · Google Drive ✓»."""
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -15,7 +15,7 @@ from app.models import BackupLog
 class DestinationStatus:
     destination: str
     label: str
-    available: bool  # el destino está ahora (pendrive conectado, carpeta de OneDrive)
+    available: bool  # el destino está ahora (pendrive conectado, carpeta de Google Drive)
     ok: bool  # disponible y su último backup salió bien → ✓
     last_at: datetime | None  # último intento
     last_ok_at: datetime | None  # último backup bueno

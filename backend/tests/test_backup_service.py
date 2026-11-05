@@ -37,8 +37,8 @@ PASSWORD = "clave-de-prueba-1d"
 
 @pytest.fixture
 def dirs(tmp_path: Path) -> dict[str, Path]:
-    """Pendrive y OneDrive simulados, con su marcador."""
-    result = {"usb": tmp_path / "pendrive", "onedrive": tmp_path / "onedrive"}
+    """Pendrive y Google Drive simulados, con su marcador."""
+    result = {"usb": tmp_path / "pendrive", "cloud": tmp_path / "cloud"}
     for d in result.values():
         d.mkdir()
         (d / MARKER).touch()
@@ -51,7 +51,7 @@ def settings(dirs: dict[str, Path]) -> Settings:
         update={
             "backup_password": SecretStr(PASSWORD),
             "backup_usb_dir": dirs["usb"],
-            "backup_onedrive_dir": dirs["onedrive"],
+            "backup_cloud_dir": dirs["cloud"],
             "backup_keep": 30,
         }
     )
@@ -71,14 +71,14 @@ def test_backup_en_los_dos_destinos(settings, dirs, db, make_user):
     result = run_backup("manual", settings)
 
     assert result.ok
-    assert [(r.destination, r.ok) for r in result.results] == [("usb", True), ("onedrive", True)]
-    usb, onedrive = backups_in(dirs["usb"]), backups_in(dirs["onedrive"])
-    assert [p.name for p in usb] == [result.filename] == [p.name for p in onedrive]
-    assert usb[0].read_bytes() == onedrive[0].read_bytes()
+    assert [(r.destination, r.ok) for r in result.results] == [("usb", True), ("cloud", True)]
+    usb, cloud = backups_in(dirs["usb"]), backups_in(dirs["cloud"])
+    assert [p.name for p in usb] == [result.filename] == [p.name for p in cloud]
+    assert usb[0].read_bytes() == cloud[0].read_bytes()
     assert decrypt(usb[0].read_bytes(), PASSWORD).startswith(b"PGDMP")  # pg_dump -Fc
     assert log_rows(db) == [
         ("usb", "ok", f"{result.filename} (manual)"),
-        ("onedrive", "ok", f"{result.filename} (manual)"),
+        ("cloud", "ok", f"{result.filename} (manual)"),
     ]
 
 
@@ -86,18 +86,18 @@ def test_sin_marcador_el_pendrive_no_cuenta(settings, dirs, db):
     (dirs["usb"] / MARKER).unlink()
     result = run_backup("interval", settings)
 
-    assert result.ok  # OneDrive sí
+    assert result.ok  # Google Drive sí
     assert backups_in(dirs["usb"]) == []
-    assert len(backups_in(dirs["onedrive"])) == 1
+    assert len(backups_in(dirs["cloud"])) == 1
     assert log_rows(db)[0] == ("usb", "error", "Pendrive no conectado (periódica)")
-    assert log_rows(db)[1][:2] == ("onedrive", "ok")
+    assert log_rows(db)[1][:2] == ("cloud", "ok")
 
 
 def test_carpeta_que_no_existe(settings, tmp_path):
-    settings = settings.model_copy(update={"backup_onedrive_dir": tmp_path / "no-existe"})
+    settings = settings.model_copy(update={"backup_cloud_dir": tmp_path / "no-existe"})
     result = run_backup("manual", settings)
-    assert [(r.destination, r.ok) for r in result.results] == [("usb", True), ("onedrive", False)]
-    assert result.results[1].message.startswith("Carpeta de OneDrive no disponible")
+    assert [(r.destination, r.ok) for r in result.results] == [("usb", True), ("cloud", False)]
+    assert result.results[1].message.startswith("Carpeta de Google Drive no disponible")
 
 
 def test_ningun_destino_disponible(settings, dirs, db):
@@ -125,7 +125,7 @@ def test_si_un_destino_falla_al_escribir_se_guarda_en_el_otro(settings, dirs, db
         "error",
         "No se ha podido escribir: No queda espacio en el dispositivo (tras importar)",
     )
-    assert len(backups_in(dirs["onedrive"])) == 1
+    assert len(backups_in(dirs["cloud"])) == 1
 
 
 def test_sin_contrasena_no_hace_nada(settings, dirs, db):
@@ -140,7 +140,7 @@ def test_si_falla_pg_dump_se_apunta_en_el_registro(settings, dirs, db):
     result = run_backup("manual", settings.model_copy(update={"postgres_db": "no_existe"}))
     assert not result.ok
     rows = log_rows(db)
-    assert [(r[0], r[1]) for r in rows] == [("usb", "error"), ("onedrive", "error")]
+    assert [(r[0], r[1]) for r in rows] == [("usb", "error"), ("cloud", "error")]
     assert rows[0][2].startswith("pg_dump ha fallado")
     assert backups_in(dirs["usb"]) == []
 
@@ -195,15 +195,15 @@ def test_escritura_atomica_no_deja_temporales(tmp_path):
 
 def test_lista_de_backups_disponibles(settings, dirs):
     (dirs["usb"] / "caudal_2026-01-01_0900.dump.enc").write_bytes(b"a")
-    (dirs["onedrive"] / "caudal_2026-02-01_0900.dump.enc").write_bytes(b"b")
-    (dirs["onedrive"] / "otro.txt").write_bytes(b"c")
+    (dirs["cloud"] / "caudal_2026-02-01_0900.dump.enc").write_bytes(b"b")
+    (dirs["cloud"] / "otro.txt").write_bytes(b"c")
     found = available_backups(settings)
     assert [(b.path.name, b.destination) for b in found] == [
-        ("caudal_2026-02-01_0900.dump.enc", "onedrive"),
+        ("caudal_2026-02-01_0900.dump.enc", "cloud"),
         ("caudal_2026-01-01_0900.dump.enc", "usb"),
     ]
     (dirs["usb"] / MARKER).unlink()  # pendrive "desconectado"
-    assert [b.destination for b in available_backups(settings)] == ["onedrive"]
+    assert [b.destination for b in available_backups(settings)] == ["cloud"]
 
 
 # ---------- Restauración completa ----------
@@ -273,7 +273,7 @@ def test_restauracion_completa_sobre_una_base_vacia(settings, dirs, db, make_acc
     original = snapshot(settings.database_url)
     assert original["transactions"] and original["categories"] and original["rules"]
 
-    restore_backup(backups_in(dirs["onedrive"])[0], PASSWORD, settings, scratch_db)
+    restore_backup(backups_in(dirs["cloud"])[0], PASSWORD, settings, scratch_db)
 
     restored = snapshot(settings.database_url.set(database=scratch_db))
     # La fila de backup_log de este backup se escribe DESPUÉS del volcado: no está en la copia

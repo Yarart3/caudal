@@ -61,7 +61,7 @@
 | operaciones_inversion.tipo (compra / venta / dividendo / comision) | `investment_operations.kind` (`buy` / `sell` / `dividend` / `fee`) |
 | fuente_precio · id_fuente · largo_plazo | `price_source` · `source_id` · `long_term` |
 | objetivos | `goals` |
-| registro_backups | `backup_log` (destino → `destination`: `usb` / `onedrive`) |
+| registro_backups | `backup_log` (destino → `destination`: `usb` / `cloud`; etiqueta visible «Google Drive») |
 | sesiones | `sessions` (`token_hash`, `last_seen_at`) |
 | subtipo_liquidez (efectivo / fondo_monetario) | `accounts.liquidity_type` (`cash` / `money_market`) |
 
@@ -313,7 +313,7 @@ El proyecto se da por **terminado** (v1.0) cuando:
 - Si un banco cambia el formato del extracto: pedir un ejemplo inventado nuevo, ajustar el importador y añadir el test.
 - Si una fuente de precios deja de funcionar: cambiar de fuente sin tocar los cálculos (por eso `app/prices/` está aislado).
 - Revisar las dependencias cada pocos meses.
-- **Antes de que Gerard se gradúe:** cambiar `ONEDRIVE_DIR` a una nube personal y copiar ahí los backups.
+- **Nube de los backups:** desde la Fase R, Google Drive (cuenta solo para Caudal). Si algún día se cambia de proveedor, basta con cambiar `CLOUD_DIR` en los `.env` y la etiqueta `LABELS` de `app/backup/service.py`, y copiar ahí los backups.
 
 ## 9. Formato de CHANGELOG.md
 

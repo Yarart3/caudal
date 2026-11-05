@@ -1,5 +1,5 @@
 #!/bin/bash
-# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y OneDrive),
+# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y Google Drive),
 # pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de lo actual.
 source "$(dirname "$0")/_comun.sh"
 
@@ -7,7 +7,7 @@ titulo "Restaurar un backup de Caudal"
 comprobar_env
 esperar_docker
 preparar_pendrive
-preparar_onedrive
+preparar_nube
 
 # Mientras se restaura, la app tiene que estar parada (nadie puede estar usando la base)
 estaba_abierta=0

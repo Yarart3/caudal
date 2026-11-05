@@ -1,4 +1,4 @@
-"""Hacer un backup: pg_dump → cifrado → pendrive y OneDrive → rotación → backup_log.
+"""Hacer un backup: pg_dump → cifrado → pendrive y Google Drive → rotación → backup_log.
 
 - El volcado se hace UNA vez y el mismo archivo cifrado se escribe en cada destino.
 - Un destino solo se usa si contiene el marcador `.caudal-backups`, que crean los scripts de
@@ -38,11 +38,11 @@ PARTIAL_SUFFIX = ".partial"
 LOCK_KEY = 7_141_521_001  # número cualquiera, fijo: identifica el bloqueo "backup de Caudal"
 DUMP_TIMEOUT_S = 600
 
-DESTINATIONS = ("usb", "onedrive")
-LABELS = {"usb": "Pendrive", "onedrive": "OneDrive"}
+DESTINATIONS = ("usb", "cloud")
+LABELS = {"usb": "Pendrive", "cloud": "Google Drive"}
 NOT_AVAILABLE = {
     "usb": "Pendrive no conectado",
-    "onedrive": "Carpeta de OneDrive no disponible",
+    "cloud": "Carpeta de Google Drive no disponible",
 }
 TRIGGERS = {
     "import": "tras importar",
@@ -82,7 +82,7 @@ class BackupResult:
 
 
 def destination_dirs(settings: Settings) -> dict[str, Path]:
-    return {"usb": settings.backup_usb_dir, "onedrive": settings.backup_onedrive_dir}
+    return {"usb": settings.backup_usb_dir, "cloud": settings.backup_cloud_dir}
 
 
 def is_available(directory: Path) -> bool:
@@ -112,7 +112,7 @@ def rotate(directory: Path, keep: int) -> list[Path]:
 
 def write_atomic(directory: Path, filename: str, blob: bytes) -> Path:
     """Escribe en un archivo temporal y lo renombra: nunca queda un backup a medias con su
-    nombre definitivo (importante en OneDrive, que sube lo que ve)."""
+    nombre definitivo (importante en Google Drive, que sube lo que ve)."""
     final = directory / filename
     tmp = directory / f".{filename}{PARTIAL_SUFFIX}"
     try:

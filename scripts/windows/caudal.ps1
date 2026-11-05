@@ -6,7 +6,7 @@ Titulo 'Abriendo Caudal'
 Comprobar-Env
 Esperar-Docker
 Preparar-Pendrive
-Preparar-OneDrive
+Preparar-Nube
 
 Write-Host '  Arrancando Caudal...'
 & docker compose up -d

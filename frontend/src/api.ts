@@ -112,9 +112,9 @@ export type TransactionCreate = {
 
 // Backups (Fase 1d). Son de la BD entera: todos los usuarios ven el mismo estado.
 export type BackupDestination = {
-  destination: 'usb' | 'onedrive';
-  label: string; // "Pendrive" / "OneDrive"
-  available: boolean; // el pendrive está conectado / la carpeta de OneDrive existe
+  destination: 'usb' | 'cloud';
+  label: string; // "Pendrive" / "Google Drive"
+  available: boolean; // el pendrive está conectado / la carpeta de Google Drive existe
   ok: boolean; // disponible y su último backup salió bien → ✓
   last_at: string | null;
   last_ok_at: string | null;

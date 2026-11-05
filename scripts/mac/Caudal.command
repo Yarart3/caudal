@@ -7,7 +7,7 @@ titulo "Abriendo Caudal"
 comprobar_env
 esperar_docker
 preparar_pendrive
-preparar_onedrive
+preparar_nube
 
 echo "  Arrancando Caudal…"
 if ! docker compose up -d; then

@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     backup_interval_min: int = 60
     backup_keep: int = 30
     backup_max_age_days: int = 7
-    # Carpetas DENTRO del contenedor; docker-compose.yml monta ahí el pendrive y OneDrive
+    # Carpetas DENTRO del contenedor; docker-compose.yml monta ahí el pendrive y Google Drive
     backup_usb_dir: Path = Path("/backups/usb")
-    backup_onedrive_dir: Path = Path("/backups/onedrive")
+    backup_cloud_dir: Path = Path("/backups/cloud")
 
     # Precios (Fase 3, DISENO §7.3): refresco al arrancar si son antiguos y luego cada
     # PRICE_REFRESH_MIN minutos. Los tests desactivan el refresco automático.

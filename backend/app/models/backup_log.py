@@ -11,7 +11,7 @@ class BackupLog(Base):
 
     __tablename__ = "backup_log"
     __table_args__ = (
-        CheckConstraint("destination IN ('usb', 'onedrive')", name="destination"),
+        CheckConstraint("destination IN ('usb', 'cloud')", name="destination"),
         CheckConstraint("result IN ('ok', 'error')", name="result"),
     )
 
