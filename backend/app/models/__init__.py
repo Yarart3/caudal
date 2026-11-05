@@ -12,6 +12,7 @@ from app.models.price import Price
 from app.models.product import Product
 from app.models.rule import Rule
 from app.models.session import UserSession
+from app.models.sync_state import SyncState
 from app.models.transaction import Transaction
 from app.models.user import User
 
@@ -27,6 +28,7 @@ __all__ = [
     "Price",
     "Product",
     "Rule",
+    "SyncState",
     "Transaction",
     "User",
     "UserSession",

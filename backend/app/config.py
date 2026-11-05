@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     backup_usb_dir: Path = Path("/backups/usb")
     backup_cloud_dir: Path = Path("/backups/cloud")
 
+    # Sincronización entre equipos (Fase R): nombre de este equipo («mac», «pc»…)
+    device_name: str = ""
+
     # Precios (Fase 3, DISENO §7.3): refresco al arrancar si son antiguos y luego cada
     # PRICE_REFRESH_MIN minutos. Los tests desactivan el refresco automático.
     price_auto: bool = True

@@ -28,7 +28,7 @@ from app.models import BackupLog
 
 log = logging.getLogger(__name__)
 
-IGNORED_TABLES = ("sessions", "backup_log")
+IGNORED_TABLES = ("sessions", "backup_log", "sync_state")
 
 
 def changes_counter(db_engine: Engine) -> int:
