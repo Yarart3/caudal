@@ -4,13 +4,17 @@ import {
   api,
   errorMessage,
   type Account,
+  type Benchmark,
+  type InvestmentSummary,
   type Operation,
+  type Positions,
   type PriceStatus,
   type Product,
 } from '../api';
 import { InvestmentAccountDialog } from '../components/InvestmentAccountDialog';
 import { InvestmentImportCard } from '../components/InvestmentImportCard';
 import { OperationDialog, type OperationMode } from '../components/OperationDialog';
+import { PortfolioOverview } from '../components/PortfolioOverview';
 import { ProductDialog } from '../components/ProductDialog';
 import { notifyDataChanged, onDataChanged } from '../events';
 import { formatDate, formatEur, formatMoment, formatPrice, formatShares } from '../format';
@@ -21,6 +25,9 @@ type Data = {
   products: Product[];
   operations: Operation[];
   prices: PriceStatus;
+  summary: InvestmentSummary;
+  positions: Positions;
+  benchmark: Benchmark;
 };
 
 type Dialog =
@@ -31,9 +38,9 @@ type Dialog =
 const STALE_BADGE = { background: '#FBE6D4', color: '#8A3A0C' };
 
 /**
- * Pestaña Inversiones (Fase 3, partes 3.3d1 y 3.3d2): cuentas de broker, productos con su último
- * precio, operaciones (añadir, duplicar, editar) e importar el historial con la plantilla.
- * Indicadores y posiciones llegan en la parte 3.5.
+ * Pestaña Inversiones (Fase 3). Arriba, la cartera como en la maqueta (parte 3.5): indicadores,
+ * posiciones, aportaciones, comparativa, dividendos, rentabilidad por año y costes. Debajo, lo
+ * de apuntar (partes 3.3d1 y 3.3d2): operaciones, productos, importar el historial y cuentas.
  */
 export function InvestmentsPage() {
   const [data, setData] = useState<Data | null>(null);
@@ -43,13 +50,24 @@ export function InvestmentsPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
-    Promise.all([api.accounts(), api.products(), api.operations(), api.priceStatus()])
-      .then(([accounts, products, operations, prices]) => {
+    Promise.all([
+      api.accounts(),
+      api.products(),
+      api.operations(),
+      api.priceStatus(),
+      api.investmentSummary(),
+      api.positions(),
+      api.benchmark(),
+    ])
+      .then(([accounts, products, operations, prices, summary, positions, benchmark]) => {
         setData({
           accounts: accounts.filter((a) => a.kind === 'investment' || a.kind === 'mixed'),
           products,
           operations,
           prices,
+          summary,
+          positions,
+          benchmark,
         });
         setError(null);
       })
@@ -118,20 +136,28 @@ export function InvestmentsPage() {
         </section>
       ) : (
         <>
-          <AccountsCard data={data} onAdd={() => setDialog({ kind: 'account' })} />
+          <PricesBar data={data} refreshing={refreshing} onRefresh={() => void refreshPrices()} />
+          {data.summary.has_investments && (
+            <PortfolioOverview
+              summary={data.summary}
+              positions={data.positions}
+              benchmark={data.benchmark}
+              operations={data.operations}
+              onAddOperation={() => setDialog({ kind: 'operation', mode: { kind: 'new' } })}
+            />
+          )}
+          <OperationsCard data={data} onOpen={(mode) => setDialog({ kind: 'operation', mode })} />
           <ProductsCard
             data={data}
-            refreshing={refreshing}
-            onRefresh={() => void refreshPrices()}
             onAdd={() => setDialog({ kind: 'product', product: null })}
             onEdit={(product) => setDialog({ kind: 'product', product })}
           />
-          <OperationsCard data={data} onOpen={(mode) => setDialog({ kind: 'operation', mode })} />
           <InvestmentImportCard
             accounts={data.accounts}
             hasProducts={data.products.length > 0}
             onImported={(text) => finish(text, true)}
           />
+          <AccountsCard data={data} onAdd={() => setDialog({ kind: 'account' })} />
         </>
       )}
 
@@ -182,21 +208,48 @@ function AccountsCard({ data, onAdd }: { data: Data; onAdd: () => void }) {
   );
 }
 
-function ProductsCard({
+/** Barra de arriba: cuándo se actualizaron los precios y el botón para hacerlo ya. */
+function PricesBar({
   data,
   refreshing,
   onRefresh,
-  onAdd,
-  onEdit,
 }: {
   data: Data;
   refreshing: boolean;
   onRefresh: () => void;
+}) {
+  if (!data.products.some((p) => p.price_source !== 'manual')) return null;
+  return (
+    <div className="infobar">
+      <span>
+        {data.prices.last_refresh ? (
+          <>
+            <strong style={{ color: 'var(--ink)' }}>
+              Precios actualizados {formatMoment(data.prices.last_refresh)}
+            </strong>{' '}
+            · ETFs y acciones con ~15 min de retraso
+          </>
+        ) : (
+          'Todavía no se han descargado precios'
+        )}
+      </span>
+      <button type="button" className="btn btn-sm" onClick={onRefresh} disabled={refreshing}>
+        {refreshing ? 'Actualizando…' : '↻ Actualizar precios'}
+      </button>
+    </div>
+  );
+}
+
+function ProductsCard({
+  data,
+  onAdd,
+  onEdit,
+}: {
+  data: Data;
   onAdd: () => void;
   onEdit: (product: Product) => void;
 }) {
   const priceOf = new Map(data.prices.products.map((p) => [p.product_id, p]));
-  const automatic = data.products.some((p) => p.price_source !== 'manual');
   return (
     <section className="card panel">
       <div className="between">
@@ -205,25 +258,6 @@ function ProductsCard({
           + Añadir producto
         </button>
       </div>
-      {automatic && (
-        <div className="infobar">
-          <span>
-            {data.prices.last_refresh ? (
-              <>
-                <strong style={{ color: 'var(--ink)' }}>
-                  Precios actualizados {formatMoment(data.prices.last_refresh)}
-                </strong>{' '}
-                · ETFs y acciones con ~15 min de retraso
-              </>
-            ) : (
-              'Todavía no se han descargado precios'
-            )}
-          </span>
-          <button type="button" className="btn btn-sm" onClick={onRefresh} disabled={refreshing}>
-            {refreshing ? 'Actualizando…' : '↻ Actualizar precios'}
-          </button>
-        </div>
-      )}
       {data.products.length === 0 ? (
         <p className="muted">
           Añade los productos que tienes (por ISIN o con su símbolo de Xetra) antes de apuntar
@@ -292,8 +326,12 @@ function ProductsCard({
   );
 }
 
+const FIRST_OPERATIONS = 10;
+
 function OperationsCard({ data, onOpen }: { data: Data; onOpen: (mode: OperationMode) => void }) {
+  const [showAll, setShowAll] = useState(false);
   const canAdd = data.products.length > 0;
+  const shown = showAll ? data.operations : data.operations.slice(0, FIRST_OPERATIONS);
   return (
     <section className="card panel">
       <div className="between">
@@ -306,7 +344,7 @@ function OperationsCard({ data, onOpen }: { data: Data; onOpen: (mode: Operation
           disabled={!canAdd}
           title={canAdd ? undefined : 'Añade antes un producto'}
         >
-          + Añadir compra / venta
+          + Añadir operación
         </button>
       </div>
       {data.operations.length === 0 ? (
@@ -330,7 +368,7 @@ function OperationsCard({ data, onOpen }: { data: Data; onOpen: (mode: Operation
               </tr>
             </thead>
             <tbody>
-              {data.operations.map((op) => (
+              {shown.map((op) => (
                 <tr key={op.id}>
                   <td className="tnum">{formatDate(op.date)}</td>
                   <td>
@@ -366,6 +404,18 @@ function OperationsCard({ data, onOpen }: { data: Data; onOpen: (mode: Operation
             </tbody>
           </table>
         </div>
+      )}
+      {data.operations.length > FIRST_OPERATIONS && (
+        <button
+          type="button"
+          className="link-btn"
+          style={{ alignSelf: 'flex-start' }}
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll
+            ? `Ver solo las ${FIRST_OPERATIONS} últimas`
+            : `Ver las ${data.operations.length} operaciones`}
+        </button>
       )}
     </section>
   );

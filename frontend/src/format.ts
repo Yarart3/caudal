@@ -190,6 +190,23 @@ export function parseTerPercent(text: string): string | null | undefined {
   return `0.${String(thousandths).padStart(5, '0')}`;
 }
 
+/**
+ * Tanto por uno → porcentaje: "0.071234" → "7,1 %"; con `signed`, "+7,1 %".
+ * `digits` decimales (1 por defecto); nunca sale "-0,0 %".
+ */
+export function formatPercent(rate: string, { signed = false, digits = 1 } = {}): string {
+  const value = Number(rate) * 100;
+  const rounded = Number(value.toFixed(digits));
+  const text = Math.abs(rounded).toFixed(digits).replace('.', ',');
+  const sign = rounded < 0 ? '-' : signed && rounded > 0 ? '+' : '';
+  return `${sign}${text} %`;
+}
+
+/** "2026-09" → "Sep 26": mes corto y año con dos cifras (ejes de 12 meses). */
+export function formatMonthYearShort(month: string): string {
+  return `${formatMonthShort(month)} ${month.slice(2, 4)}`;
+}
+
 /** "0.00070" → "0,07 %" (para enseñar o para rellenar el campo). */
 export function formatTerPercent(ter: string): string {
   const percent = (Number(ter) * 100).toFixed(3).replace(/0$/, '');

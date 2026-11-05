@@ -1047,6 +1047,42 @@ td {
   border-top: 1px solid var(--soft);
 }
 
+/* --- Inversiones (Fase 3, parte 3.5): tres y dos columnas, barras de aportaciones --- */
+.r3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.r2h {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1180px) {
+  .r3,
+  .r2h {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.contrib-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 130px;
+  border-bottom: 1px solid var(--line);
+}
+
+.contrib-bars div {
+  flex: 1 1 0;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+}
+
 /* --- Inversiones (Fase 3, parte 3.3d): resultados del buscador de productos --- */
 .pick-list {
   list-style: none;

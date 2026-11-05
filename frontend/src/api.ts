@@ -357,6 +357,71 @@ export type InvestmentImportResult = {
   operations: InvestmentImportRow[]; // las nuevas (hasta 200)
 };
 
+// Cartera (Fase 3, partes 3.4b y 3.4c). Porcentajes en tanto por uno: "0.071234" = 7,12 %
+export type InvestmentSummary = {
+  has_investments: boolean;
+  as_of: string;
+  value: string;
+  cost: string;
+  gain: string;
+  gain_pct: string | null;
+  realized: string;
+  dividends: string;
+  dividends_12m: string;
+  fees: string;
+  xirr: string | null;
+  contributed_12m: string;
+  contributions: { month: string; amount: string }[];
+  streak: number;
+  ter_annual: string;
+  year_returns: { year: number; return_pct: string }[];
+  max_drawdown: string | null;
+  missing_prices: string[];
+};
+
+export type Position = {
+  product_id: number;
+  name: string;
+  isin: string | null;
+  symbol: string | null;
+  kind: ProductKind;
+  accounts: string[];
+  shares: string;
+  average_price: string | null;
+  cost: string;
+  price: string | null;
+  price_currency: string | null;
+  price_eur: string | null;
+  price_date: string | null;
+  fetched_at: string | null;
+  stale: boolean;
+  value: string | null;
+  gain: string | null;
+  gain_pct: string | null;
+  weight: string | null;
+  ter: string | null;
+};
+
+export type Positions = { total_value: string; items: Position[] };
+
+export type BenchmarkItem = {
+  key: string;
+  name: string;
+  symbol: string;
+  available: boolean;
+  value: string | null;
+  diff: string | null; // índice − real (positivo: el índice habría ido mejor)
+  xirr: string | null;
+  price_date: string | null;
+};
+
+export type Benchmark = {
+  has_investments: boolean;
+  value: string;
+  xirr: string | null;
+  items: BenchmarkItem[];
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -518,6 +583,9 @@ export const api = {
       body: form,
     });
   },
+  investmentSummary: () => request<InvestmentSummary>('/api/investments/summary'),
+  positions: () => request<Positions>('/api/investments/positions'),
+  benchmark: () => request<Benchmark>('/api/investments/benchmark'),
   priceStatus: () => request<PriceStatus>('/api/prices/status'),
   refreshPrices: () =>
     request<{ items: unknown[]; status: PriceStatus }>('/api/prices/refresh', { method: 'POST' }),

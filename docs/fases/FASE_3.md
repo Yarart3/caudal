@@ -18,7 +18,7 @@
 | 3.4a | `app/investments/calc.py`: FIFO, TIR (XIRR), rentabilidad por año, peor caída, aportaciones, racha y TER (sin base de datos) | ✅ |
 | 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ✅ |
 | 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ✅ |
-| 3.5 | Pestaña Inversiones | ⬜ |
+| 3.5 | Pestaña Inversiones: indicadores, posiciones, aportaciones, comparativa, dividendos, rentabilidad por año y costes | ✅ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
 | 3.7 | Cierre | ⬜ |
 
@@ -47,7 +47,10 @@
 - Importar: vista previa sin guardar y después confirmar; entra todo o nada, con la misma validación que el formulario y la comprobación de ventas. Huella por fila: el mismo archivo dos veces no duplica, y dos filas idénticas del mismo archivo entran las dos.
 - Las operaciones escritas a mano no tienen huella: si luego se importa ese mismo historial, saldría repetido (la vista previa lo enseña antes de confirmar).
 - Consultas a Yahoo desde la pantalla (buscar, comprobar precio, crear producto): un solo intento de 8 s, para no dejar a nadie esperando casi un minuto. El refresco en segundo plano sigue con 3 intentos. El error técnico va al log; la pantalla dice «No se ha podido consultar Yahoo. Prueba en un momento.».
-- Indicadores, «Mis posiciones», aportaciones y comparativa llegan en la 3.5, cuando existan los cálculos (3.4).
+- Orden de la pestaña: barra de precios, indicadores, «Mis posiciones», aportaciones · comparativa · dividendos, rentabilidad por año · riesgo y costes, el aviso de que no es asesoramiento y, debajo, lo de apuntar (operaciones, productos, importar y cuentas). Las operaciones enseñan las 10 últimas y un botón para verlas todas.
+- «Intereses y dividendos» de la maqueta queda en **Dividendos**: los intereses de Trade Republic son movimientos de la cuenta de efectivo (pestaña Movimientos), no operaciones de inversión.
+- Además de la maqueta (DISENO §7.5): tarjetas «Rentabilidad por año» (Dietz, el año en curso «hasta hoy») y «Riesgo y costes» (peor caída, plusvalía realizada, dividendos cobrados, comisiones de los fondos al año por TER y otras comisiones).
+- Etiqueta del precio en las posiciones: «~15 min» si es de hoy, «Cierre» si es de un día anterior (la fecha, al pasar el ratón), «A mano» en los manuales y «Desactualizado» si falló el refresco. Si a un producto le falta precio, un aviso arriba dice que no cuenta en el valor.
 - Importar en la pantalla: el archivo se sube dos veces (vista previa y confirmar) y no se guarda en ningún sitio. Con errores, el botón de importar queda desactivado y se listan las filas que fallan. Tras importar se actualizan los precios, para traer el histórico desde las compras antiguas.
 - FIFO **por producto**, sumando todas las cuentas: un mismo ISIN en Trade Republic y en Scalable es un solo historial a efectos de Hacienda (criterio publicado; no es asesoría fiscal). La comprobación de no vender de más sigue siendo por cuenta.
 - Coste del lote = importe de la compra (comisiones incluidas); lo cobrado en una venta ya va sin comisiones. Un lote vendido a medias reparte su coste en proporción y redondea al céntimo; lo que queda se calcula por resta, así la suma siempre cuadra.
