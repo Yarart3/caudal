@@ -79,13 +79,13 @@ preparar_pendrive() {
   if mount | grep -qF " on $volumen ("; then
     if mkdir -p "$volumen/CaudalBackups" && touch "$volumen/CaudalBackups/.caudal-backups"; then
       export USB_BACKUP_DIR="$volumen/CaudalBackups"
-      ok "Pendrive «$etiqueta» conectado"
+      ok "Pendrive «${etiqueta}» conectado"
       return 0
     fi
-    aviso "El pendrive «$etiqueta» está conectado, pero no se puede escribir en él"
+    aviso "El pendrive «${etiqueta}» está conectado, pero no se puede escribir en él"
     return 1
   fi
-  aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a Google Drive"
+  aviso "Pendrive «${etiqueta}» no conectado: las copias irán solo a Google Drive"
   if mount | grep -qF " on $volumen 1 ("; then
     aviso "Hay un volumen «$etiqueta 1»: macOS cambia el nombre si dos discos se llaman igual."
   fi
