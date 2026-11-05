@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 2 terminada** (control del gasto): además de importar los extractos de imagin y Wise, categorizarlos y hacer copias cifradas, Caudal tiene **presupuestos por categoría**, **avisos**, **pagos recurrentes**, **objetivo de patrimonio con hitos** y **selector de mes** en las pestañas Patrimonio y Movimientos. Siguiente: Fase 3 (patrimonio e inversiones). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 3 terminada** (patrimonio e inversiones): además de importar y categorizar los extractos de imagin y Wise, presupuestos, avisos, recurrentes y copias cifradas, Caudal lleva tus **inversiones** (operaciones a mano o con plantilla, **precios automáticos**, FIFO, plusvalías, TIR, rentabilidad por año, peor caída y comparativa con un indexado) y la pestaña **Patrimonio** ya suma liquidez + inversiones. Siguiente: Fase 4 (los padres). Este README se irá actualizando al terminar cada fase.
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -61,7 +61,8 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - Posiciones con precio actual, plusvalía y peso en la cartera.
 - Cálculo **FIFO** (como Hacienda), **TIR**, rentabilidad por año y peor caída.
 - "¿Y si todo fuera a un indexado?" con tus mismas aportaciones.
-- Aportaciones mes a mes, comisiones anuales (TER), intereses y dividendos.
+- Aportaciones mes a mes y racha, comisiones anuales (TER) y dividendos.
+- Precios con su etiqueta (~15 min, cierre, a mano o desactualizado) y botón para actualizarlos.
 
 **Además:** usuarios con contraseña, copias de seguridad cifradas en el pendrive y en OneDrive, y funcionamiento en Windows y Mac.
 
@@ -294,7 +295,7 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 1. Doble clic en **Caudal** → eliges tu usuario → contraseña.
 2. **Movimientos → Importar extracto:** eliges la cuenta y arrastras el Excel del banco. Si alguna fila no se puede leer, te la enseña y la apuntas a mano.
 3. **Movimientos → Revisar:** eliges la categoría de lo que ninguna regla conoce y, si quieres, **«¿Aplicar siempre?»** crea la regla para las próximas veces. Las reglas se editan en **Ajustes**.
-4. **Inversiones:** apuntas cada compra o venta en **+ Añadir compra / venta** (puedes duplicar una anterior); los precios se actualizan solos. El historial antiguo se puede cargar de golpe con la plantilla de Excel.
+4. **Inversiones:** la primera vez, añade tu cuenta de broker y tus productos (por ISIN o con su símbolo de Xetra, por ejemplo `SXR8.DE`). Después apuntas cada compra o venta en **+ Añadir compra / venta** (puedes duplicar una anterior); los precios se actualizan solos. El historial antiguo se puede cargar de golpe con la plantilla de Excel (**Importar historial**).
 5. Al terminar, doble clic en **Cerrar Caudal**: hace un backup y apaga todo.
 
 ## Copias de seguridad
@@ -346,7 +347,7 @@ caudal/
 | 1c | Categorización + pestañas Movimientos y Patrimonio | ✅ |
 | 1d | Backups + accesos directos | ✅ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ✅ |
-| 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ⬜ |
+| 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ✅ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
 | 6 | Migración a Mac | ⬜ |
@@ -358,14 +359,14 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md), [Fase 3](docs/fases/FASE_3.md)).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 
 ## Créditos
 
-- La parte de inversiones se inspira en **[RUMBO](https://github.com/danidm98/rumbo)** de Dani Dominguez Quant (licencia MIT). Si se reutiliza código suyo, se mantendrá su aviso de copyright.
-- Precios: Yahoo Finance, Morningstar y CoinGecko (servicios gratuitos y no oficiales).
+- La parte de inversiones se inspira en **[RUMBO](https://github.com/danidm98/rumbo)** de Dani Dominguez Quant (licencia MIT). No se ha copiado código suyo; si algún día se reutiliza, se mantendrá su aviso de copyright.
+- Precios: Yahoo Finance (servicio gratuito y no oficial). Morningstar y CoinGecko, si hacen falta más adelante.
 
 ## Aviso
 

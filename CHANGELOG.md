@@ -2,6 +2,30 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [0.6.0] – 2026-11-05 · Fase 3
+### Añadido
+- **Inversiones** (migraciones `0004`, `0005` y `0006`): productos (ETF, acciones, fondos, cripto, planes, materias primas), operaciones (compra, venta, dividendo y comisión), precios, valores anotados a mano, tipos de cambio y cierres de los índices de referencia.
+- **Precios automáticos** de Yahoo Finance (`backend/app/prices/`): histórico, paso a euros con tipos de cambio, aviso de precio desactualizado, refresco al arrancar y cada `PRICE_REFRESH_MIN`, botón «↻ Actualizar precios» y el comando `python -m app.prices probe|quote`. Solo viajan símbolos, nunca cantidades.
+- **Productos:** buscador por ISIN, símbolo o nombre, con vista previa del precio; no se guardan si no tienen precio.
+- **Operaciones** con «+ Añadir compra / venta», «Duplicar» y «Editar», sin vender nunca más de lo que hay en la cuenta.
+- **Plantilla Excel/CSV** para cargar el historial: descarga, vista previa y confirmar (todo o nada, sin duplicados al reimportar).
+- **Cálculos** (`backend/app/investments/`): FIFO por producto, plusvalía latente y realizada, TIR (XIRR), rentabilidad por año (Dietz modificado), peor caída, aportaciones y racha, coste anual por TER y comparativa «¿Y si todo fuera a un indexado?» con MSCI World (IWDA), S&P 500 (SXR8) y monetario del euro (XEON).
+- API: `/api/products`, `/api/investments/operations`, `/api/investments/template`, `/api/investments/import`, `/api/investments/summary`, `/api/investments/positions`, `/api/investments/benchmark`, `/api/prices/status` y `/api/prices/refresh`.
+- **Pestaña Inversiones completa:** indicadores, «Mis posiciones», aportaciones, comparativa, dividendos, rentabilidad por año, riesgo y costes, y debajo operaciones, productos, importar y cuentas.
+- **Patrimonio con inversiones:** patrimonio neto = liquidez + inversiones, evolución apilada, entidades con invertido + efectivo, reparto por tipo de producto y objetivo que cuenta las inversiones.
+- 296 tests nuevos (623 en total), con casos de FIFO y TIR calculados a mano, el ejemplo de `XIRR` de Excel y aislamiento entre usuarios en cada endpoint nuevo.
+- `docs/fases/FASE_3.md`.
+### Cambiado
+- `GET /api/dashboard/net-worth` da también `investments_gain`, `investments_by_kind` y lo invertido de cada cuenta (`invested`).
+- Configuración de los precios en el `.env`: `PRICE_REFRESH_MIN` y `PRICE_MAX_AGE_HOURS` (ya estaban en `.env.example`) y `PRICE_AUTO` (por defecto `true`; `false` apaga el refresco automático).
+- Contrato de la API actualizado (CLAUDE.md §6).
+### Corregido
+- En el móvil la página ya no se desplaza a lo ancho (Movimientos con pendientes de revisar, tablas anchas): los textos para lectores de pantalla ensanchaban la página.
+### Notas
+- **Aplazado** a la revisión final (DISENO §17, pendiente 11): comparar el valor de la cartera con los brokers (menos del 1 % de diferencia) con las operaciones reales, y comprobar con Yahoo real la búsqueda, «Comprobar precio» y los índices de la comparativa.
+- Sin importadores de Trade Republic ni Scalable ni de RUMBO: las operaciones van a mano o con la plantilla. No se ha copiado código de RUMBO.
+- Solo Yahoo: Morningstar (fondos) y CoinGecko (cripto) se añadirán si hace falta.
+
 ## [0.5.0] – 2026-11-02 · Fase 2
 ### Añadido
 - **Presupuestos mensuales** por categoría de gasto (migración `0003`): estado OK (< 90 %), Al límite (90–100 %) y Superado (> 100 %). `GET/PUT /api/budgets`.

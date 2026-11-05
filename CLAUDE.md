@@ -29,8 +29,8 @@
 ### Lenguajes
 | Parte | Lenguaje | Stack |
 |---|---|---|
-| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, cryptography, pytest, ruff (APScheduler solo si hace falta en la Fase 3: los backups periódicos usan un hilo de la app) |
-| Frontend | **TypeScript** (`strict`) | React + Vite, React Router, ESLint + Prettier. Gráficos en CSS como la maqueta (Recharts solo si hace falta en la Fase 3) |
+| Backend | **Python 3.12** | FastAPI, SQLAlchemy 2 (estilo `Mapped[...]`), Alembic, Pydantic v2, openpyxl, python-multipart, argon2-cffi, httpx, cryptography, pytest, ruff (sin APScheduler: los backups y los precios periódicos usan hilos de la app) |
+| Frontend | **TypeScript** (`strict`) | React + Vite, React Router, ESLint + Prettier. Gráficos en CSS como la maqueta (sin Recharts: no hizo falta en la Fase 3) |
 | Base de datos | **SQL** | PostgreSQL 16 |
 | Infraestructura | YAML, Batch, PowerShell, Bash | Docker Compose, scripts `.bat` que llaman a un `.ps1` (Windows) y `.command` (Mac) |
 
@@ -248,6 +248,7 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → 4 → 5 → 6
   - **Pestaña Inversiones** completa y **Patrimonio** con inversiones (evolución apilada, entidades con invertido + efectivo, reparto por tipo).
   - Tests: FIFO con ventas parciales, XIRR contra casos calculados a mano (y contra `XIRR` de Excel), dividendos, precio desactualizado, divisas.
 - **Hecho cuando:** el valor de la cartera difiere menos del 1 % del que muestran los brokers el mismo día; los tests de FIFO y XIRR pasan; la pestaña se parece a la maqueta.
+  - **Hecho (2026-11-05):** detalle en `docs/fases/FASE_3.md`. Aplazado a la revisión final: la comparación con los brokers con datos reales y las pruebas con Yahoo real (DISENO §17, pendiente 11).
 - **Mensaje para empezar:** `Empezamos la Fase 3 de Caudal (patrimonio e inversiones). Te paso la lista de productos que tengo (sin cantidades). Sigue CLAUDE.md.`
 
 ---
