@@ -2,6 +2,7 @@
 
 - GET /api/investments/summary    indicadores: valor, plusvalías, TIR, aportaciones, TER…
 - GET /api/investments/positions  «Mis posiciones»: una fila por producto que aún se tiene
+- GET /api/investments/benchmark  «¿Y si todo fuera a un indexado?» (parte 3.4c)
 
 Las cifras salen como texto (`"1234.56"`); los porcentajes, en tanto por uno con 6 decimales
 (`"0.071234"` = 7,12 %). Cada usuario ve solo lo suyo.
@@ -19,6 +20,7 @@ from app.api.prices import prices_settings
 from app.auth.deps import current_user
 from app.config import Settings
 from app.db import get_db
+from app.investments.benchmark import BENCHMARKS, BenchmarkPrices, simulate
 from app.investments.calc import cents
 from app.investments.operations import TZ
 from app.investments.portfolio import build, summarize
@@ -167,3 +169,51 @@ def get_positions(
             )
         )
     return PositionsOut(total_value=total, items=items)
+
+
+class BenchmarkItemOut(BaseModel):
+    key: str
+    name: str
+    symbol: str
+    available: bool  # False: faltan cierres del índice para alguna fecha (no se compara)
+    value: Num | None
+    diff: Num | None  # valor del índice − valor real (positivo: el índice habría ido mejor)
+    xirr: Num | None
+    price_date: date | None
+
+
+class BenchmarkOut(BaseModel):
+    has_investments: bool
+    value: Num  # lo que vale hoy la cartera de verdad
+    xirr: Num | None
+    items: list[BenchmarkItemOut]
+
+
+@router.get("/benchmark")
+def get_benchmark(
+    user: User = Depends(current_user), db: Session = Depends(get_db)
+) -> BenchmarkOut:
+    today = datetime.now(TZ).date()
+    portfolio = build(db, user.id, today)
+    mine = summarize(portfolio)
+    items = []
+    for bench in BENCHMARKS:
+        sim = simulate(portfolio.ops, BenchmarkPrices(db, bench.symbol), today)
+        items.append(
+            BenchmarkItemOut(
+                key=bench.key,
+                name=bench.name,
+                symbol=bench.symbol,
+                available=sim.value is not None,
+                value=sim.value,
+                diff=None if sim.value is None else sim.value - mine.value,
+                xirr=_rate(sim.xirr),
+                price_date=sim.price_date,
+            )
+        )
+    return BenchmarkOut(
+        has_investments=bool(portfolio.ops),
+        value=mine.value,
+        xirr=_rate(mine.xirr),
+        items=items,
+    )

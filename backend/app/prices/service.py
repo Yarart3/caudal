@@ -14,6 +14,7 @@ En las peticiones solo viaja el símbolo (CLAUDE.md §10.4).
 """
 
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -22,7 +23,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.models import ExchangeRate, InvestmentOperation, Price, Product
+from app.models import BenchmarkPrice, ExchangeRate, InvestmentOperation, Price, Product
 from app.prices.yahoo import PRICE_QUANTUM, YahooClient, YahooError
 
 SOURCE = "yahoo"
@@ -191,6 +192,81 @@ def refresh_prices(
     for currency, start in sorted(currencies.items()):
         items.append(_refresh_rate(db, client, currency, start, today, now))
     return items
+
+
+def refresh_benchmarks(
+    db: Session, client: YahooClient, symbols: Sequence[str], today: date, now: datetime
+) -> list[RefreshItem]:
+    """Actualiza los índices de la comparativa (y los tipos de cambio que necesiten).
+
+    Solo si alguien tiene operaciones: el histórico hace falta desde la primera operación de
+    cualquier usuario (son datos públicos, compartidos). Si ya está guardado desde antes, se
+    sigue desde el último cierre. Nunca lanza YahooError: los fallos van en la lista.
+    """
+    needed_from = db.scalar(select(func.min(InvestmentOperation.date)))
+    if needed_from is None:
+        return []
+    items: list[RefreshItem] = []
+    currencies: dict[str, date] = {}
+    for symbol in symbols:
+        first, last = db.execute(
+            select(func.min(BenchmarkPrice.date), func.max(BenchmarkPrice.date)).where(
+                BenchmarkPrice.symbol == symbol
+            )
+        ).one()
+        start = last if first is not None and first <= needed_from else needed_from
+        try:
+            history = client.history(symbol, start, today)
+        except YahooError as error:
+            items.append(RefreshItem(symbol, ok=False, days=0, message=str(error)))
+            continue
+        currency = normalize_currency(history.currency, Decimal(1))[0]
+        rows = [
+            {
+                "symbol": symbol,
+                "date": close.date,
+                "price": normalize_currency(history.currency, close.close)[1],
+                "currency": currency,
+                "source": SOURCE,
+                "fetched_at": now,
+            }
+            for close in history.closes
+        ]
+        if rows:
+            stmt = insert(BenchmarkPrice).values(rows)
+            db.execute(
+                stmt.on_conflict_do_update(
+                    index_elements=[BenchmarkPrice.symbol, BenchmarkPrice.date],
+                    set_={
+                        "price": stmt.excluded.price,
+                        "currency": stmt.excluded.currency,
+                        "fetched_at": stmt.excluded.fetched_at,
+                    },
+                )
+            )
+        db.commit()
+        items.append(RefreshItem(symbol, ok=True, days=len(rows)))
+        if currency != "EUR":
+            currencies[currency] = min(start, currencies.get(currency, start))
+    for currency, start in sorted(currencies.items()):
+        items.append(_refresh_rate(db, client, currency, start, today, now))
+    return items
+
+
+def benchmarks_need_refresh(
+    db: Session, symbols: Sequence[str], now: datetime, max_age: timedelta
+) -> bool:
+    """¿Hay operaciones y a algún índice le falta precio o el último se bajó hace > max_age?"""
+    if db.scalar(select(InvestmentOperation.id).limit(1)) is None:
+        return False
+    latest = dict(
+        db.execute(
+            select(BenchmarkPrice.symbol, func.max(BenchmarkPrice.fetched_at))
+            .where(BenchmarkPrice.symbol.in_(symbols))
+            .group_by(BenchmarkPrice.symbol)
+        ).all()
+    )
+    return any(latest.get(s) is None or now - latest[s] > max_age for s in symbols)
 
 
 def to_eur(db: Session, amount: Decimal, currency: str, day: date) -> Decimal | None:

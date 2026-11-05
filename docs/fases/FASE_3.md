@@ -17,7 +17,7 @@
 | 3.3d2 | Pestaña Inversiones: importar la plantilla (descargar, vista previa y confirmar) | ✅ |
 | 3.4a | `app/investments/calc.py`: FIFO, TIR (XIRR), rentabilidad por año, peor caída, aportaciones, racha y TER (sin base de datos) | ✅ |
 | 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ✅ |
-| 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ⬜ |
+| 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ✅ |
 | 3.5 | Pestaña Inversiones | ⬜ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
 | 3.7 | Cierre | ⬜ |
@@ -60,5 +60,7 @@
 - Si a un producto le falta el precio o el tipo de cambio de hoy, no suma en el valor ni en la plusvalía y sale en `missing_prices`; la TIR usa lo que costó, para no quedarse sin ella.
 - Aportado en 12 meses = este mes y los 11 anteriores. La API da los porcentajes en tanto por uno con 6 decimales (`"0.071234"` = 7,12 %).
 - Resumen y posiciones en su propio archivo (`app/api/portfolio.py`), con el mismo prefijo `/api/investments`: `investments.py` ya era largo.
+- Comparativa: cada compra y venta se repite en el índice por el **mismo importe en euros** y en la misma fecha (cierre de ese día o el último anterior); si en el índice no llega para la venta, se vende todo. Dividendos y comisiones sueltas no se repiten (los tres índices son de acumulación). Como el dinero que entra y sale es el mismo, la diferencia está solo en el valor de hoy.
+- Índices en euros de Xetra: MSCI World = `EUNL.DE` (el mismo fondo que IWDA, IE00B4L5Y983), S&P 500 = `SXR8.DE` y monetario = `XEON.DE`. Se guardan en su tabla `benchmark_prices` (datos públicos, para todos, como los tipos de cambio) y se actualizan con los precios, desde la primera operación de cualquier usuario. Si un índice no tiene cierres desde la primera compra (con 7 días de margen), sale «no disponible».
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

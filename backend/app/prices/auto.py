@@ -1,7 +1,7 @@
 """Refresco automático de precios (DISENO §7.3):
 
 - Al arrancar, si algún producto con precio automático no tiene precio o el último se
-  descargó hace más de PRICE_MAX_AGE_HOURS.
+  descargó hace más de PRICE_MAX_AGE_HOURS (o lo mismo con los índices de la comparativa).
 - Cada PRICE_REFRESH_MIN minutos, siempre: son pocas peticiones (una por símbolo y divisa).
 - A mano, con POST /api/prices/refresh (solo los productos de ese usuario).
 
@@ -20,8 +20,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings, get_settings
 from app.db import SessionLocal
+from app.investments.benchmark import BENCHMARK_SYMBOLS
 from app.models import Price, Product
-from app.prices.service import SOURCE, RefreshItem, refresh_prices
+from app.prices.service import (
+    SOURCE,
+    RefreshItem,
+    benchmarks_need_refresh,
+    refresh_benchmarks,
+    refresh_prices,
+)
 from app.prices.yahoo import YahooClient
 
 log = logging.getLogger(__name__)
@@ -71,8 +78,11 @@ class AutoPrices:
             raise PricesBusyError("Ya se están actualizando los precios. Prueba en un momento.")
         try:
             now = self._clock()
+            client = self._client_factory()
             with self._session_factory() as db:
-                return refresh_prices(db, self._client_factory(), now.date(), now, user_id)
+                items = refresh_prices(db, client, now.date(), now, user_id)
+                # Los índices de la comparativa son de todos: se actualizan siempre
+                return items + refresh_benchmarks(db, client, BENCHMARK_SYMBOLS, now.date(), now)
         finally:
             self._lock.release()
 
@@ -92,10 +102,14 @@ class AutoPrices:
         return items
 
     def startup_check(self) -> list[RefreshItem] | None:
-        """Al arrancar: actualiza solo si algún precio falta o es antiguo."""
+        """Al arrancar: actualiza solo si algún precio (o índice de la comparativa) falta o es
+        antiguo."""
         max_age = timedelta(hours=self.settings().price_max_age_hours)
+        now = self._clock()
         with self._session_factory() as db:
-            if not needs_refresh(db, self._clock(), max_age):
+            if not needs_refresh(db, now, max_age) and not benchmarks_need_refresh(
+                db, BENCHMARK_SYMBOLS, now, max_age
+            ):
                 return None
         return self.refresh_quietly("startup")
 

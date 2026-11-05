@@ -56,7 +56,7 @@ class PriceRow:
     fetched_at: datetime
 
 
-class _Series:
+class DateSeries:
     """Valores por fecha con búsqueda del último en o antes de un día."""
 
     def __init__(self, rows: list[tuple[date, object]]) -> None:
@@ -64,9 +64,14 @@ class _Series:
         self.dates = [d for d, _ in rows]
         self.values = [v for _, v in rows]
 
-    def at(self, day: date):
+    def last(self, day: date) -> tuple[date, object] | None:
+        """(fecha, valor) del día o del último anterior; None si no hay ninguno."""
         i = bisect_right(self.dates, day)
-        return self.values[i - 1] if i else None
+        return (self.dates[i - 1], self.values[i - 1]) if i else None
+
+    def at(self, day: date):
+        found = self.last(day)
+        return None if found is None else found[1]
 
 
 class Market:
@@ -84,7 +89,7 @@ class Market:
                 prices[row.product_id].append(
                     (row.date, PriceRow(row.date, row.price, row.currency, row.fetched_at))
                 )
-        self.prices = {pid: _Series(rows) for pid, rows in prices.items()}
+        self.prices = {pid: DateSeries(rows) for pid, rows in prices.items()}
 
         currencies = {row.currency for rows in prices.values() for _, row in rows} - {"EUR"}
         rates: dict[str, list] = defaultdict(list)
@@ -95,7 +100,7 @@ class Market:
                 )
             ):
                 rates[row.currency].append((row.date, row.rate))
-        self.rates = {cur: _Series(rows) for cur, rows in rates.items()}
+        self.rates = {cur: DateSeries(rows) for cur, rows in rates.items()}
 
         manual_ids = [p.id for p in products if p.price_source == "manual"]
         manual: dict[int, list] = defaultdict(list)
@@ -106,7 +111,7 @@ class Market:
                 ).where(ManualValuation.product_id.in_(manual_ids))
             ):
                 manual[row.product_id].append((row.date, row.value_eur))
-        self.manual = {pid: _Series(rows) for pid, rows in manual.items()}
+        self.manual = {pid: DateSeries(rows) for pid, rows in manual.items()}
 
     def last_price(self, product_id: int, day: date) -> PriceRow | None:
         series = self.prices.get(product_id)

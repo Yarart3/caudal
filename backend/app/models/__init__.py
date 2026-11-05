@@ -2,6 +2,7 @@
 
 from app.models.account import Account
 from app.models.backup_log import BackupLog
+from app.models.benchmark_price import BenchmarkPrice
 from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal
@@ -17,6 +18,7 @@ from app.models.user import User
 __all__ = [
     "Account",
     "BackupLog",
+    "BenchmarkPrice",
     "Category",
     "ExchangeRate",
     "Goal",

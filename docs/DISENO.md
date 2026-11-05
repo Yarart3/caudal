@@ -258,7 +258,7 @@ ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro�
 - **Plusvalía latente** (de lo que aún se tiene) y **realizada** (de lo vendido).
 - **TIR (XIRR):** rentabilidad anual que tiene en cuenta **cuándo** entró y salió cada euro.
 - **Rentabilidad por año natural** y **peor caída** (máximo drawdown).
-- **Comparativa con un indexado:** se repiten las mismas aportaciones y ventas, en las mismas fechas, en MSCI World (IWDA), S&P 500 (SXR8) y un monetario del euro (XEON), y se compara con el valor real.
+- **Comparativa con un indexado:** se repiten las mismas aportaciones y ventas, en las mismas fechas, en MSCI World (IWDA; se usa su cotización en euros de Xetra, `EUNL.DE`), S&P 500 (SXR8) y un monetario del euro (XEON), y se compara con el valor real. Las compras y ventas se repiten por el mismo importe en euros; dividendos y comisiones sueltas, no.
 - **Comisiones anuales:** suma de valor × TER de cada producto.
 - **Aportaciones** mes a mes, racha de meses aportando e **hitos** de patrimonio.
 - Más adelante: **ganancias realizadas por año** para la declaración de la renta (solo informativo).
