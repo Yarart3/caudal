@@ -312,3 +312,79 @@ def summarize(portfolio: Portfolio) -> Summary:
         max_drawdown=max_drawdown(portfolio.series),
         missing=sorted(portfolio.missing, key=str.lower),
     )
+
+
+# ---------------------------------------------------------------- Patrimonio (parte 3.6)
+
+
+@dataclass(frozen=True)
+class Holdings:
+    """Lo invertido a una fecha: valor total, lo que costó y el reparto por cuenta y por tipo."""
+
+    value: Decimal
+    cost: Decimal
+    by_account: dict[int, Decimal]  # id de la cuenta → valor
+    by_kind: dict[str, Decimal]  # tipo de producto (etf, crypto…) → valor
+
+
+class InvestmentHistory:
+    """Operaciones y precios de un usuario, cargados una vez para valorar a varias fechas.
+
+    Mismas reglas que la serie diaria de `build`: el último precio del día o anterior y, si no
+    hay, lo que costó. Un producto en dos cuentas reparte su valor según las participaciones
+    que hay en cada una (el FIFO es por producto).
+    """
+
+    def __init__(self, db: Session, user_id: int) -> None:
+        products = db.scalars(select(Product).where(Product.user_id == user_id)).all()
+        self.products = {p.id: p for p in products}
+        operations = db.scalars(
+            select(InvestmentOperation)
+            .join(Account, Account.id == InvestmentOperation.account_id)
+            .where(
+                Account.user_id == user_id,
+                InvestmentOperation.product_id.in_(self.products or [0]),
+            )
+        ).all()
+        self.where: dict[int, tuple[int, int]] = {}  # operación → (producto, cuenta)
+        ops = []
+        for o in operations:
+            ops.append(Op(o.date, o.kind, o.shares, o.amount_eur, o.id))
+            self.where[o.id] = (o.product_id, o.account_id)
+        self.ops = chronological(ops)
+        self.market = Market(db, list(products)) if ops else None
+
+    def at(self, day: date) -> Holdings:
+        books: dict[int, Fifo] = defaultdict(Fifo)
+        held: dict[int, dict[int, Decimal]] = defaultdict(lambda: defaultdict(Decimal))
+        for op in self.ops:
+            if op.date > day:
+                break
+            product_id, account_id = self.where[op.id]
+            apply(books[product_id], op)
+            if op.kind == "buy":
+                held[product_id][account_id] += op.shares
+            elif op.kind == "sell":
+                held[product_id][account_id] -= op.shares
+
+        value = cost = ZERO
+        by_account: dict[int, Decimal] = defaultdict(Decimal)
+        by_kind: dict[str, Decimal] = defaultdict(Decimal)
+        for product_id, book in books.items():
+            if book.shares <= 0 or self.market is None:
+                continue
+            product = self.products[product_id]
+            known = self.market.value(product, book, day)
+            worth = book.cost if known is None else known
+            value += worth
+            cost += book.cost
+            by_kind[product.kind] += worth
+            for account_id, shares in held[product_id].items():
+                if shares > 0:
+                    by_account[account_id] += worth * shares / book.shares
+        return Holdings(
+            value=cents(value),
+            cost=cents(cost),
+            by_account={k: cents(v) for k, v in by_account.items()},
+            by_kind={k: cents(v) for k, v in sorted(by_kind.items()) if v > 0},
+        )

@@ -19,7 +19,7 @@
 | 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ✅ |
 | 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ✅ |
 | 3.5 | Pestaña Inversiones: indicadores, posiciones, aportaciones, comparativa, dividendos, rentabilidad por año y costes | ✅ |
-| 3.6 | Patrimonio con inversiones | ⬜ |
+| 3.6 | Patrimonio con inversiones: valor a fin de mes, evolución apilada, entidades con invertido + efectivo y reparto por tipo | ✅ |
 | 3.7 | Cierre | ⬜ |
 
 ## Decisiones
@@ -65,5 +65,9 @@
 - Resumen y posiciones en su propio archivo (`app/api/portfolio.py`), con el mismo prefijo `/api/investments`: `investments.py` ya era largo.
 - Comparativa: cada compra y venta se repite en el índice por el **mismo importe en euros** y en la misma fecha (cierre de ese día o el último anterior); si en el índice no llega para la venta, se vende todo. Dividendos y comisiones sueltas no se repiten (los tres índices son de acumulación). Como el dinero que entra y sale es el mismo, la diferencia está solo en el valor de hoy.
 - Índices en euros de Xetra: MSCI World = `EUNL.DE` (el mismo fondo que IWDA, IE00B4L5Y983), S&P 500 = `SXR8.DE` y monetario = `XEON.DE`. Se guardan en su tabla `benchmark_prices` (datos públicos, para todos, como los tipos de cambio) y se actualizan con los precios, desde la primera operación de cualquier usuario. Si un índice no tiene cierres desde la primera compra (con 7 días de margen), sale «no disponible».
+- Patrimonio: las inversiones se valoran al **final del mes elegido** (o hoy, si el mes no ha acabado), con las mismas reglas que la serie diaria (último precio del día o anterior; sin precio, lo que costó). Patrimonio neto = liquidez + inversiones; el objetivo y sus hitos ya lo usan.
+- Por entidad: cada cuenta suma su liquidez (verde) y lo invertido en ella (azul). Un producto en dos cuentas reparte su valor según las participaciones de cada una (el FIFO sigue siendo por producto).
+- Reparto por tipo: los tipos de producto con valor (ETFs, cripto, planes de pensiones…) junto a «Fondo monetario» y «Efectivo». La API los da aparte (`investments_by_kind`) para no cambiar `by_type`.
+- Corregido de paso: los textos `.sr-only` (para lectores de pantalla) ensanchaban la página en el móvil cuando había pendientes de revisar o una tabla ancha; ahora van arriba a la izquierda.
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

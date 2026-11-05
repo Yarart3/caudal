@@ -138,7 +138,8 @@ export type AccountBalance = {
   name: string;
   kind: Account['kind'];
   liquidity_type: Account['liquidity_type'];
-  balance: string;
+  balance: string; // liquidez (saldo de sus movimientos)
+  invested: string; // valor de lo invertido en esa cuenta (Fase 3)
 };
 
 export type NetWorthMonth = { month: string; liquidity: string; investments: string };
@@ -147,10 +148,12 @@ export type NetWorth = {
   month: string;
   net_worth: string;
   liquidity: string;
-  investments: string; // Fase 3: de momento siempre 0
+  investments: string; // a fin de mes (o hoy, si el mes no ha acabado)
+  investments_gain: string; // plusvalía latente de lo que se tiene
   savings: string; // ingresos − gastos del mes
   accounts: AccountBalance[];
   by_type: Record<Account['liquidity_type'], string>;
+  investments_by_kind: Partial<Record<ProductKind, string>>; // solo los tipos con valor
   history: NetWorthMonth[]; // 12 meses, del más antiguo al elegido
 };
 

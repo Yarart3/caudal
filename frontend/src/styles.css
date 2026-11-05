@@ -222,6 +222,10 @@ p {
 /* Texto solo para lectores de pantalla */
 .sr-only {
   position: absolute;
+  /* Arriba a la izquierda: donde estaría el texto (una cabecera de tabla ancha, la barra de
+     pestañas del móvil) ensanchaba la página y aparecía desplazamiento horizontal. */
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   overflow: hidden;

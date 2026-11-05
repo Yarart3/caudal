@@ -12,6 +12,10 @@ Saldo de una cuenta a una fecha D (DISENO 8.2: el saldo se calcula, no se guarda
   donde S(x) es la suma de sus movimientos con fecha ≤ x. Si D > R suma lo que vino después;
   si D < R, resta lo que pasó entre D y R.
 - sin saldo de referencia (cuentas a mano): saldo(D) = S(D).
+
+Inversiones (Fase 3, parte 3.6): valor de lo que se tiene al final del mes (o hoy, si el mes
+no ha acabado), con `app.investments.portfolio.InvestmentHistory`. Patrimonio neto =
+liquidez + inversiones.
 """
 
 from bisect import bisect_right
@@ -24,6 +28,8 @@ from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.dashboard.months import last_months, month_end, month_key, parse_month
+from app.investments.operations import TZ
+from app.investments.portfolio import InvestmentHistory
 from app.models import Account, Category, Transaction
 
 ZERO = Decimal("0.00")
@@ -139,7 +145,8 @@ class AccountBalance:
     name: str
     kind: str
     liquidity_type: str
-    balance: Decimal
+    balance: Decimal  # liquidez (saldo de sus movimientos)
+    invested: Decimal  # valor de lo invertido en esa cuenta
 
 
 @dataclass
@@ -154,10 +161,12 @@ class NetWorth:
     month: str
     net_worth: Decimal
     liquidity: Decimal
-    investments: Decimal  # Fase 3: de momento siempre 0
+    investments: Decimal
+    investments_gain: Decimal  # plusvalía latente de lo que se tiene (valor − coste)
     savings: Decimal  # ingresos − gastos del mes
     accounts: list[AccountBalance]
-    by_type: dict[str, Decimal]  # «cash» (efectivo) y «money_market» (fondo monetario)
+    by_type: dict[str, Decimal]  # liquidez: «cash» (efectivo) y «money_market» (fondo monetario)
+    investments_by_kind: dict[str, Decimal]  # inversiones por tipo de producto (solo > 0)
     history: list[NetWorthMonth]
 
 
@@ -166,6 +175,9 @@ def net_worth(db: Session, user_id: int, first_day: date) -> NetWorth:
     series = _series(db, user_id)
     empty = _Series()
     end = month_end(first_day)
+    today = datetime.now(TZ).date()
+    investments = InvestmentHistory(db, user_id)
+    holdings = investments.at(min(end, today))
 
     balances = [
         AccountBalance(
@@ -174,6 +186,7 @@ def net_worth(db: Session, user_id: int, first_day: date) -> NetWorth:
             kind=a.kind,
             liquidity_type=a.liquidity_type,
             balance=_money(_balance(a, series.get(a.id, empty), end)),
+            invested=holdings.by_account.get(a.id, ZERO),
         )
         for a in accounts
     ]
@@ -186,18 +199,21 @@ def net_worth(db: Session, user_id: int, first_day: date) -> NetWorth:
     for month in last_months(first_day, HISTORY_MONTHS):
         month_last = month_end(month)
         total = sum((_balance(a, series.get(a.id, empty), month_last) for a in accounts), ZERO)
-        history.append(NetWorthMonth(month_key(month), _money(total), ZERO))
+        invested = investments.at(min(month_last, today)).value if month <= today else ZERO
+        history.append(NetWorthMonth(month_key(month), _money(total), invested))
 
     flows = _income_expense_by_month(db, user_id, first_day, first_day)
     income, expense = flows.get(month_key(first_day), (ZERO, ZERO))
     return NetWorth(
         month=month_key(first_day),
-        net_worth=_money(liquidity),
+        net_worth=_money(liquidity + holdings.value),
         liquidity=_money(liquidity),
-        investments=ZERO,
+        investments=holdings.value,
+        investments_gain=holdings.value - holdings.cost,
         savings=_money(income - expense),
         accounts=balances,
         by_type={k: _money(v) for k, v in by_type.items()},
+        investments_by_kind=holdings.by_kind,
         history=history,
     )
 

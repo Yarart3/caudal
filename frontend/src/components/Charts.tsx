@@ -185,10 +185,20 @@ const LIQUIDITY_LABEL: Record<AccountBalance['liquidity_type'], string> = {
   money_market: 'Fondo monetario',
 };
 
-/** Patrimonio por entidad (cada cuenta). Hasta la Fase 3, todo es liquidez. */
+const entityTotal = (a: AccountBalance) => toNumber(a.balance) + toNumber(a.invested);
+
+function entityKind(a: AccountBalance): string {
+  if (toNumber(a.invested) > 0) {
+    return toNumber(a.balance) > 0 ? 'Inversión + efectivo' : 'Inversión';
+  }
+  return LIQUIDITY_LABEL[a.liquidity_type];
+}
+
+/** Patrimonio por entidad (cada cuenta): azul lo invertido y verde la liquidez, como la maqueta. */
 export function EntityBars({ accounts }: { accounts: AccountBalance[] }) {
-  const sorted = [...accounts].sort((a, b) => Number(b.balance) - Number(a.balance));
-  const max = Math.max(...sorted.map((a) => toNumber(a.balance)), 0);
+  const sorted = [...accounts].sort((a, b) => entityTotal(b) - entityTotal(a));
+  const max = Math.max(...sorted.map(entityTotal), 0);
+  const width = (amount: string) => `${max > 0 ? ((toNumber(amount) / max) * 100).toFixed(1) : 0}%`;
   return (
     <div className="card panel">
       <h2>Patrimonio por entidad</h2>
@@ -199,18 +209,18 @@ export function EntityBars({ accounts }: { accounts: AccountBalance[] }) {
           <div key={a.id} className="entity">
             <div className="between" style={{ fontSize: 14, gap: 8 }}>
               <span>
-                <strong>{a.name}</strong>{' '}
-                <span className="muted">· {LIQUIDITY_LABEL[a.liquidity_type]}</span>
+                <strong>{a.name}</strong> <span className="muted">· {entityKind(a)}</span>
               </span>
-              <strong className="tnum">{formatEurRounded(a.balance)}</strong>
+              <strong
+                className="tnum"
+                title={`Invertido ${formatEur(a.invested)} · liquidez ${formatEur(a.balance)}`}
+              >
+                {formatEurRounded((Number(a.balance) + Number(a.invested)).toFixed(2))}
+              </strong>
             </div>
             <div className="track" style={{ height: 10 }}>
-              <div
-                style={{
-                  width: `${max > 0 ? ((toNumber(a.balance) / max) * 100).toFixed(1) : 0}%`,
-                  background: 'var(--liq)',
-                }}
-              />
+              <div style={{ width: width(a.invested), background: 'var(--inv)' }} />
+              <div style={{ width: width(a.balance), background: 'var(--liq)' }} />
             </div>
           </div>
         ))

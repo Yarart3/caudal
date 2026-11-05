@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { api } from '../api';
+import { api, type NetWorth, type ProductKind } from '../api';
 import { AppShell } from '../AppShell';
 import { useAuth } from '../auth/AuthContext';
 import { Donut, EntityBars, NetWorthChart, type Slice } from '../components/Charts';
@@ -12,7 +12,7 @@ import { useMonthParam } from '../hooks/useMonthParam';
 
 const loadNetWorth = (month?: string) => api.netWorth(month);
 
-/** Pestaña Patrimonio (DISENO 3.1). Hasta la Fase 3 solo hay liquidez: saldo de cada cuenta. */
+/** Pestaña Patrimonio (DISENO 3.1): liquidez de cada cuenta e inversiones (Fase 3, parte 3.6). */
 export function PanelPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,13 +63,17 @@ export function PanelPage() {
             <Kpi
               label="Liquidez"
               value={formatEurRounded(data.liquidity)}
-              hint={`${data.accounts.length} ${data.accounts.length === 1 ? 'cuenta' : 'cuentas'} con dinero disponible`}
+              hint={liquidityHint(data)}
               color="#0B5747"
             />
             <Kpi
               label="Inversiones"
               value={formatEurRounded(data.investments)}
-              hint="Sin inversiones todavía"
+              hint={
+                Number(data.investments) > 0
+                  ? `${formatSignedRounded(data.investments_gain)} de plusvalía`
+                  : 'Sin inversiones todavía'
+              }
               color="#28437F"
             />
             <Kpi
@@ -88,7 +92,7 @@ export function PanelPage() {
           <section className="r2e">
             <div className="card panel">
               <h2>Reparto por tipo</h2>
-              <TypeDonut byType={data.by_type} />
+              <TypeDonut data={data} />
             </div>
             <GoalCard month={month} />
           </section>
@@ -98,10 +102,31 @@ export function PanelPage() {
   );
 }
 
-function TypeDonut({ byType }: { byType: Record<string, string> }) {
+function liquidityHint(data: NetWorth): string {
+  const count = data.accounts.filter((a) => a.kind !== 'investment').length;
+  return `${count} ${count === 1 ? 'cuenta' : 'cuentas'} con dinero disponible`;
+}
+
+// Tipos de inversión del reparto (colores de la maqueta para ETFs y cripto)
+const INVESTMENT_SLICES: { kind: ProductKind; label: string; color: string }[] = [
+  { kind: 'etf', label: 'ETFs', color: '#3555A0' },
+  { kind: 'stock', label: 'Acciones', color: '#28437F' },
+  { kind: 'fund', label: 'Fondos', color: '#5B76B8' },
+  { kind: 'crypto', label: 'Cripto', color: '#B08A12' },
+  { kind: 'pension', label: 'Planes de pensiones', color: '#7A5AA6' },
+  { kind: 'commodity', label: 'Materias primas', color: '#8A6D1E' },
+  { kind: 'other', label: 'Otras inversiones', color: '#8C939C' },
+];
+
+function TypeDonut({ data }: { data: NetWorth }) {
   const slices: Slice[] = [
-    { label: 'Fondo monetario', amount: byType.money_market ?? '0', color: '#0E6B58' },
-    { label: 'Efectivo', amount: byType.cash ?? '0', color: '#9DB8AE' },
+    ...INVESTMENT_SLICES.map((s) => ({
+      label: s.label,
+      amount: data.investments_by_kind[s.kind] ?? '0',
+      color: s.color,
+    })),
+    { label: 'Fondo monetario', amount: data.by_type.money_market ?? '0', color: '#0E6B58' },
+    { label: 'Efectivo', amount: data.by_type.cash ?? '0', color: '#9DB8AE' },
   ].filter((s) => Number(s.amount) > 0);
   if (slices.length === 0) return <p className="muted">Ahora mismo no tienes saldo positivo.</p>;
   return <Donut label="Reparto del patrimonio por tipo" slices={slices} size={140} />;

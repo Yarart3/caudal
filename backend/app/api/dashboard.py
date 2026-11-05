@@ -25,6 +25,7 @@ class AccountBalanceOut(BaseModel):
     kind: str
     liquidity_type: str
     balance: Decimal
+    invested: Decimal
 
 
 class NetWorthMonthOut(BaseModel):
@@ -38,9 +39,11 @@ class NetWorthOut(BaseModel):
     net_worth: Decimal
     liquidity: Decimal
     investments: Decimal
+    investments_gain: Decimal
     savings: Decimal
     accounts: list[AccountBalanceOut]
     by_type: dict[str, Decimal]
+    investments_by_kind: dict[str, Decimal]
     history: list[NetWorthMonthOut]
 
 
@@ -81,8 +84,8 @@ def _month(db: Session, user: User, month: str | None) -> date:
 def get_net_worth(
     month: str | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)
 ) -> NetWorthOut:
-    """Pestaña Patrimonio: indicadores, saldo de cada cuenta, reparto y evolución a 12 meses.
-    En la 1c solo hay liquidez; las inversiones llegan en la Fase 3."""
+    """Pestaña Patrimonio: indicadores, saldo e invertido de cada cuenta, reparto y evolución a
+    12 meses. Las inversiones se valoran al final del mes (o hoy, si no ha acabado)."""
     return NetWorthOut(**asdict(service.net_worth(db, user.id, _month(db, user, month))))
 
 
