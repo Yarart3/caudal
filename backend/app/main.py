@@ -21,6 +21,7 @@ from app.api import (
     goals,
     imports,
     investments,
+    portfolio,
     prices,
     products,
     recurring,
@@ -72,6 +73,7 @@ app.include_router(alerts.router)
 app.include_router(goals.router)
 app.include_router(prices.router)
 app.include_router(investments.router)
+app.include_router(portfolio.router)
 app.include_router(products.router)
 
 

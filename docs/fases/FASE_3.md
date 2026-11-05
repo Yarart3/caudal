@@ -16,7 +16,7 @@
 | 3.3d1 | Pestaña Inversiones: cuentas de broker, productos (buscar, comprobar precio, guardar) y operaciones con «+ Añadir compra / venta», «duplicar» y editar | ✅ |
 | 3.3d2 | Pestaña Inversiones: importar la plantilla (descargar, vista previa y confirmar) | ✅ |
 | 3.4a | `app/investments/calc.py`: FIFO, TIR (XIRR), rentabilidad por año, peor caída, aportaciones, racha y TER (sin base de datos) | ✅ |
-| 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ⬜ |
+| 3.4b | Cartera desde la base de datos: posiciones, valor diario, plusvalías, indicadores y `GET /api/investments/summary` · `/positions` | ✅ |
 | 3.4c | Comparativa con IWDA / SXR8 / XEON repitiendo los flujos y `GET /api/investments/benchmark` | ⬜ |
 | 3.5 | Pestaña Inversiones | ⬜ |
 | 3.6 | Patrimonio con inversiones | ⬜ |
@@ -55,5 +55,10 @@
 - Rentabilidad por año natural con el método **Dietz modificado** (no anualizada): una aportación grande en diciembre no cuenta como ganancia. El año en curso, hasta hoy.
 - Peor caída sobre la rentabilidad diaria encadenada, no sobre el valor: comprar más taparía las caídas. Para el valor diario, un dividendo es dinero que sale de la cartera y una comisión suelta, dinero que entra.
 - Aportación del mes = compras − ventas. Racha = meses seguidos con aportación > 0; si este mes aún no hay, se cuenta desde el anterior (no se rompe a mitad de mes).
+- «Mis posiciones»: una fila por **producto** (FIFO global), con las cuentas donde aún quedan participaciones. Si el mismo ETF está en dos brokers, sale una fila con los dos nombres.
+- Valor diario desde la primera operación, con el último precio y tipo de cambio de ese día o anterior. Antes del primer precio, lo que costó. Los productos manuales valen lo último anotado (la posición entera).
+- Si a un producto le falta el precio o el tipo de cambio de hoy, no suma en el valor ni en la plusvalía y sale en `missing_prices`; la TIR usa lo que costó, para no quedarse sin ella.
+- Aportado en 12 meses = este mes y los 11 anteriores. La API da los porcentajes en tanto por uno con 6 decimales (`"0.071234"` = 7,12 %).
+- Resumen y posiciones en su propio archivo (`app/api/portfolio.py`), con el mismo prefijo `/api/investments`: `investments.py` ya era largo.
 - Refresco: al arrancar solo si algún precio falta o es antiguo; luego cada `PRICE_REFRESH_MIN` siempre (una petición por símbolo y divisa). Dos refrescos no se pisan.
 - `POST /api/prices/refresh` actualiza solo los productos del usuario. `PRICE_AUTO=false` apaga el refresco automático (los tests lo apagan: nunca salen a internet).

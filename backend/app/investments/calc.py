@@ -97,17 +97,22 @@ def fifo(ops: Iterable[Op]) -> Fifo:
     """
     result = Fifo()
     for op in chronological(ops):
-        if op.kind == "buy":
-            result.lots.append(Lot(op.date, op.shares, op.amount))
-        elif op.kind == "sell":
-            result.sales.append(_sell(result.lots, op))
-        elif op.kind == "dividend":
-            result.dividends += op.amount
-        elif op.kind == "fee":
-            result.fees += op.amount
-        else:
-            raise ValueError(f"Tipo de operación desconocido: {op.kind}")
+        apply(result, op)
     return result
+
+
+def apply(book: Fifo, op: Op) -> None:
+    """Aplica una operación a un FIFO en curso (las operaciones tienen que llegar en orden)."""
+    if op.kind == "buy":
+        book.lots.append(Lot(op.date, op.shares, op.amount))
+    elif op.kind == "sell":
+        book.sales.append(_sell(book.lots, op))
+    elif op.kind == "dividend":
+        book.dividends += op.amount
+    elif op.kind == "fee":
+        book.fees += op.amount
+    else:
+        raise ValueError(f"Tipo de operación desconocido: {op.kind}")
 
 
 def _sell(lots: list[Lot], op: Op) -> Sale:
