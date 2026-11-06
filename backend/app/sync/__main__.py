@@ -3,6 +3,7 @@
     python -m app.sync open [--force]   antes de arrancar la app: trae la última versión
     python -m app.sync close            con la app en marcha: copia final y candado «cerrado»
     python -m app.sync status           qué versión hay aquí y qué dice Google Drive
+    python -m app.sync adopt            tras «Restaurar backup»: seguir con lo restaurado
 
 Códigos de salida: 0 bien (se puede abrir), 1 error, 2 cancelado, 3 abierto en el otro
 equipo, 4 hay que actualizar el código (git pull).
@@ -13,7 +14,14 @@ import sys
 
 from app.config import get_settings
 from app.db import engine
-from app.sync.service import OK, SyncContext, close_sync, open_sync, status_lines
+from app.sync.service import (
+    OK,
+    SyncContext,
+    adopt_restored,
+    close_sync,
+    open_sync,
+    status_lines,
+)
 
 
 def _ask(prompt: str) -> str:
@@ -32,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sub.add_parser("close", help="copia final y candado «cerrado»")
     sub.add_parser("status", help="versión de este equipo y de Google Drive")
+    sub.add_parser("adopt", help="tras restaurar un backup a mano: seguir con lo restaurado")
     args = parser.parse_args(argv)
 
     ctx = SyncContext(settings=get_settings(), engine=engine, ask=_ask)
@@ -39,6 +48,8 @@ def main(argv: list[str] | None = None) -> int:
         return open_sync(ctx, force=args.force)
     if args.command == "close":
         return close_sync(ctx)
+    if args.command == "adopt":
+        return adopt_restored(ctx)
     for line in status_lines(ctx):
         print(line)
     return OK

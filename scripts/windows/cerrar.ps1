@@ -1,5 +1,6 @@
-﻿# Cierra Caudal (DISENO §11): copia final, docker compose down y, si quieres, cierra Docker
-# Desktop. Los datos se conservan en el volumen de Docker. Se lanza con «Cerrar Caudal.bat».
+﻿# Cierra Caudal (DISENO §11 y §15): guarda la versión final (copia + candado «cerrado en este
+# equipo» en Google Drive), docker compose down y, si quieres, cierra Docker Desktop. Los datos
+# se conservan en el volumen de Docker. Se lanza con «Cerrar Caudal.bat».
 . (Join-Path $PSScriptRoot '_comun.ps1')
 
 Titulo 'Cerrando Caudal'
@@ -12,24 +13,15 @@ if (-not (Docker-Listo)) {
 }
 
 if (App-En-Marcha) {
-    Write-Host '  Haciendo la copia de seguridad final...'
-    $intentos = 0
-    while ($true) {
-        & docker compose exec -T app python -m app.backup run --trigger close
-        $codigo = $LASTEXITCODE
-        # 2 = hay otra copia en marcha (por ejemplo, la periódica): se espera hasta 1 minuto
-        if ($codigo -eq 2 -and $intentos -lt 12) {
-            $intentos++
-            Write-Host '  Esperando a que termine la otra copia...'
-            Start-Sleep -Seconds 5
-            continue
-        }
-        break
-    }
-    if ($codigo -eq 0) {
-        Ok 'Copia final hecha'
+    Write-Host '  Guardando la versión final (copia de seguridad y Google Drive)...'
+    # Si hay otra copia en marcha (la periódica), la propia app espera hasta 1 minuto
+    & docker compose exec -T app python -m app.sync close
+    if ($LASTEXITCODE -eq 0) {
+        Ok 'Versión final guardada'
     } else {
-        Fallo 'No se ha podido hacer la copia final'
+        Fallo 'La versión final no ha llegado a Google Drive (mira el mensaje de arriba)'
+        Write-Host '       Si cierras igualmente, el otro equipo no verá lo que has hecho hasta que'
+        Write-Host '       vuelvas a abrir y cerrar Caudal aquí.'
         $respuesta = Read-Host '  ¿Cerrar Caudal igualmente? (s/N)'
         if ($respuesta -notmatch '^[sS]') {
             Write-Host '  No se ha cerrado nada.'

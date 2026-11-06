@@ -558,6 +558,16 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Restablecer contraseña** desde la terminal (`python -m app.auth.reset`): también desbloquea y cierra las sesiones de ese usuario.
 - **Scripts de Windows:** cada `.bat` llama a un `.ps1` (UTF-8 con BOM, para PowerShell 5.1) con la lógica. El pendrive se busca con `Win32_LogicalDisk` por su nombre; si hay dos unidades con el mismo nombre, no se usa ninguna.
 
+**Decisiones de implementación (Fase R: sincronización entre el Mac y el PC):**
+- **Versiones con identificador:** cada base guarda su versión en `sync_state` (una fila: número, identificador único, `lineage` con los identificadores de las versiones de las que viene, `session_open` y equipo). La fila viaja dentro de los backups, así que al restaurar la copia del otro equipo se sabe de qué versión vienen los datos.
+- **Candado** `caudal-sync.json` en la carpeta de Google Drive: estado (`open` / `closed`), equipo, versión, `lineage`, migración de Alembic del código que lo escribió, hora y la copia de esa versión (nombre, tamaño y SHA-256). Se escribe de golpe (temporal + renombrar) y se valida al leerlo: lo puede haber escrito el otro equipo.
+- **Al abrir** (`python -m app.sync open`, antes de arrancar la app): misma versión → se abre; la del candado contiene la de aquí y aquí no quedó ninguna sesión sin cerrar → **se restaura sola**; si no → **conflicto**: 1 = la del otro equipo, 2 = la de este, y las dos se copian a `conflictos/` como `<equipo>-v<N>_caudal_….dump.enc` (la rotación no las toca y «Restaurar backup» las lista). Copia de un código más nuevo → pide `git pull`. Abierto en el otro equipo → no arranca salvo confirmarlo, y entonces se queda el candado. Si la copia aún no ha bajado, espera hasta 5 minutos comprobando tamaño y SHA-256.
+- **«Cambios sin copia»** quiere decir que la sesión no se cerró con «Cerrar Caudal» (`session_open`), no un recuento de filas: si se añadiera una tabla y se olvidara contarla, se perderían datos sin avisar. Ante la duda, pregunta. También lo marcan «Restablecer contraseña» y «Restaurar backup».
+- **Al cerrar** (`python -m app.sync close`): versión nueva → backup → candado «cerrado». Si la copia no llega a Google Drive, el candado no se toca. Si el candado dice que el otro equipo lo abrió a la fuerza, tampoco: la próxima vez se pregunta con qué versión seguir.
+- **Restaurar a mano** (`python -m app.sync adopt`, lo llama «Restaurar backup»): lo restaurado recibe una versión nueva que contiene las del candado; si no, al abrir se cambiaría sola por la última.
+- **Scripts:** «Caudal» reconstruye la imagen (`docker compose build --quiet app`; con caché tarda segundos) para que después de un `git pull` no arranque con el código viejo, y luego hace `app.sync open` y `up -d`. «Cerrar Caudal» usa `app.sync close`.
+- **«Última copia: equipo, fecha y hora»** en «¿Quién entra?», con `GET /api/sync/status` (sin sesión: solo equipo, versión y hora). Es lo que permite notar el riesgo aceptado de la sección 15.
+
 ---
 
 ## 11. Arranque y parada (Docker solo cuando quieras)

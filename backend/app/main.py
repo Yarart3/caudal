@@ -27,6 +27,7 @@ from app.api import (
     recurring,
     rules,
     setup,
+    sync,
     transactions,
 )
 from app.backup.auto import auto_backup
@@ -75,6 +76,7 @@ app.include_router(prices.router)
 app.include_router(investments.router)
 app.include_router(portfolio.router)
 app.include_router(products.router)
+app.include_router(sync.router)
 
 
 @app.exception_handler(RequestValidationError)

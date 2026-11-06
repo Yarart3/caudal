@@ -133,6 +133,7 @@
 | 3 | `GET/POST /api/investments/operations` · `GET/PATCH/DELETE /api/investments/operations/{id}` · `POST /api/investments/import` | Operaciones (compra, venta, dividendo, comisión) en cuentas de inversión del usuario. Nunca se vende más de lo que hay **en esa cuenta**: se comprueba al crear, editar y borrar (422). `GET /api/investments/template?format=xlsx|csv` da la plantilla vacía; `POST /api/investments/import` (account_id, file, confirm) hace la vista previa o guarda **todo o nada** (mirar `saved`) |
 | 3 | `GET /api/investments/summary` · `GET /api/investments/positions` · `GET /api/investments/benchmark` | Pestaña Inversiones |
 | 3 | `GET /api/prices/status` · `POST /api/prices/refresh` | Último precio de cada producto del usuario (y si está desactualizado) y actualización manual de **sus** productos; 409 si ya hay una actualización en marcha |
+| R | `GET /api/sync/status` | «Última copia» en «¿Quién entra?»: sin sesión, solo el equipo, la versión y quién guardó la última copia y cuándo (no expone datos de nadie) |
 | 4 | `GET/POST/PATCH /api/admin/users` · `POST /api/admin/users/{id}/reset-password` · `GET/POST /api/import-formats` | Administración y asistente genérico |
 
 Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta tabla.

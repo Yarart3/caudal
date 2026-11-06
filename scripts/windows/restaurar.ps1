@@ -1,5 +1,6 @@
-﻿# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y Google Drive),
-# pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de lo actual.
+﻿# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive, Google Drive
+# y conflictos/), pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de
+# lo actual. Después, lo restaurado pasa a ser la versión con la que se sigue (Fase R).
 # Se lanza con «Restaurar backup.bat».
 . (Join-Path $PSScriptRoot '_comun.ps1')
 
@@ -21,7 +22,16 @@ Write-Host ''
 $codigo = $LASTEXITCODE
 Write-Host ''
 
-if ($codigo -eq 0 -or $estabaAbierta) {
+if ($codigo -eq 0) {
+    # Sin esto, al abrir se cambiaría sola por la última versión del otro equipo
+    & docker compose run --rm app python -m app.sync adopt
+    & docker compose run --rm app python -m app.sync open
+    $abrir = ($LASTEXITCODE -eq 0)
+} else {
+    $abrir = $estabaAbierta  # si estaba abierta y no se ha restaurado, se vuelve a abrir
+}
+
+if ($abrir) {
     Write-Host '  Abriendo Caudal...'
     & docker compose up -d
     if ($LASTEXITCODE -eq 0 -and (Esperar-App)) { Start-Process (Url-App) }

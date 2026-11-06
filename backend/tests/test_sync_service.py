@@ -18,7 +18,12 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session
 
 from app.auth.security import hash_password
-from app.backup.restore import CONFLICTS_DIR, available_backups, recreate_database
+from app.backup.restore import (
+    CONFLICTS_DIR,
+    available_backups,
+    recreate_database,
+    restore_backup,
+)
 from app.backup.service import MARKER
 from app.config import Settings, get_settings
 from app.models import User
@@ -30,10 +35,12 @@ from app.sync.service import (
     OK,
     UPDATE_CODE,
     SyncContext,
+    adopt_restored,
     close_sync,
     migrate,
     open_sync,
     status_lines,
+    sync_info,
 )
 from app.sync.state import read_local_state
 
@@ -446,3 +453,76 @@ def test_status_lines(make_device, cloud: Path) -> None:
     assert lock is not None
     write_lock(cloud, replace(lock, state="open"))
     assert "abierto en el mac" in status_lines(ctx)[1]
+
+
+# --------------------------------------------------------------------------- restaurar a mano
+
+
+def test_restaurar_a_mano_una_version_antigua_no_se_deshace_al_abrir(
+    make_device, cloud: Path, tmp_path: Path
+) -> None:
+    mac, pc = make_device("mac"), make_device("pc")
+    mac.open()
+    mac.add_user("gerard")
+    mac.close()  # v1
+    v1 = read_lock(cloud)
+    assert v1 is not None and v1.file is not None
+    old = tmp_path / v1.file
+    old.write_bytes((cloud / v1.file).read_bytes())  # se guarda aparte la copia de la v1
+    pc.open()
+    pc.add_user("padres")
+    pc.close()  # v2
+    mac.open()  # restaura la v2
+    assert mac.users() == {"gerard", "padres"}
+    mac.close()  # v3
+
+    # «Restaurar backup» con la copia de la v1, y después lo que hace el script
+    mac.engine.dispose()
+    restore_backup(old, PASSWORD, mac.settings, mac.settings.postgres_db)
+    assert adopt_restored(mac.ctx()) == OK
+    mac.output.clear()
+    assert mac.open() == OK
+    assert "Restaurando" not in mac.text
+    assert mac.users() == {"gerard"}
+    assert mac.close() == OK
+
+    # El otro equipo recibe lo restaurado sin preguntar
+    assert pc.open() == OK
+    assert "Los dos equipos" not in pc.text
+    assert pc.users() == {"gerard"}
+
+
+def test_adoptar_sin_candado(make_device) -> None:
+    mac = make_device("mac")
+    mac.add_user("gerard")
+    assert adopt_restored(mac.ctx()) == OK
+    local = read_local_state(mac.engine)
+    assert local.session_open
+    assert local.version_id in local.lineage
+
+
+# --------------------------------------------------------------------------- «Última copia»
+
+
+def test_ultima_copia_tras_cerrar_y_con_el_otro_equipo_abierto(make_device, cloud: Path) -> None:
+    mac, pc = make_device("mac"), make_device("pc")
+    assert sync_info(mac.settings, mac.engine).last_copy is None
+    mac.open()
+    assert sync_info(mac.settings, mac.engine).last_copy is None  # aún no hay ninguna versión
+    mac.add_user("gerard")
+    mac.close()
+    closed = sync_info(mac.settings, mac.engine).last_copy
+    assert closed is not None and (closed.device, closed.version) == ("mac", 1)
+
+    pc.open()  # el candado pasa a «abierto en el pc», pero la última copia sigue siendo del Mac
+    info = sync_info(pc.settings, pc.engine)
+    assert (info.this_device, info.local_version, info.cloud_available) == ("pc", 1, True)
+    assert info.last_copy == closed
+
+
+def test_ultima_copia_sin_google_drive(make_device, cloud: Path) -> None:
+    mac = make_device("mac")
+    (cloud / MARKER).unlink()
+    info = sync_info(mac.settings, mac.engine)
+    assert not info.cloud_available
+    assert info.last_copy is None

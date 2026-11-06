@@ -39,8 +39,10 @@ from app.config import Settings
 from app.sync.decide import Action, decide
 from app.sync.lock import (
     FileStatus,
+    LastCopy,
     LockError,
     SyncLock,
+    last_copy,
     read_lock,
     remote_file_status,
     sha256_file,
@@ -295,7 +297,8 @@ def _mark_open(
     if not write:
         return
     # La copia del candado anterior sigue valiendo si es de esta misma versión
-    same = previous is not None and previous.version_id == (local.version_id or "")
+    base = previous if previous and previous.version_id == (local.version_id or "") else None
+    copy = last_copy(base)
     lock = SyncLock(
         state="open",
         device=ctx.device,
@@ -304,9 +307,11 @@ def _mark_open(
         lineage=local.lineage,
         schema=head_revision(),
         at=ctx.now(),
-        file=previous.file if same and previous else None,
-        size=previous.size if same and previous else None,
-        sha256=previous.sha256 if same and previous else None,
+        file=base.file if base else None,
+        size=base.size if base else None,
+        sha256=base.sha256 if base else None,
+        closed_by=copy.device if copy else None,
+        closed_at=copy.at if copy else None,
     )
     try:
         write_lock(ctx.cloud_dir, lock)
@@ -433,3 +438,63 @@ def status_lines(ctx: SyncContext) -> list[str]:
         f"Google Drive: {what} {lock.device}, versión {lock.version}, "
         f"{lock.at.astimezone(TZ):%d/%m/%Y %H:%M}",
     ]
+
+
+# --------------------------------------------------------------------------- restaurar a mano
+
+
+def adopt_restored(ctx: SyncContext) -> int:
+    """Tras «Restaurar backup»: lo restaurado pasa a ser la versión con la que se sigue.
+
+    Sin esto, al abrir se vería como una versión antigua y se cambiaría sola por la última del
+    candado, deshaciendo la restauración. Se le da una versión nueva que «contiene» todas las
+    del candado; al cerrar, el otro equipo la recibirá como cualquier otra.
+    """
+    if not _check_device(ctx):
+        return ERROR
+    ctx.migrate(ctx.engine)  # el backup puede ser de antes de la migración 0008
+    lock = None
+    if is_available(ctx.cloud_dir):
+        try:
+            lock = read_lock(ctx.cloud_dir)
+        except LockError as error:
+            ctx.out(f"Aviso: {error}")
+    local = read_local_state(ctx.engine)
+    new_id = str(uuid.uuid4())
+    remote = lock.lineage if lock else ()
+    adopted = replace(
+        local,
+        version=max(local.version, lock.version if lock else 0),
+        version_id=new_id,
+        lineage=extend_lineage(local.lineage, *remote, new_id),
+        session_open=True,  # todavía no está en ninguna copia: al cerrar se guardará
+        device=ctx.device,
+    )
+    write_local_state(adopted, ctx.engine)
+    ctx.out("Lo restaurado es ahora la versión de Caudal; al cerrar, la recibirá el otro equipo.")
+    return OK
+
+
+# --------------------------------------------------------------------------- «Última copia»
+
+
+@dataclass(frozen=True)
+class SyncInfo:
+    this_device: str
+    local_version: int
+    cloud_available: bool
+    last_copy: LastCopy | None
+
+
+def sync_info(settings: Settings, db_engine: Engine) -> SyncInfo:
+    """Lo que enseña la pantalla de inicio: «Última copia: equipo, fecha y hora»."""
+    local = read_local_state(db_engine)
+    device = settings.device_name.strip().lower()
+    cloud = settings.backup_cloud_dir
+    if not is_available(cloud):
+        return SyncInfo(device, local.version, False, None)
+    try:
+        lock = read_lock(cloud)
+    except LockError:
+        lock = None
+    return SyncInfo(device, local.version, True, last_copy(lock))

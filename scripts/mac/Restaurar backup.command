@@ -1,6 +1,7 @@
 #!/bin/bash
-# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive y Google Drive),
-# pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de lo actual.
+# Restaura un backup de Caudal (DISENO §12): elige el archivo de la lista (pendrive, Google Drive
+# y conflictos/), pide la contraseña y lo restaura sobre una base vacía. Antes hace una copia de
+# lo actual. Después, lo restaurado pasa a ser la versión con la que se sigue (Fase R).
 source "$(dirname "$0")/_comun.sh"
 
 titulo "Restaurar un backup de Caudal"
@@ -22,7 +23,16 @@ docker compose run --rm app python -m app.backup restore
 codigo=$?
 echo
 
-if [ "$codigo" -eq 0 ] || [ "$estaba_abierta" -eq 1 ]; then
+if [ "$codigo" -eq 0 ]; then
+  # Sin esto, al abrir se cambiaría sola por la última versión del otro equipo
+  docker compose run --rm app python -m app.sync adopt
+  docker compose run --rm app python -m app.sync open
+  abrir=$?
+else
+  abrir=$((1 - estaba_abierta))  # si estaba abierta y no se ha restaurado, se vuelve a abrir
+fi
+
+if [ "$abrir" -eq 0 ]; then
   echo "  Abriendo Caudal…"
   if docker compose up -d && esperar_app; then
     open "$(url_app)"

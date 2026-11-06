@@ -9,6 +9,7 @@ from app.auth import reset
 from app.auth.reset import ResetError, reset_password
 from app.auth.security import verify_password
 from app.models import User, UserSession
+from app.sync.state import LocalState, read_local_state, write_local_state
 
 
 def test_cambia_la_contrasena_desbloquea_y_cierra_sesiones(db, login):
@@ -29,6 +30,13 @@ def test_cambia_la_contrasena_desbloquea_y_cierra_sesiones(db, login):
     assert client.get("/api/auth/me").status_code == 401  # la sesión abierta ya no vale
     res = client.post("/api/auth/login", json={"username": "padres", "password": "nueva-clave-123"})
     assert res.status_code == 200
+
+
+def test_marca_un_cambio_sin_copia_para_la_sincronizacion(db, make_user):
+    make_user("padres")
+    write_local_state(LocalState(version=2, version_id="id-2", lineage=("id-2",)))
+    reset_password(db, "padres", "nueva-clave-123")
+    assert read_local_state().session_open
 
 
 def test_solo_toca_a_ese_usuario(db, login):

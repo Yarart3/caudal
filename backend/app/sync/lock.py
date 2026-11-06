@@ -37,11 +37,15 @@ class SyncLock:
     file: str | None = None  # la copia con esta versión (None si todavía no hay ninguna)
     size: int | None = None
     sha256: str | None = None
+    # Con el candado abierto: quién cerró esta versión y cuándo (para «Última copia»)
+    closed_by: str | None = None
+    closed_at: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["lineage"] = list(self.lineage)
         data["at"] = self.at.isoformat()
+        data["closed_at"] = self.closed_at.isoformat() if self.closed_at else None
         return {"format": LOCK_FORMAT, **data}
 
     @classmethod
@@ -63,6 +67,12 @@ class SyncLock:
                 file=file,
                 size=None if data.get("size") is None else int(data["size"]),
                 sha256=None if data.get("sha256") is None else str(data["sha256"]),
+                closed_by=None if data.get("closed_by") is None else str(data["closed_by"]),
+                closed_at=(
+                    None
+                    if data.get("closed_at") is None
+                    else datetime.fromisoformat(data["closed_at"])
+                ),
             )
             if lock.state not in STATES:
                 raise ValueError(f"estado «{lock.state}» desconocido")
@@ -130,3 +140,21 @@ def remote_file_status(directory: Path, lock: SyncLock) -> FileStatus:
     if lock.sha256 is not None and sha256_file(path) != lock.sha256:
         return FileStatus.INCOMPLETE
     return FileStatus.READY
+
+
+@dataclass(frozen=True)
+class LastCopy:
+    device: str
+    version: int
+    at: datetime
+
+
+def last_copy(lock: SyncLock | None) -> LastCopy | None:
+    """La última versión guardada que conoce el candado: quién la cerró y cuándo."""
+    if lock is None or not lock.version_id:
+        return None
+    if lock.state == "closed":
+        return LastCopy(lock.device, lock.version, lock.at)
+    if lock.closed_by and lock.closed_at:
+        return LastCopy(lock.closed_by, lock.version, lock.closed_at)
+    return None

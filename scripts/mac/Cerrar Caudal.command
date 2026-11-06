@@ -1,6 +1,7 @@
 #!/bin/bash
-# Cierra Caudal con doble clic (DISENO §11): copia final, docker compose down y, si quieres,
-# cierra Docker Desktop. Los datos se conservan en el volumen de Docker.
+# Cierra Caudal con doble clic (DISENO §11 y §15): guarda la versión final (copia + candado
+# «cerrado en este equipo» en Google Drive), docker compose down y, si quieres, cierra Docker
+# Desktop. Los datos se conservan en el volumen de Docker.
 source "$(dirname "$0")/_comun.sh"
 
 titulo "Cerrando Caudal"
@@ -12,24 +13,16 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 if app_en_marcha; then
-  echo "  Haciendo la copia de seguridad final…"
-  intentos=0
-  while :; do
-    docker compose exec -T app python -m app.backup run --trigger close
-    codigo=$?
-    # 2 = hay otra copia en marcha (por ejemplo, la periódica): se espera hasta 1 minuto
-    if [ "$codigo" -eq 2 ] && [ "$intentos" -lt 12 ]; then
-      intentos=$((intentos + 1))
-      echo "  Esperando a que termine la otra copia…"
-      sleep 5
-      continue
-    fi
-    break
-  done
+  echo "  Guardando la versión final (copia de seguridad y Google Drive)…"
+  # Si hay otra copia en marcha (la periódica), la propia app espera hasta 1 minuto
+  docker compose exec -T app python -m app.sync close
+  codigo=$?
   if [ "$codigo" -eq 0 ]; then
-    ok "Copia final hecha"
+    ok "Versión final guardada"
   else
-    fallo "No se ha podido hacer la copia final"
+    fallo "La versión final no ha llegado a Google Drive (mira el mensaje de arriba)"
+    echo "    Si cierras igualmente, el otro equipo no verá lo que has hecho hasta que"
+    echo "    vuelvas a abrir y cerrar Caudal aquí."
     read -r -p "  ¿Cerrar Caudal igualmente? (s/N): " respuesta || respuesta=""
     case "$respuesta" in
       s | S) ;;

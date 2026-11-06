@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { api, ApiError, errorMessage, type UserCard } from '../api';
 import { useAuth } from '../auth/AuthContext';
+import { SyncInfo } from '../components/SyncInfo';
 import { Loading, Screen } from './Screen';
 
 const FOOT =
@@ -52,6 +53,7 @@ export function LoginPage() {
           <strong style={{ fontSize: 17 }}>{u.display_name}</strong>
         </button>
       ))}
+      <SyncInfo />
     </Screen>
   );
 }

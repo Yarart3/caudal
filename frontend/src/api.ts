@@ -29,6 +29,14 @@ export type AccountCreate = {
   liquidity_type: Account['liquidity_type'];
 };
 
+// Sincronización entre el Mac y el PC (Fase R): «Última copia» en la pantalla de inicio
+export type SyncStatus = {
+  this_device: string;
+  local_version: number;
+  cloud_available: boolean;
+  last_copy: { device: string; version: number; at: string } | null;
+};
+
 export type RowError = { row: number; field: string; value: string; message: string };
 
 export type ImportResult = {
@@ -552,6 +560,7 @@ export const api = {
     }),
   deleteGoal: () => request<void>('/api/goals', { method: 'DELETE' }),
   backupStatus: () => request<BackupStatus>('/api/backups/status'),
+  syncStatus: () => request<SyncStatus>('/api/sync/status'),
   runBackup: () => request<BackupRun>('/api/backups/run', { method: 'POST' }),
   applyRules: (includeAuto: boolean) =>
     request<RulesApplied>(`/api/rules/apply${queryString({ include_auto: includeAuto })}`, {

@@ -10,8 +10,10 @@ import pytest
 from app.sync.lock import (
     LOCK_FILENAME,
     FileStatus,
+    LastCopy,
     LockError,
     SyncLock,
+    last_copy,
     read_lock,
     remote_file_status,
     sha256_file,
@@ -49,6 +51,23 @@ def test_ida_y_vuelta(tmp_path: Path) -> None:
     assert read_lock(tmp_path) == original
     # Sin el temporal: solo queda el candado
     assert [p.name for p in tmp_path.iterdir()] == [LOCK_FILENAME]
+
+
+def test_candado_abierto_con_quien_cerro_la_version(tmp_path: Path) -> None:
+    original = make_lock(
+        state="open", closed_by="pc", closed_at=datetime(2026, 11, 5, 20, 0, tzinfo=TZ)
+    )
+    write_lock(tmp_path, original)
+    assert read_lock(tmp_path) == original
+
+
+def test_ultima_copia() -> None:
+    assert last_copy(None) is None
+    assert last_copy(make_lock(version_id="")) is None
+    assert last_copy(make_lock()) == LastCopy("mac", 3, make_lock().at)
+    opened = make_lock(state="open", device="pc", closed_by="mac", closed_at=make_lock().at)
+    assert last_copy(opened) == LastCopy("mac", 3, make_lock().at)
+    assert last_copy(make_lock(state="open", device="pc")) is None
 
 
 def test_candado_abierto_sin_copia(tmp_path: Path) -> None:

@@ -13,13 +13,13 @@ Códigos de salida: 0 bien, 1 error, 2 cancelado.
 import getpass
 import sys
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.api.setup import MIN_PASSWORD_LENGTH
 from app.auth.security import hash_password
 from app.db import SessionLocal
-from app.models import User, UserSession
+from app.models import SyncState, User, UserSession
 
 
 class ResetError(Exception):
@@ -37,6 +37,9 @@ def reset_password(db: Session, username: str, new_password: str) -> User:
     user.failed_attempts = 0
     user.locked_until = None
     db.execute(delete(UserSession).where(UserSession.user_id == user.id))
+    # Es un cambio que todavía no está en ninguna copia (Fase R): si se abre Caudal y el otro
+    # equipo tiene una versión más nueva, se preguntará en vez de pisarlo sin avisar
+    db.execute(update(SyncState).where(SyncState.id == 1).values(session_open=True))
     db.commit()
     return user
 
