@@ -72,13 +72,14 @@ esperar_docker() {
 # carpeta CaudalBackups con su marcador y se pasa a Docker con USB_BACKUP_DIR. Si no está, no se
 # pasa nada: Docker monta una carpeta vacía sin marcador y la app avisa «Pendrive no conectado».
 preparar_pendrive() {
-  local etiqueta volumen
+  local etiqueta volumen carpeta
   etiqueta="$(env_valor USB_LABEL Gerard)"
+  carpeta="$(env_valor USB_FOLDER CaudalBackups)"
   volumen="/Volumes/$etiqueta"
   unset USB_BACKUP_DIR
   if mount | grep -qF " on $volumen ("; then
-    if mkdir -p "$volumen/CaudalBackups" && touch "$volumen/CaudalBackups/.caudal-backups"; then
-      export USB_BACKUP_DIR="$volumen/CaudalBackups"
+    if mkdir -p "$volumen/$carpeta" && touch "$volumen/$carpeta/.caudal-backups"; then
+      export USB_BACKUP_DIR="$volumen/$carpeta"
       ok "Pendrive «${etiqueta}» conectado"
       return 0
     fi

@@ -7,6 +7,7 @@ Titulo 'Abriendo Caudal'
 Comprobar-Env
 Esperar-Docker
 Preparar-Pendrive
+Llevar-Al-Pendrive
 Preparar-Nube
 
 if (App-En-Marcha) {

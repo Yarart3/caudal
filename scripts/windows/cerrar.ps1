@@ -32,6 +32,10 @@ if (App-En-Marcha) {
     Aviso 'Caudal no estaba abierto: no hace falta copia final'
 }
 
+# El pendrive no se monta en Docker (pendiente 12): las copias se llevan desde aquí
+Preparar-Pendrive
+Llevar-Al-Pendrive
+
 Write-Host '  Parando Caudal...'
 & docker compose down
 if ($LASTEXITCODE -ne 0) {

@@ -8,6 +8,7 @@ Titulo 'Restaurar un backup de Caudal'
 Comprobar-Env
 Esperar-Docker
 Preparar-Pendrive
+Traer-Del-Pendrive
 Preparar-Nube
 
 # Mientras se restaura, la app tiene que estar parada (nadie puede estar usando la base)

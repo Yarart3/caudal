@@ -80,33 +80,97 @@ function Esperar-Docker {
     Pausa-Y-Salir 1
 }
 
-# Pendrive: se busca por su nombre de volumen (USB_LABEL), no por la letra de unidad. Si está,
-# se crea la carpeta CaudalBackups con su marcador y se pasa a Docker con USB_BACKUP_DIR. Si no
-# está, no se pasa nada: Docker monta una carpeta vacía sin marcador y la app avisa.
+# Pendrive (pendiente 12, Fase R): Docker Desktop (WSL2) NO ve las unidades extraíbles de Windows
+# (monta una carpeta vacía en su lugar), así que el pendrive no se monta. La app guarda sus copias
+# del «pendrive» en backups\pendrive (en el disco C:, que Docker sí ve) y este script las lleva al
+# pendrive al abrir y al cerrar (Llevar-Al-Pendrive) y las trae antes de restaurar
+# (Traer-Del-Pendrive). El pendrive se busca por su nombre de volumen (USB_LABEL), no por la letra,
+# y dentro se usa la carpeta USB_FOLDER (CaudalBackups en la instancia real, CaudalBackupsDev en
+# desarrollo). Sin pendrive, se quita el marcador de backups\pendrive y la app avisa.
+$Intermedia = Join-Path $Root 'backups\pendrive'
+$PatronCopia = '^caudal_\d{4}-\d{2}-\d{2}_\d{4}\.dump\.enc$'
+$script:DirPendrive = $null
+
 function Preparar-Pendrive {
     $etiqueta = Env-Valor 'USB_LABEL' 'Gerard'
-    Remove-Item Env:USB_BACKUP_DIR -ErrorAction SilentlyContinue
+    $carpeta = Env-Valor 'USB_FOLDER' 'CaudalBackups'
+    $marcador = Join-Path $Intermedia '.caudal-backups'
+    New-Item -ItemType Directory -Force -Path $Intermedia | Out-Null
+    $env:USB_BACKUP_DIR = $Intermedia
+    $script:DirPendrive = $null
     $discos = @(Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction SilentlyContinue |
             Where-Object { $_.VolumeName -eq $etiqueta })
-    if ($discos.Count -eq 0) {
-        Aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a Google Drive"
+    if ($discos.Count -ne 1) {
+        Remove-Item -LiteralPath $marcador -Force -ErrorAction SilentlyContinue
+        if ($discos.Count -eq 0) {
+            Aviso "Pendrive «$etiqueta» no conectado: las copias irán solo a Google Drive"
+        } else {
+            $letras = ($discos | ForEach-Object { $_.DeviceID }) -join ', '
+            Fallo "Hay varias unidades llamadas «$etiqueta» ($letras): no se usa ninguna."
+        }
         return
     }
-    if ($discos.Count -gt 1) {
-        $letras = ($discos | ForEach-Object { $_.DeviceID }) -join ', '
-        Fallo "Hay varias unidades llamadas «$etiqueta» ($letras): no se usa ninguna."
-        return
-    }
-    $dir = $discos[0].DeviceID + '\CaudalBackups'
+    $dir = $discos[0].DeviceID + '\' + $carpeta
     try {
         New-Item -ItemType Directory -Force -Path $dir -ErrorAction Stop | Out-Null
         New-Item -ItemType File -Force -Path (Join-Path $dir '.caudal-backups') -ErrorAction Stop | Out-Null
     } catch {
+        Remove-Item -LiteralPath $marcador -Force -ErrorAction SilentlyContinue
         Aviso "El pendrive «$etiqueta» está conectado, pero no se puede escribir en él"
         return
     }
-    $env:USB_BACKUP_DIR = $dir
-    Ok "Pendrive «$etiqueta» conectado ($($discos[0].DeviceID))"
+    New-Item -ItemType File -Force -Path $marcador | Out-Null
+    $script:DirPendrive = $dir
+    Ok "Pendrive «$etiqueta» conectado ($dir)"
+}
+
+# Copia de $origen a $destino las copias de Caudal que falten (o que tengan otro tamaño); con
+# $maximo, solo las $maximo más recientes. Cada una se copia primero como .partial y después se
+# renombra: nunca queda una a medias con el nombre bueno.
+function Copiar-Copias([string]$origen, [string]$destino, [int]$maximo = 0) {
+    $copiadas = 0
+    $archivos = @(Get-ChildItem -LiteralPath $origen -File -ErrorAction Stop |
+            Where-Object { $_.Name -match $PatronCopia } |
+            Sort-Object Name -Descending)
+    if ($maximo -gt 0) { $archivos = @($archivos | Select-Object -First $maximo) }
+    foreach ($archivo in $archivos) {
+        $final = Join-Path $destino $archivo.Name
+        $ya = Get-Item -LiteralPath $final -ErrorAction SilentlyContinue
+        if ($ya -and $ya.Length -eq $archivo.Length) { continue }
+        $temporal = $final + '.partial'
+        Copy-Item -LiteralPath $archivo.FullName -Destination $temporal -Force -ErrorAction Stop
+        Move-Item -LiteralPath $temporal -Destination $final -Force -ErrorAction Stop
+        $copiadas++
+    }
+    return $copiadas
+}
+
+# Lleva al pendrive las copias nuevas y deja solo las BACKUP_KEEP más recientes (como la app)
+function Llevar-Al-Pendrive {
+    if (-not $script:DirPendrive) { return }
+    try {
+        $guardar = [int](Env-Valor 'BACKUP_KEEP' '30')
+        $copiadas = Copiar-Copias $Intermedia $script:DirPendrive $guardar
+        Get-ChildItem -LiteralPath $script:DirPendrive -File |
+            Where-Object { $_.Name -match $PatronCopia } |
+            Sort-Object Name -Descending |
+            Select-Object -Skip $guardar |
+            Remove-Item -Force -ErrorAction Stop
+        if ($copiadas -gt 0) { Ok "Pendrive: $copiadas copia(s) nueva(s) guardada(s)" } else { Ok 'Pendrive al día' }
+    } catch {
+        Aviso "No se han podido guardar las copias en el pendrive: $($_.Exception.Message)"
+    }
+}
+
+# Trae del pendrive las copias que no estén en backups\pendrive (para poder restaurarlas)
+function Traer-Del-Pendrive {
+    if (-not $script:DirPendrive) { return }
+    try {
+        $copiadas = Copiar-Copias $script:DirPendrive $Intermedia
+        if ($copiadas -gt 0) { Ok "Pendrive: $copiadas copia(s) traída(s) para poder restaurarlas" }
+    } catch {
+        Aviso "No se han podido leer las copias del pendrive: $($_.Exception.Message)"
+    }
 }
 
 # Google Drive: la carpeta de CLOUD_DIR tiene que existir (la crea la app de Google Drive). Si no
