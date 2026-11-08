@@ -2,6 +2,25 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [Sin publicar] · Fase R (en curso)
+### Añadido
+- **Sincronización entre el Mac y el PC** por los backups cifrados de Google Drive (`backend/app/sync/`, migración `0008`): versión de cada base con identificador y su historia, candado `caudal-sync.json` y `python -m app.sync open | close | status | adopt`. Al abrir restaura sola la última versión, espera a que baje de Drive, pregunta si los dos equipos tienen cambios (y guarda las dos en `conflictos/`), no abre si está abierto en el otro equipo y pide `git pull` si la copia es de un código más nuevo.
+- «Última copia: equipo, fecha y hora» en «¿Quién entra?» (`GET /api/sync/status`, sin sesión).
+- «Restaurar backup» lista también las copias de `conflictos/`.
+- Variables del `.env`: `DEVICE_NAME` (`mac` / `pc`) y `USB_FOLDER` (carpeta del pendrive de cada instancia).
+- 70 tests nuevos (693 en total), con dos «equipos» de verdad (dos bases y una carpeta de Drive compartida).
+- `docs/fases/FASE_R.md`.
+### Cambiado
+- El destino en la nube es **Google Drive** con una cuenta solo para Caudal. En el código se llama `cloud` (`CLOUD_DIR`, `/backups/cloud`; migración `0007` para `backup_log`).
+- Los scripts de abrir, cerrar y restaurar usan la sincronización. «Caudal» reconstruye la imagen antes de abrir, para no arrancar con el código viejo después de un `git pull`.
+- **Pendrive en Windows:** ya no se monta en Docker (no ve las unidades extraíbles). La app guarda sus copias en `backups\pendrive` y los scripts las llevan al pendrive al abrir y al cerrar, y las traen antes de restaurar.
+- «Restablecer contraseña» cuenta como cambio sin copia.
+### Corregido
+- `«�` en el aviso del pendrive de los scripts del Mac (bash 3.2).
+### Notas
+- Instancia real y de desarrollo separadas en cada equipo (pendiente 9). Pendiente 12 resuelto.
+- Quedan R.4 (movimientos reales), R.5 (inversiones reales) y R.6 (arreglos).
+
 ## [0.6.0] – 2026-11-05 · Fase 3
 ### Añadido
 - **Inversiones** (migraciones `0004`, `0005` y `0006`): productos (ETF, acciones, fondos, cripto, planes, materias primas), operaciones (compra, venta, dividendo y comisión), precios, valores anotados a mano, tipos de cambio y cierres de los índices de referencia.

@@ -128,14 +128,17 @@ Abre **http://localhost:8080**. La primera vez aparece el **asistente** para cre
    - `BACKUP_PASSWORD`: la contraseña de las copias, **distinta** de las de inicio de sesión y **apuntada en papel** (si se pierde, las copias no se pueden abrir). Solo letras sin acentos, números y guiones.
    - `CLOUD_DIR`: la carpeta `CaudalBackups` de Google Drive (modo «Replicar archivos»), entre comillas. En un equipo de desarrollo, una carpeta aparte (`CaudalBackupsDev`), nunca la real.
    - `USB_LABEL`: el nombre del pendrive (`Gerard`).
+   - `USB_FOLDER`: la carpeta dentro del pendrive (`CaudalBackups`; en desarrollo, `CaudalBackupsDev`).
+   - `DEVICE_NAME`: qué equipo es (`mac` o `pc`). Va en el candado de sincronización.
+   - En un equipo de desarrollo, además: `COMPOSE_PROJECT_NAME=caudal-dev` y `APP_PORT=8081`, para que no se mezcle con la instancia real.
 4. `docker compose build` (y otra vez después de cada `git pull` que cambie el código).
 5. Doble clic en **`scripts/windows/Caudal.bat`** (en Mac, `scripts/mac/Caudal.command`; la primera vez, clic derecho → **Abrir**).
 6. La primera vez, un asistente crea los usuarios y sus contraseñas.
 
 | Acceso directo (`scripts/windows/*.bat` · `scripts/mac/*.command`) | Qué hace |
 |---|---|
-| **Caudal** | Abre Docker Desktop si hace falta, busca el pendrive por su nombre, arranca la app y abre el navegador |
-| **Cerrar Caudal** | Hace la copia final, para la app y, si quieres, cierra Docker Desktop |
+| **Caudal** | Abre Docker Desktop si hace falta, busca el pendrive por su nombre, trae la última versión del otro equipo (Google Drive), arranca la app y abre el navegador |
+| **Cerrar Caudal** | Hace la copia final y la deja como la última versión para el otro equipo, para la app y, si quieres, cierra Docker Desktop |
 | **Restaurar backup** | Elige una copia (del pendrive o de Google Drive), pide la contraseña y la restaura. Antes guarda una copia de lo que hay |
 | **Restablecer contraseña** | Cambia la contraseña de un usuario y lo desbloquea |
 
@@ -148,6 +151,7 @@ El código se desarrolla en varios equipos (MacBook Air, portátil con Windows y
 - **Git solo lleva el código y la documentación.** Los datos de la app (la base de datos, en el volumen de Docker) y el archivo `.env` **no viajan con Git**, y nunca deben subirse.
 - **Desde la Fase R, la instancia real funciona en el Mac y en el PC de casa**, sincronizadas por los backups cifrados en Google Drive: al cerrar en uno y abrir en el otro, se restaura sola la última copia (ver `docs/DISENO.md`, Fase R). Para desarrollar se usa una instancia aparte con los ejemplos inventados de `samples/`.
 - **Regla de oro:** antes de empezar, `git pull`; al terminar, `git commit` + `git push`. Así nunca hay dos equipos con cambios distintos sin subir.
+- **Dos instancias en cada equipo:** la **real** (para usar: `~/Caudal` en el Mac y `C:\Users\gerar\Caudal` en el PC, puerto 8080, solo `git pull`) y la de **desarrollo** (para programar: `caudal-dev`, puerto 8081, carpetas `CaudalBackupsDev`). Ver `docs/fases/FASE_R.md`, sección 4.
 
 Los comandos son para **PowerShell** (Windows). En Mac, los comandos de Git son los mismos en la app Terminal, y la preparación del equipo está en la sección 16.1 de `docs/DISENO.md`.
 
@@ -305,6 +309,8 @@ En Windows, los bloques de comandos con `cat > archivo <<'EOF'` se pegan en **Gi
 - **Cifradas** (AES-256-GCM, clave derivada con scrypt) con una contraseña propia. Se guardan las 30 últimas en cada sitio.
 - **Indicador** en la cabecera: «Último backup: hoy 18:42 · Pendrive ✓ · Google Drive ✓». En rojo, lo que necesita atención.
 - **Restaurar:** script *Restaurar backup*. Sirve también para pasar a otro ordenador.
+- **Entre el Mac y el PC:** al cerrar en uno y abrir en el otro, se restaura sola la última versión. «¿Quién entra?» enseña «Última copia: equipo, fecha y hora». Si los dos equipos tienen cambios, pregunta y guarda las dos en `conflictos/`.
+- **En Windows**, Docker no ve el pendrive: la app guarda sus copias en `backups\pendrive` y los scripts las llevan al pendrive al abrir y al cerrar.
 
 Desde la terminal: `docker compose exec app python -m app.backup run` (copia ahora) y `docker compose exec app python -m app.backup list` (copias disponibles).
 
@@ -348,7 +354,7 @@ caudal/
 | 1d | Backups + accesos directos | ✅ |
 | 2 | Presupuestos, avisos, recurrentes, objetivos | ✅ |
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ✅ |
-| R | Puesta en marcha: uso real en el Mac y en el PC, sincronizados por Google Drive | ⬜ |
+| R | Puesta en marcha: uso real en el Mac y en el PC, sincronizados por Google Drive | ⏳ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
 | 5 | Previsión, IA local, informes, extras | ⬜ |
 | 6 | Migración a Mac | ⬜ |
