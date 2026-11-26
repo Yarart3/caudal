@@ -4,7 +4,7 @@
 
 - **Nombre de la app:** **Caudal** (el dinero que fluye y, a la vez, el patrimonio que se acumula)
 - **Autor:** Gerard
-- **Estado:** Fase 2 terminada (presupuestos, avisos, recurrentes, objetivo y selector de mes). En curso: Fase 3 (parte 3.1 hecha: esquema de inversiones)
+- **Estado:** Fase 3 terminada. En curso: **Fase R** (R.1 a R.3 hechas; quedan R.4 a R.6, con los datos reales de Gerard) y la **parte de Gerard de la Fase 5**, adelantada a la Fase 4 (decisión del 2026-11-26)
 - **Maqueta visual (referencia oficial del diseño):**
   - `maqueta/caudal-maqueta.html`: se abre con doble clic en el navegador, sin depender de Claude.
   - Versión editable en Claude Design: https://claude.ai/artifact/DXDvWvm4wy3PE4RYRtcckQ (privada, solo la ve Gerard; para usarla como app, pulsar ▶ Play).
@@ -44,7 +44,7 @@ Una aplicación **útil de verdad** para controlar **todo el dinero** de Gerard 
 - **Movimientos:** en qué se gasta y qué entra cada mes, **importando los extractos** del banco en lugar de introducir todo a mano. La app detecta sola si cada movimiento es un gasto o un ingreso y lo **categoriza**.
 - **Inversiones:** la cartera de Trade Republic y Scalable Capital, con **precios actualizados automáticamente**, plusvalías, rentabilidad y comparativa con un indexado.
 
-Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual.
+Funciona **en el PC de casa y en el MacBook** (desde la Fase R, sincronizados por los backups cifrados), sin publicar nada en internet y sin coste mensual.
 
 **De momento no es un proyecto para el CV.** Si más adelante se quiere enseñar, se hará una versión demo aparte con datos inventados (Fase 7).
 
@@ -65,7 +65,7 @@ Funciona **en el PC de casa**, sin publicar nada en internet y sin coste mensual
 | Cuentas de los padres | **CaixaBank** y **Sabadell** (formatos pendientes) |
 | Datos visibles por movimiento | **Cuenta, Concepto, Fecha, Importe** (+ Categoría, asignada automáticamente) |
 | Gasto o ingreso | Lo deduce la app por el **signo del importe** |
-| Precios de inversiones | Automáticos (Morningstar, Yahoo Finance, CoinGecko), con retraso de ~15 min en bolsa; fondos, una vez al día |
+| Precios de inversiones | Automáticos con **Yahoo Finance** (ETFs, acciones, ETC y divisas), con retraso de ~15 min en bolsa. Morningstar (fondos) y CoinGecko (cripto) se añadirán cuando haya un producto que los necesite (Fase 3) |
 | Backups | Automáticos y **cifrados**, en el **pendrive** (siempre conectado, 250 GB) y en **Google Drive** (cuenta solo para Caudal; hasta la Fase R, OneDrive de la UdL) |
 | IA | En las primeras fases no se usa IA externa con datos reales. Si más adelante se usa un modelo, será **local**. |
 | Stack | PostgreSQL + FastAPI (Python) + React (Vite; gráficos en CSS como la maqueta), con Docker Compose |
@@ -240,6 +240,8 @@ ETFs, acciones, fondos indexados, cripto, planes de pensiones, depósitos, oro�
 | Fondos | Morningstar | Valor liquidativo del cierre (1 vez al día, con 1–2 días de retraso) |
 | Cripto | CoinGecko | Prácticamente en vivo |
 | Divisas | Yahoo Finance | Para pasar todo a EUR |
+
+> **Implementado (Fase 3): solo Yahoo.** Todos los productos de Gerard tienen precio en Yahoo. Morningstar y CoinGecko se añadirán cuando haya un fondo o una cripto que Yahoo no cubra; el esquema ya los admite (`price_source`). Para una cripto, primero se prueba su símbolo de Yahoo en euros (por ejemplo, `BTC-EUR`) con «Comprobar precio».
 
 - Se actualizan **al abrir la app** (si tienen más de 6 horas), **cada 15 minutos** mientras está abierta y con el botón **"↻ Actualizar precios"**.
 - **El histórico** de precios se descarga y se guarda, para poder dibujar la evolución aunque el PC haya estado apagado.
@@ -437,7 +439,7 @@ Todo se **calcula al pedirlo** (no hay tablas de avisos ni de recurrentes) y exc
 | Capa | Tecnología |
 |---|---|
 | Base de datos | PostgreSQL 16 |
-| Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic. Tareas periódicas: un hilo de la app para los backups (Fase 1d); APScheduler solo si hace falta para los precios (Fase 3) |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic. Tareas periódicas: hilos de la app para los backups (Fase 1d) y los precios (Fase 3), sin APScheduler |
 | Lectura de extractos | openpyxl (`.xlsx`). Sin pandas ni xlrd (Fase 1b) |
 | Contraseñas | argon2-cffi |
 | Precios | `urllib` de la biblioteca estándar, con caché, tiempo de espera y reintentos (`httpx` solo está en la imagen de desarrollo) |
@@ -473,8 +475,9 @@ caudal/
 │       ├── dashboard/          ← totales de Patrimonio y Movimientos
 │       ├── transfers/
 │       ├── investments/        ← productos, operaciones, FIFO, XIRR, comparativa
-│       ├── prices/             ← yahoo.py, morningstar.py, coingecko.py, caché
+│       ├── prices/             ← yahoo.py, service.py, auto.py (Morningstar y CoinGecko, cuando hagan falta)
 │       ├── backup/
+│       ├── sync/               ← sincronización entre el Mac y el PC (Fase R)
 │       └── api/
 ├── backend/tests/              ← pytest, con una BD aparte (caudal_test)
 ├── frontend/src/               ← login, Patrimonio, Movimientos, Inversiones, Ajustes
@@ -580,12 +583,14 @@ Los accesos directos están en `scripts/windows/` (`.bat`, que llaman a un `.ps1
 
 ### Acceso directo "Caudal" (doble clic)
 1. Abre Docker Desktop si no está abierto y **espera** a que esté listo.
-2. **Busca el pendrive por su nombre de volumen** (`USB_LABEL`), no por su letra, y crea en él `CaudalBackups/` con su marcador. Si no lo encuentra, sigue igualmente y el panel avisa.
-3. `docker compose up -d`.
-4. Cuando la app responde, **abre el navegador** en `http://localhost:8080`.
+2. **Busca el pendrive por su nombre de volumen** (`USB_LABEL`), no por su letra, y prepara en él la carpeta `USB_FOLDER` con su marcador. En Windows, además, le lleva las copias que se hicieron con el pendrive desconectado (Fase R, sección 10). Si no lo encuentra, sigue igualmente y el panel avisa.
+3. Reconstruye la imagen si el código ha cambiado (`docker compose build --quiet app`; con caché tarda segundos).
+4. **Trae la última versión del otro equipo** de Google Drive (`python -m app.sync open`, Fase R). Si está abierta en el otro equipo, si hay conflicto o si hace falta `git pull`, se para y lo explica.
+5. `docker compose up -d`.
+6. Cuando la app responde, **abre el navegador** en `http://localhost:8080`.
 
 ### Acceso directo "Cerrar Caudal" (doble clic)
-1. **Backup final.** Si hay otra copia en marcha, espera hasta un minuto. Si falla, pregunta antes de cerrar.
+1. **Backup final con versión nueva** y candado «cerrado en este equipo» (`python -m app.sync close`). Si hay otra copia en marcha, espera hasta un minuto. Si falla, pregunta antes de cerrar. En Windows, después lleva la copia al pendrive.
 2. `docker compose down` (los datos se conservan en el volumen).
 3. Opcional: cierra Docker Desktop para liberar memoria. **Siempre en este orden**: si Docker Desktop se cierra con la app abierta, un contenedor puede quedar dañado (se arregla con `docker compose down`, sin `-v`).
 
@@ -629,7 +634,7 @@ Si un destino falla, se escribe igualmente en el otro y el panel lo indica.
 - **Apuntarla en papel en un sitio seguro.** Si se pierde, las copias no se pueden abrir.
 
 ### Restaurar
-Script **"Restaurar backup"**: enseña una lista numerada con las copias del pendrive y de Google Drive, se elige una, se escribe la contraseña (Enter = la del `.env`) y se confirma escribiendo `RESTAURAR`. Antes de tocar nada descifra y comprueba el archivo; después hace una copia de lo actual, borra la base y hace `pg_restore` en una sola transacción. Probado en la Fase 1d con datos inventados y OneDrive; con el pendrive real y en el PC, en la revisión final (sección 17, pendiente 11) y en la mudanza al Mac.
+Script **"Restaurar backup"**: enseña una lista numerada con las copias del pendrive y de Google Drive, se elige una, se escribe la contraseña (Enter = la del `.env`) y se confirma escribiendo `RESTAURAR`. Antes de tocar nada descifra y comprueba el archivo; después hace una copia de lo actual, borra la base y hace `pg_restore` en una sola transacción. Lo restaurado recibe una versión nueva para la sincronización (Fase R). Probado en la Fase 1d con datos inventados y OneDrive, y en la Fase R (R.3) desde Google Drive y desde el pendrive real en el PC. Queda probar el pendrive en el Mac.
 
 ### Avisos
 - **Google Drive:** cuenta de Google solo para Caudal, con verificación en dos pasos. Sustituye a OneDrive de la UdL, que se desactivará al acabar la carrera. Al ir cifrados, Google no puede leer los backups.
@@ -711,7 +716,7 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 
 **1d. Backups + accesos directos** ✅ (2026-10-30, detalle en `docs/fases/FASE_1d.md`)
 - Backup cifrado, rotación, los 4 momentos, pendrive por nombre, indicador. Scripts de Windows y de Mac.
-- **Hecho cuando:** se ha hecho una **restauración completa de prueba** desde el pendrive y desde OneDrive. Hecha desde OneDrive (y con un test que compara todas las tablas); desde el pendrive real, aplazada (sección 17, pendiente 11).
+- **Hecho cuando:** se ha hecho una **restauración completa de prueba** desde el pendrive y desde OneDrive. Hecha desde OneDrive (y con un test que compara todas las tablas); desde el pendrive real y desde Google Drive, en la Fase R (R.3).
 
 ### Fase 2: control del gasto
 - Presupuestos (OK / Al límite ≥ 90 % / Superado), avisos y pagos recurrentes.
@@ -744,6 +749,7 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 - **Hecho cuando:** los padres importan y revisan un mes solos.
 
 ### Fase 5: inteligencia y extras
+- **Adelantada en parte (decisión del 2026-11-26):** mientras Gerard hace la R.4 y la R.5 con sus datos, se hacen los extras que eligió y que no dependen de los padres: **notas y etiquetas** en los movimientos, **deshacer una importación**, **exportar** (Excel e «Imprimir / Guardar como PDF»), **tema oscuro** y **«solo largo plazo»** en Inversiones. El resto (previsión, ganancias por año, modelo local, multidivisa) queda para después de la Fase 4.
 - **Previsión** del gasto del mes siguiente.
 - **Categorización con un modelo local** (Ollama) como sugerencia para los movimientos en `revisar`.
 - **Exportar** informes (PDF / Excel), ganancias realizadas por año (informativo) y multidivisa en Wise.
@@ -766,7 +772,7 @@ MacBook Air M5 (Apple Silicon). En el Mac se desarrolla con una instancia aparte
 1. **Docker Desktop**, versión *Apple chip*; al abrirlo por primera vez, instalar Rosetta si lo pide y desactivar *"Start Docker Desktop when you sign in"*. Comprobar con `docker run hello-world`.
 2. **Git:** `xcode-select --install` y `git config --global user.name/user.email`.
 3. **GitHub:** Homebrew, `brew install gh` y `gh auth login`.
-4. **Proyecto:** `git clone https://github.com/Yarart3/caudal.git` en `~/Proyectos/caudal` (fuera de OneDrive).
+4. **Proyecto:** `git clone https://github.com/Yarart3/caudal.git` en `~/Desktop/proyectos/caudal` (desarrollo, fuera de OneDrive). Desde la Fase R, la instancia real va aparte, en `~/Caudal` (`docs/fases/FASE_R.md`, sección 4).
 5. **VS Code:** las mismas extensiones que en Windows y *Shell Command: Install 'code' command in PATH*.
 6. **Google Drive** (desde la Fase R): Google Drive para ordenadores con la cuenta de Caudal, en modo *«Replicar archivos»*. La carpeta queda en `~/Library/CloudStorage/GoogleDrive-<correo>/Mi unidad/CaudalBackups` (comprobar con `ls -d ~/Library/CloudStorage/GoogleDrive-*/Mi\ unidad`). Antes era OneDrive de la UdL.
 7. **Pendrive:** no hace falta para desarrollar. Si se conecta, aparece en `/Volumes/Gerard`.
@@ -798,9 +804,9 @@ Hay que tener en cuenta que el Mac es un portátil: los padres solo podrían ent
 | 6 | ~~Objetivo de patrimonio de cada usuario~~ → cada usuario lo pone en Patrimonio → Objetivo | ✅ Fase 2 |
 | 7 | ~~Destino de los backups tras graduarse (sustituir OneDrive UdL)~~ → Google Drive con una cuenta de Google solo para Caudal (también sirve para sincronizar el Mac y el PC); se configura en la R.1 | ✅ Decidido en la Fase R |
 | 8 | El repositorio de GitHub es **público** (solo tiene código y datos inventados). Decidir si vuelve a ser privado | Cuando Gerard decida |
-| 9 | En el PC de casa, antes de meter datos reales: borrar la BD de pruebas (`docker compose down -v`), separar el desarrollo con `COMPOSE_PROJECT_NAME=caudal-dev`, elegir la `BACKUP_PASSWORD` definitiva y apuntarla en papel | Antes del primer uso real (revisión final) |
+| 9 | ~~En el PC de casa, antes de meter datos reales: borrar la BD de pruebas, separar el desarrollo y elegir la `BACKUP_PASSWORD` definitiva~~ → instancia real y de desarrollo separadas en cada equipo (`docs/fases/FASE_R.md`, sección 4) | ✅ Fase R (R.1) |
 | 10 | Al importar el primer extracto real de Wise, comprobar si aparecen tipos de fila que los ejemplos no tienen (intereses del fondo en fila propia, transferencias enviadas, conversiones). Si salen en errores o mal clasificados, pedir una fila de ejemplo inventada y añadir el caso | Primer uso real |
-| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar). **1d** → restauración completa desde el **pendrive real** y desde OneDrive en el PC; con el pendrive desconectado, aviso y OneDrive sigue; los cuatro `.bat` en el PC (primero, el pendrive: pendiente 12). **2** → con extractos reales, Movimientos y Patrimonio se parecen a la maqueta; los Bizum no salen como recurrentes; los umbrales de los avisos (1,5× la media y 30 €) y la ventana de recurrentes (62 días) son razonables. **3** → con las operaciones reales (formulario o plantilla), el valor de la cartera difiere menos del 1 % del de Trade Republic y Scalable el mismo día; la búsqueda, «Comprobar precio» y los índices de la comparativa (`EUNL.DE`, `SXR8.DE`, `XEON.DE`) funcionan con Yahoo real; Inversiones y Patrimonio se parecen a la maqueta | Lo de Gerard, en la **Fase R**; lo de los padres, antes del 1.0 |
+| 11 | **Revisión final con datos reales** (decisión de la Fase 1c: primero se hace todo funcional y al final se prueba y se retoca lo que no guste). Criterios aplazados: **1c** → tras importar un mes real, todo lo que no sea Bizum queda categorizado (después de pasar una vez por Revisar). **1d** → ~~restauración completa desde el pendrive real y desde la nube en el PC; con el pendrive desconectado, aviso y la nube sigue; los cuatro `.bat` en el PC~~ (hecho en la Fase R, R.3; queda el pendrive en el Mac). **2** → con extractos reales, Movimientos y Patrimonio se parecen a la maqueta; los Bizum no salen como recurrentes; los umbrales de los avisos (1,5× la media y 30 €) y la ventana de recurrentes (62 días) son razonables. **3** → con las operaciones reales (formulario o plantilla), el valor de la cartera difiere menos del 1 % del de Trade Republic y Scalable el mismo día; la búsqueda, «Comprobar precio» y los índices de la comparativa (`EUNL.DE`, `SXR8.DE`, `XEON.DE`) funcionan con Yahoo real; Inversiones y Patrimonio se parecen a la maqueta | Lo de Gerard, en la **Fase R**; lo de los padres, antes del 1.0 |
 | 12 | ~~En Windows, comprobar que Docker Desktop (WSL2) monta el pendrive~~ → **no lo ve**: Docker Desktop no monta las unidades extraíbles (probado en el PC con el pendrive exFAT: monta una carpeta vacía). En Windows, la app guarda las copias del pendrive en `backups\pendrive` y los scripts las llevan al pendrive al abrir y al cerrar, y las traen antes de restaurar. En el Mac se sigue montando `/Volumes/Gerard` (sin probar todavía con el pendrive) | ✅ Resuelto en la Fase R (R.3) |
 
 ---

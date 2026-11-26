@@ -140,7 +140,7 @@ Si durante una fase conviene cambiar el contrato, se cambia y se actualiza esta 
 
 ## 7. Las fases, de principio a fin
 
-Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5 → 6 → 7**. La Fase R (puesta en marcha) se añadió el 2026-11-05: Gerard empieza a usar lo suyo, en el Mac y en el PC, antes de la parte de los padres. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional.
+Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5 → 6 → 7**. La Fase R (puesta en marcha) se añadió el 2026-11-05: Gerard empieza a usar lo suyo, en el Mac y en el PC, antes de la parte de los padres. La Fase 6 (Mac) puede hacerse en cualquier momento después de la 1d; el Mac ya está preparado para desarrollar desde el 2026-10-11 (sección 16.1 de DISENO). La 7 es opcional. **Excepción (2026-11-26):** los extras de la Fase 5 que eligió Gerard y no dependen de los padres (notas, etiquetas, deshacer importación, exportar, tema oscuro y «solo largo plazo») se adelantan y se hacen mientras él completa la R.4 y la R.5 con sus datos.
 
 ---
 
@@ -281,7 +281,8 @@ Orden obligatorio: **0 → 1a → 1b → 1c → 1d → 2 → 3 → R → 4 → 5
 ---
 
 ### Fase 5: inteligencia y extras
-- **Prerrequisitos:** 4.
+- **Prerrequisitos:** 4 (salvo la parte adelantada, que solo necesita la 3).
+- **Elegido por Gerard (2026-11-26), adelantado a la Fase 4:** notas y etiquetas en los movimientos, deshacer importación, exportar (Excel + «Imprimir / Guardar como PDF» del navegador, sin dependencias nuevas), tema oscuro y «solo largo plazo». Queda para después de la 4: previsión, ganancias por año, modelo local y multidivisa.
 - **Entregables (Gerard elige y prioriza al empezar):** previsión del gasto del mes siguiente (media móvil + recurrentes); sugerencias de categoría con un **modelo local** (Ollama, opcional y desactivable; **nunca** APIs externas con datos reales); exportar informes (PDF / Excel); ganancias realizadas por año (informativo); multidivisa en Wise; etiquetas, notas, deshacer importación, tema oscuro, "solo largo plazo".
 - **Hecho cuando:** lo elegido funciona, con tests.
 - **Mensaje para empezar:** `Empezamos la Fase 5 de Caudal. Repasa los extras y ayúdame a priorizar. Sigue CLAUDE.md.`

@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 3 terminada** (patrimonio e inversiones): además de importar y categorizar los extractos de imagin y Wise, presupuestos, avisos, recurrentes y copias cifradas, Caudal lleva tus **inversiones** (operaciones a mano o con plantilla, **precios automáticos**, FIFO, plusvalías, TIR, rentabilidad por año, peor caída y comparativa con un indexado) y la pestaña **Patrimonio** ya suma liquidez + inversiones. Siguiente: Fase 4 (los padres). Este README se irá actualizando al terminar cada fase.
+> 🚧 **Estado: Fase 3 terminada; Fase R en curso** (uso real en el Mac y en el PC, sincronizados por Google Drive: la sincronización y los backups reales ya funcionan; falta cargar los datos reales). Además de importar y categorizar los extractos de imagin y Wise, presupuestos, avisos, recurrentes y copias cifradas, Caudal lleva tus **inversiones** (operaciones a mano o con plantilla, **precios automáticos**, FIFO, plusvalías, TIR, rentabilidad por año, peor caída y comparativa con un indexado) y la pestaña **Patrimonio** suma liquidez + inversiones. En paralelo: los extras de la Fase 5 que no dependen de los padres. Después: Fase 4 (los padres).
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -356,7 +356,7 @@ caudal/
 | 3 | Patrimonio e inversiones (alta manual, precios, FIFO, TIR) | ✅ |
 | R | Puesta en marcha: uso real en el Mac y en el PC, sincronizados por Google Drive | ⏳ |
 | 4 | Los padres: CaixaBank, Sabadell, asistente genérico, gestión de usuarios | ⬜ |
-| 5 | Previsión, IA local, informes, extras | ⬜ |
+| 5 | Extras: notas, etiquetas, deshacer importación, exportar, tema oscuro, largo plazo (adelantados); previsión, IA local… (después de la 4) | ⏳ |
 | 6 | Migración a Mac | ⬜ |
 | 7 | (Opcional) Versión demo para el CV | ⬜ |
 
@@ -366,7 +366,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md), [Fase 3](docs/fases/FASE_3.md)).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md), [Fase 3](docs/fases/FASE_3.md), [Fase R](docs/fases/FASE_R.md), en curso).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

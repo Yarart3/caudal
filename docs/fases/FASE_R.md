@@ -17,7 +17,8 @@ Este documento explica qué se ha hecho, cómo y por qué. Se irá completando h
 5. [El pendrive en Windows](#5-el-pendrive-en-windows)
 6. [Problemas encontrados y cómo se resolvieron](#6-problemas-encontrados-y-cómo-se-resolvieron)
 7. [Criterios de "hecho"](#7-criterios-de-hecho)
-8. [Chuleta de comandos](#8-chuleta-de-comandos)
+8. [Guía para R.4 y R.5](#8-guía-para-r4-y-r5-con-tus-datos-sin-claude)
+9. [Chuleta de comandos](#9-chuleta-de-comandos)
 
 ---
 
@@ -143,7 +144,37 @@ En el Mac se sigue montando `/Volumes/Gerard` directamente. Todavía no se ha pr
 
 ---
 
-## 8. Chuleta de comandos
+## 8. Guía para R.4 y R.5 (con tus datos, sin Claude)
+
+Estos dos pasos los haces tú, en la **instancia real** (`C:\Users\gerar\Caudal` o `~/Caudal`, `localhost:8080`), porque usan tus datos. A Claude solo se le pasan **resultados sin datos** («3 filas con error en la columna Importe», «diferencia del 0,4 %») y, si algo falla, **una fila de ejemplo inventada** con el mismo formato.
+
+### R.4 · Movimientos reales
+1. `git pull` en la carpeta real y abre con «Caudal».
+2. Descarga de imagin y de Wise los extractos de los últimos **3 a 6 meses** (imagin: Excel; Wise: el `.xlsx` en EUR).
+3. **Movimientos → Importar extracto bancario.** Crea la cuenta la primera vez («Crear cuenta»). Importa los dos bancos del mismo periodo: al importar el segundo, las recargas imagin → Wise se emparejan como internas.
+4. En cada resumen, mira **con error** y los **avisos de saldo**:
+   - Fila con error → «Añadir a mano» y apunta el tipo de error (no el dato).
+   - Aviso de saldo → puede faltar un movimiento: comprueba que el extracto cubre todas las fechas.
+   - **Pendiente 10 (Wise):** si salen tipos de fila raros (intereses del fondo, conversiones, transferencias enviadas) en errores o mal clasificados, haz una fila inventada con el mismo formato y pásamela.
+5. **Revisar:** pon la categoría de lo pendiente y acepta «¿Aplicar siempre?» cuando tenga sentido. Los Bizum se quedan para revisar uno a uno.
+6. **Criterio de la 1c:** después de pasar una vez por Revisar, importa un mes nuevo. Todo lo que no sea Bizum debe quedar categorizado. Si no, anota qué tipo de concepto falla (por ejemplo, «una tienda de ropa con el nombre cortado»).
+7. **Criterios de la 2:** Movimientos y Patrimonio se parecen a la maqueta; los Bizum no salen en «Pagos recurrentes»; los avisos (1,5× la media y 30 €) y la ventana de recurrentes (62 días) te parecen razonables.
+8. «Cerrar Caudal», abre en el otro equipo y comprueba que está todo.
+
+### R.5 · Inversiones reales
+1. **Inversiones → Añadir cuenta:** Trade Republic (**mixta**) y Scalable (**inversión**).
+2. **Añadir producto** por cada ETF o ETC, con el símbolo de Xetra (`XXXX.DE`) y «Comprobar precio». Si tienes cripto, prueba primero su símbolo de Yahoo en euros (`BTC-EUR`). Si Yahoo no lo tiene, dímelo: habría que añadir CoinGecko.
+3. **Historial:** «Importar historial» con la plantilla (vista previa → confirmar) o, si no recuerdas cada compra, una **posición inicial** por producto (DISENO §7.4).
+4. **Efectivo de Trade Republic:** apúntalo en Movimientos («Añadir movimiento»), con los intereses de cada mes en la categoría *Intereses*.
+5. **Criterio de la 3:** el mismo día y a la misma hora, compara el valor de cada posición y el total con lo que enseñan Trade Republic y Scalable. La diferencia tiene que ser **menor del 1 %**. Si no, mira primero si es por la hora del precio («~15 min» / «Cierre») o por una operación que falta.
+6. Comprueba que la comparativa «¿Y si todo fuera a un indexado?» carga los tres índices (`EUNL.DE`, `SXR8.DE`, `XEON.DE`).
+
+### R.6 · Arreglos
+Lo que falle o moleste en la R.4 y la R.5 se arregla con tests y ejemplos inventados. Cuando todo esté bien, se cierra la fase (`docs: close phase R`).
+
+---
+
+## 9. Chuleta de comandos
 
 | Para qué | Comando |
 |---|---|
