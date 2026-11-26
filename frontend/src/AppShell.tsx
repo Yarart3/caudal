@@ -75,7 +75,7 @@ export function AppShell({
 
   return (
     <div className="shell">
-      <aside className="side">
+      <aside className="side no-print">
         <div className="row" style={{ padding: '0 8px' }}>
           <Logo />
           <span className="num" style={{ fontWeight: 700, fontSize: 18 }}>
@@ -115,9 +115,24 @@ export function AppShell({
         <header className="between">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <h1 style={{ fontSize: 30 }}>{title}</h1>
-            <BackupIndicator />
+            <span className="no-print">
+              <BackupIndicator />
+            </span>
+            <span className="print-only muted" style={{ fontSize: 13 }}>
+              Caudal · {user.display_name} · {new Date().toLocaleDateString('es-ES')}
+            </span>
           </div>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div className="row no-print" style={{ flexWrap: 'wrap', gap: 12 }}>
+            {tabs && (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => window.print()}
+                title="Imprime esta pestaña o guárdala como PDF (elige «Guardar como PDF» en la impresora)"
+              >
+                Imprimir / PDF
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-primary"
@@ -141,7 +156,7 @@ export function AppShell({
           </div>
         </header>
         {tabs && (
-          <div className="tabs" role="group" aria-label="Pestañas">
+          <div className="tabs no-print" role="group" aria-label="Pestañas">
             {TABS.map(({ name, path }) => (
               <button
                 key={name}

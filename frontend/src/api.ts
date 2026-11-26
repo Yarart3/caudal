@@ -549,6 +549,9 @@ export const api = {
     request<Transaction>('/api/transactions', { method: 'POST', body: tx }),
   transactions: (filters: TransactionFilters = {}) =>
     request<TransactionPage>(`/api/transactions${queryString(filters)}`),
+  /** Enlace de descarga del Excel con los mismos filtros que la lista (Fase 5). */
+  exportTransactionsUrl: (filters: TransactionFilters = {}) =>
+    `/api/transactions/export${queryString(filters)}`,
   transactionTags: () => request<TagCount[]>('/api/transactions/tags'),
   updateTransaction: (id: number, changes: TransactionUpdate) =>
     request<Transaction>(`/api/transactions/${id}`, { method: 'PATCH', body: changes }),

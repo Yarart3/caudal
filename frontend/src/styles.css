@@ -1169,3 +1169,58 @@ button.tag {
 .pick-list button:focus-visible {
   border-color: var(--accent);
 }
+
+/* ---------- Impresión / «Guardar como PDF» (Fase 5) ---------- */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+    /* Los gráficos son fondos de CSS: sin esto, el navegador no los imprime */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print,
+  .side,
+  .tabs,
+  .filters,
+  .infobar,
+  dialog,
+  button {
+    display: none !important;
+  }
+
+  .print-only {
+    display: inline;
+  }
+
+  .shell {
+    display: block;
+  }
+
+  .content {
+    padding: 0;
+    max-width: none;
+  }
+
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  table {
+    min-width: 0 !important;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

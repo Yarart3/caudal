@@ -6,13 +6,15 @@ del usuario con cuántos movimientos tiene cada una).
 
 import datetime as dt
 import re
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field, StringConstraints
-from sqlalchemy import func, or_, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.accounts import get_own_account
@@ -20,6 +22,7 @@ from app.api.categories import get_own_category
 from app.auth.deps import current_user
 from app.categories import apply_rules
 from app.db import get_db
+from app.exports import STATUS_LABELS, XLSX, ExportRow, build_transactions_xlsx
 from app.models import Account, Category, Transaction, User
 from app.transfers import match_internal_transfers
 from app.transfers.matcher import mark_internal
@@ -31,6 +34,7 @@ Money = Annotated[Decimal, Field(max_digits=12, decimal_places=2)]
 # Estado que se ve en la tabla: los de la BD + «internal» (las transferencias internas)
 StatusFilter = Literal["auto", "manual", "review", "internal"]
 
+TZ = ZoneInfo("Europe/Madrid")
 NOT_FOUND = "Movimiento no encontrado"
 MONTH_RE = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
 MAX_LIMIT = 1000
@@ -169,39 +173,52 @@ def _escape_like(text: str) -> str:
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-@router.get("")
-def list_transactions(
+@dataclass(frozen=True)
+class Filters:
+    """Filtros de la lista de movimientos (los usan la lista y la exportación a Excel)."""
+
+    month: str | None = None
+    q: str | None = None
+    category: int | None = None
+    tag: str | None = None
+    status: StatusFilter | None = None
+    account: int | None = None
+
+
+def transaction_filters(
     month: str | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
     category: int | None = None,
     tag: Annotated[str | None, Query(max_length=TAG_MAX_LENGTH)] = None,
     status_: Annotated[StatusFilter | None, Query(alias="status")] = None,
     account: int | None = None,
-    limit: Annotated[int, Query(ge=0, le=MAX_LIMIT)] = 200,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    user: User = Depends(current_user),
-    db: Session = Depends(get_db),
-) -> TransactionPage:
-    """Movimientos del usuario, del más reciente al más antiguo.
+) -> Filters:
+    """Filtros desde la URL.
 
     - `month=2026-09`: solo ese mes. `q`: busca en el concepto, en la nota y en el nombre de la
       categoría (sin distinguir mayúsculas; los acentos sí cuentan). `category`, `account`: por
       id. `tag`: los que llevan esa etiqueta.
     - `status`: `review` (por revisar), `auto`, `manual` o `internal` (transferencias internas,
       que no salen en los otros tres).
-    - `limit=0` devuelve solo el total (para el contador de «por revisar»).
     """
+    if month is not None:
+        _month_range(month)  # 422 si no es AAAA-MM
+    return Filters(month, q, category, tag, status_, account)
+
+
+def filtered_query(filters: Filters, user: User) -> Select[tuple[Transaction]]:
+    """Movimientos del usuario que cumplen los filtros (sin orden ni límite)."""
     query = (
         select(Transaction)
         .join(Account, Account.id == Transaction.account_id)
         .outerjoin(Category, Category.id == Transaction.category_id)
         .where(Account.user_id == user.id)  # nunca movimientos de otro usuario
     )
-    if month is not None:
-        start, end = _month_range(month)
+    if filters.month is not None:
+        start, end = _month_range(filters.month)
         query = query.where(Transaction.date >= start, Transaction.date < end)
-    if q is not None and q.strip():
-        pattern = f"%{_escape_like(q.strip())}%"
+    if filters.q is not None and filters.q.strip():
+        pattern = f"%{_escape_like(filters.q.strip())}%"
         query = query.where(
             or_(
                 Transaction.description.ilike(pattern, escape="\\"),
@@ -209,30 +226,91 @@ def list_transactions(
                 Category.name.ilike(pattern, escape="\\"),
             )
         )
-    if category is not None:
-        query = query.where(Transaction.category_id == category)
-    if account is not None:
-        query = query.where(Transaction.account_id == account)
-    if tag is not None and tag.strip():
-        query = query.where(Transaction.tags.contains([" ".join(tag.split())]))
-    if status_ == "internal":
+    if filters.category is not None:
+        query = query.where(Transaction.category_id == filters.category)
+    if filters.account is not None:
+        query = query.where(Transaction.account_id == filters.account)
+    if filters.tag is not None and filters.tag.strip():
+        query = query.where(Transaction.tags.contains([" ".join(filters.tag.split())]))
+    if filters.status == "internal":
         query = query.where(Transaction.is_internal_transfer.is_(True))
-    elif status_ is not None:
+    elif filters.status is not None:
         query = query.where(
-            Transaction.category_status == status_, Transaction.is_internal_transfer.is_(False)
+            Transaction.category_status == filters.status,
+            Transaction.is_internal_transfer.is_(False),
         )
+    return query
 
+
+NEWEST_FIRST = (Transaction.date.desc(), Transaction.id.desc())
+
+
+@router.get("")
+def list_transactions(
+    filters: Annotated[Filters, Depends(transaction_filters)],
+    limit: Annotated[int, Query(ge=0, le=MAX_LIMIT)] = 200,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> TransactionPage:
+    """Movimientos del usuario, del más reciente al más antiguo (filtros en
+    `transaction_filters`). `limit=0` devuelve solo el total (para el contador de «por
+    revisar»)."""
+    query = filtered_query(filters, user)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items: list[Transaction] = []
     if limit > 0:
-        items = list(
-            db.scalars(
-                query.order_by(Transaction.date.desc(), Transaction.id.desc())
-                .limit(limit)
-                .offset(offset)
-            )
-        )
+        items = list(db.scalars(query.order_by(*NEWEST_FIRST).limit(limit).offset(offset)))
     return TransactionPage(items=[_out(tx) for tx in items], total=total)
+
+
+@router.get("/export")
+def export_transactions(
+    filters: Annotated[Filters, Depends(transaction_filters)],
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Los movimientos con los filtros de la lista, en Excel (Fase 5). Sin límite."""
+    rows = db.execute(
+        filtered_query(filters, user)
+        .add_columns(Account.name, Category.name)
+        .order_by(*NEWEST_FIRST)
+    ).all()
+    content = build_transactions_xlsx(
+        [ExportRow(tx, account_name, category_name) for tx, account_name, category_name in rows],
+        describe_filters(filters, db, user),
+    )
+    stamp = dt.datetime.now(TZ).strftime("%Y-%m-%d")
+    name = f"caudal_movimientos_{filters.month or 'todos'}_{stamp}.xlsx"
+    return Response(
+        content=content,
+        media_type=XLSX,
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )
+
+
+def describe_filters(filters: Filters, db: Session, user: User) -> list[str]:
+    """Los filtros en castellano, para la hoja «Resumen»."""
+    parts: list[str] = []
+    if filters.month:
+        parts.append(f"Mes: {filters.month}")
+    if filters.q and filters.q.strip():
+        parts.append(f"Buscar: «{filters.q.strip()}»")
+    if filters.category is not None:
+        category = db.scalar(
+            select(Category).where(Category.id == filters.category, Category.user_id == user.id)
+        )
+        parts.append(f"Categoría: {category.name if category else '(no existe)'}")
+    if filters.account is not None:
+        account = db.scalar(
+            select(Account).where(Account.id == filters.account, Account.user_id == user.id)
+        )
+        parts.append(f"Cuenta: {account.name if account else '(no existe)'}")
+    if filters.tag and filters.tag.strip():
+        parts.append(f"Etiqueta: {filters.tag.strip()}")
+    if filters.status:
+        parts.append(f"Estado: {STATUS_LABELS[filters.status]}")
+    return parts
 
 
 @router.get("/tags")

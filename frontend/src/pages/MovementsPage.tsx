@@ -274,11 +274,18 @@ export function MovementsPage() {
               ? 'Cargando…'
               : `${loaded.total} ${loaded.total === 1 ? 'movimiento' : 'movimientos'}`}
           </span>
-          {hasFilters && (
-            <button type="button" className="link-btn" onClick={() => setFilters(NO_FILTERS)}>
-              Quitar filtros
-            </button>
-          )}
+          <span className="row no-print" style={{ gap: 12 }}>
+            {hasFilters && (
+              <button type="button" className="link-btn" onClick={() => setFilters(NO_FILTERS)}>
+                Quitar filtros
+              </button>
+            )}
+            {!loading && loaded.total > 0 && (
+              <a className="link-btn" href={api.exportTransactionsUrl(query)} download>
+                Exportar a Excel
+              </a>
+            )}
+          </span>
         </div>
 
         {!loading && loaded.items.length === 0 ? (

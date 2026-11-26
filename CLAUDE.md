@@ -137,6 +137,7 @@
 | 3 | `GET /api/prices/status` · `POST /api/prices/refresh` | Último precio de cada producto del usuario (y si está desactualizado) y actualización manual de **sus** productos; 409 si ya hay una actualización en marcha |
 | R | `GET /api/sync/status` | «Última copia» en «¿Quién entra?»: sin sesión, solo el equipo, la versión y quién guardó la última copia y cuándo (no expone datos de nadie) |
 | 5 | `GET /api/transactions?tag=` · `GET /api/transactions/tags` | Notas y etiquetas: `note` y `tags` en el alta, la edición y la lista; `q` busca también en la nota; `/tags` da las etiquetas del usuario con su número de movimientos |
+| 5 | `GET /api/transactions/export?month=&q=&category=&tag=&status=&account=` | Excel con los movimientos de la lista (mismos filtros, sin límite): hojas «Movimientos» y «Resumen» (totales sin internas). Los textos nunca se guardan como fórmula |
 | 5 | `GET /api/imports?account_id=&limit=` · `DELETE /api/imports/{id}` | Últimas importaciones de extractos y deshacer una entera → `{deleted, unpaired, balance_restored}`. `POST /api/imports` devuelve también `import_id` |
 | 4 | `GET/POST/PATCH /api/admin/users` · `POST /api/admin/users/{id}/reset-password` · `GET/POST /api/import-formats` | Administración y asistente genérico |
 
