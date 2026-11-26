@@ -624,9 +624,19 @@ export const api = {
       body: form,
     });
   },
-  investmentSummary: () => request<InvestmentSummary>('/api/investments/summary'),
-  positions: () => request<Positions>('/api/investments/positions'),
-  benchmark: () => request<Benchmark>('/api/investments/benchmark'),
+  // longTerm (Fase 5): solo los productos marcados «a largo plazo»
+  investmentSummary: (longTerm = false) =>
+    request<InvestmentSummary>(
+      `/api/investments/summary${queryString({ long_term: longTerm || undefined })}`,
+    ),
+  positions: (longTerm = false) =>
+    request<Positions>(
+      `/api/investments/positions${queryString({ long_term: longTerm || undefined })}`,
+    ),
+  benchmark: (longTerm = false) =>
+    request<Benchmark>(
+      `/api/investments/benchmark${queryString({ long_term: longTerm || undefined })}`,
+    ),
   priceStatus: () => request<PriceStatus>('/api/prices/status'),
   refreshPrices: () =>
     request<{ items: unknown[]; status: PriceStatus }>('/api/prices/refresh', { method: 'POST' }),

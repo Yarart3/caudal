@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { AppShell } from '../AppShell';
 import {
   api,
@@ -48,6 +49,19 @@ export function InvestmentsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  // «Solo largo plazo» (Fase 5), en la URL (?largo=1) para que se mantenga al recargar
+  const [params, setParams] = useSearchParams();
+  const longTerm = params.get('largo') === '1';
+  const setLongTerm = (on: boolean) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (on) next.set('largo', '1');
+        else next.delete('largo');
+        return next;
+      },
+      { replace: true },
+    );
 
   const load = useCallback(() => {
     Promise.all([
@@ -55,9 +69,9 @@ export function InvestmentsPage() {
       api.products(),
       api.operations(),
       api.priceStatus(),
-      api.investmentSummary(),
-      api.positions(),
-      api.benchmark(),
+      api.investmentSummary(longTerm),
+      api.positions(longTerm),
+      api.benchmark(longTerm),
     ])
       .then(([accounts, products, operations, prices, summary, positions, benchmark]) => {
         setData({
@@ -72,7 +86,7 @@ export function InvestmentsPage() {
         setError(null);
       })
       .catch((err: unknown) => setError(errorMessage(err)));
-  }, []);
+  }, [longTerm]);
 
   useEffect(() => {
     load();
@@ -137,12 +151,39 @@ export function InvestmentsPage() {
       ) : (
         <>
           <PricesBar data={data} refreshing={refreshing} onRefresh={() => void refreshPrices()} />
+          {(longTerm || data.products.some((p) => !p.long_term)) && (
+            <label className="check no-print" style={{ minHeight: 0 }}>
+              <input
+                type="checkbox"
+                checked={longTerm}
+                onChange={(e) => setLongTerm(e.target.checked)}
+              />
+              Solo largo plazo
+              <span className="muted" style={{ fontSize: 13 }}>
+                (sin los productos que no marcaste «A largo plazo»)
+              </span>
+            </label>
+          )}
+          {longTerm && (
+            <p className="print-only muted" style={{ fontSize: 13 }}>
+              Solo productos a largo plazo
+            </p>
+          )}
+          {longTerm && !data.summary.has_investments && (
+            <p className="muted">Ningún producto marcado «A largo plazo» tiene operaciones.</p>
+          )}
           {data.summary.has_investments && (
             <PortfolioOverview
               summary={data.summary}
               positions={data.positions}
               benchmark={data.benchmark}
-              operations={data.operations}
+              operations={
+                longTerm
+                  ? data.operations.filter(
+                      (op) => data.products.find((p) => p.id === op.product_id)?.long_term,
+                    )
+                  : data.operations
+              }
               onAddOperation={() => setDialog({ kind: 'operation', mode: { kind: 'new' } })}
             />
           )}

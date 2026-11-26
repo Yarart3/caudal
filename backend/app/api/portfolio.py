@@ -6,6 +6,8 @@
 
 Las cifras salen como texto (`"1234.56"`); los porcentajes, en tanto por uno con 6 decimales
 (`"0.071234"` = 7,12 %). Cada usuario ve solo lo suyo.
+
+Fase 5: `?long_term=true` en los tres deja solo los productos marcados «a largo plazo».
 """
 
 from datetime import date, datetime, timedelta
@@ -101,9 +103,13 @@ class PositionsOut(BaseModel):
 
 
 @router.get("/summary")
-def get_summary(user: User = Depends(current_user), db: Session = Depends(get_db)) -> SummaryOut:
+def get_summary(
+    long_term: bool = False,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> SummaryOut:
     today = datetime.now(TZ).date()
-    portfolio = build(db, user.id, today)
+    portfolio = build(db, user.id, today, long_term_only=long_term)
     s = summarize(portfolio)
     return SummaryOut(
         has_investments=bool(portfolio.ops),
@@ -129,13 +135,14 @@ def get_summary(user: User = Depends(current_user), db: Session = Depends(get_db
 
 @router.get("/positions")
 def get_positions(
+    long_term: bool = False,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
     settings: Settings = Depends(prices_settings),
 ) -> PositionsOut:
     now = datetime.now(TZ)
     max_age = timedelta(hours=settings.price_max_age_hours)
-    portfolio = build(db, user.id, now.date())
+    portfolio = build(db, user.id, now.date(), long_term_only=long_term)
     total = cents(portfolio.value)
     items = []
     for p in portfolio.positions:
@@ -191,10 +198,12 @@ class BenchmarkOut(BaseModel):
 
 @router.get("/benchmark")
 def get_benchmark(
-    user: User = Depends(current_user), db: Session = Depends(get_db)
+    long_term: bool = False,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
 ) -> BenchmarkOut:
     today = datetime.now(TZ).date()
-    portfolio = build(db, user.id, today)
+    portfolio = build(db, user.id, today, long_term_only=long_term)
     mine = summarize(portfolio)
     items = []
     for bench in BENCHMARKS:

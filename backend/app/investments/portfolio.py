@@ -175,8 +175,13 @@ def _day_flow(op: Op) -> Decimal:
     return op.amount if op.kind in ("buy", "fee") else -op.amount
 
 
-def build(db: Session, user_id: int, today: date) -> Portfolio:
-    products = db.scalars(select(Product).where(Product.user_id == user_id)).all()
+def build(db: Session, user_id: int, today: date, long_term_only: bool = False) -> Portfolio:
+    """Cartera del usuario a `today`. Con `long_term_only` (Fase 5) solo cuentan los productos
+    marcados «a largo plazo»: sus operaciones, su valor y, por tanto, TIR y comparativa."""
+    query = select(Product).where(Product.user_id == user_id)
+    if long_term_only:
+        query = query.where(Product.long_term.is_(True))
+    products = db.scalars(query).all()
     by_id = {p.id: p for p in products}
     rows = db.execute(
         select(InvestmentOperation, Account.name)
