@@ -87,7 +87,7 @@ En la carpeta de Google Drive hay un **candado**, `caudal-sync.json`, que dice q
 | | Real (para usar) | Desarrollo (para programar) |
 |---|---|---|
 | Carpeta en el Mac | `~/Caudal` | `~/Desktop/proyectos/caudal` |
-| Carpeta en el PC | `C:\Users\gerar\Caudal` | `C:\Users\gerar\Proyectos\caudal` |
+| Carpeta en el PC | `C:\Users\gerar\Caudal` | `C:\Users\gerar\Desktop\proyectos\caudal` (hasta el 2026-11-26, `C:\Users\gerar\Proyectos\caudal`) |
 | `COMPOSE_PROJECT_NAME` | `caudal` | `caudal-dev` |
 | Navegador | `localhost:8080` | `localhost:8081` |
 | Google Drive (`CLOUD_DIR`) | `Mi unidad/CaudalBackups` | `Mi unidad/CaudalBackupsDev` |
@@ -95,7 +95,7 @@ En la carpeta de Google Drive hay un **candado**, `caudal-sync.json`, que dice q
 | `BACKUP_PASSWORD` | La definitiva, la misma en los dos equipos y en papel | Una de prueba, la misma en los dos equipos |
 | `DEVICE_NAME` | `mac` / `pc` | `mac` / `pc` |
 
-En la carpeta real **solo se hace `git pull`**: nunca se edita código ahí. Las dos instancias pueden estar abiertas a la vez, porque usan puertos distintos.
+En la carpeta real **solo se hace `git pull`**: nunca se edita código ahí. El Escritorio del PC no se sincroniza con OneDrive (es `C:\Users\gerar\Desktop`), así que el repositorio de desarrollo puede estar ahí. Dos carpetas con el mismo `COMPOSE_PROJECT_NAME` comparten contenedores y base de datos: por eso hay **una sola** carpeta de desarrollo por equipo. Una carpeta **sin `.env`** no se usa nunca con `docker compose`: `docker-compose.yml` lleva `name: caudal`, el de la instancia real. Las dos instancias pueden estar abiertas a la vez, porque usan puertos distintos.
 
 ---
 

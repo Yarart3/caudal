@@ -295,7 +295,8 @@ El saldo **se calcula**, no se guarda por movimiento. Se guarda un **saldo de re
 - Columnas del fondo de Wise.
 - **El archivo original del extracto:** se lee, se importa y se descarta.
 
-> Hora, divisa original, notas, etiquetas y "deshacer importación" quedan **fuera** por ahora. Se pueden añadir después sin perder datos (con una migración de Alembic).
+> **Notas, etiquetas y «deshacer importación»** se añadieron en la Fase 5 (migraciones `0009` y `0010`). Hora y divisa original siguen **fuera**; se pueden añadir después sin perder datos (con una migración de Alembic).
+> De cada importación se guardan las fechas de lo importado, cuántos movimientos entraron y el saldo de referencia de antes y después, **no el nombre del archivo** (el de Wise lleva el número del extracto).
 
 ### 8.4 Tablas (esquema orientativo)
 
@@ -319,7 +320,12 @@ categorias
 movimientos
   id, cuenta_id → cuentas, fecha, concepto, importe NUMERIC(12,2),
   categoria_id (nullable), estado_categoria ("auto" | "manual" | "revisar"),
-  es_transferencia_interna (bool), huella, UNIQUE (cuenta_id, huella)
+  es_transferencia_interna (bool), huella, UNIQUE (cuenta_id, huella),
+  nota (texto, opcional), etiquetas (lista de textos, índice GIN), importacion_id → importaciones (Fase 5)
+
+importaciones          (Fase 5: para deshacer una importación entera)
+  id, cuenta_id → cuentas, creada_en, primera_fecha, ultima_fecha, nuevos,
+  saldo_anterior, saldo_anterior_fecha, saldo_puesto, saldo_puesto_fecha
 
 reglas
   id, usuario_id, texto_contiene, categoria_id, prioridad, creada_por ("sistema" | "usuario")
@@ -561,6 +567,13 @@ El `.env` es **distinto en cada ordenador** y no se sube a Git. No hay `SESSION_
 - **Restablecer contraseña** desde la terminal (`python -m app.auth.reset`): también desbloquea y cierra las sesiones de ese usuario.
 - **Scripts de Windows:** cada `.bat` llama a un `.ps1` (UTF-8 con BOM, para PowerShell 5.1) con la lógica. El pendrive se busca con `Win32_LogicalDisk` por su nombre; si hay dos unidades con el mismo nombre, no se usa ninguna.
 
+**Decisiones de implementación (Fase 5, parte adelantada):**
+- **Etiquetas como lista en el propio movimiento** (`transactions.tags`, `ARRAY` de PostgreSQL con índice GIN) en lugar de dos tablas: basta para etiquetar, filtrar y contar. Hasta 10 por movimiento y 30 caracteres; se quitan repetidas sin mirar mayúsculas y se reutiliza la forma en que el usuario ya escribió la etiqueta. Nota de hasta 500 caracteres; el buscador también mira en ella.
+- **Deshacer importación:** borra los movimientos de esa importación (también los editados después). El saldo de referencia vuelve al de antes salvo que se haya cambiado después. La otra pata de una transferencia interna se desmarca y vuelve a pasar por las reglas, salvo que sea ambiguo (podría ser pareja de otro movimiento que se queda). Las importaciones del historial de inversiones no se deshacen (podrían dejar ventas sin compras).
+- **Exportar a Excel** con openpyxl (sin dependencias nuevas), con los mismos filtros que la lista y una hoja «Resumen» con los totales sin internas. **Todos los textos se guardan como texto**: openpyxl toma por fórmula lo que empieza por «=». **PDF** con la impresión del navegador (`@media print`), sin generar PDF en el servidor.
+- **Tema oscuro** con variables CSS: automático según el sistema o elegido en Ajustes → Apariencia; se guarda en el navegador (no es un dato de la app). Al imprimir, siempre claro.
+- **«Solo largo plazo»** filtra en la raíz de la cartera (`build`), así que valor, TIR, aportaciones y comparativa salen coherentes. `?long_term=true` en la API y `?largo=1` en la URL.
+
 **Decisiones de implementación (Fase R: sincronización entre el Mac y el PC):**
 - **Versiones con identificador:** cada base guarda su versión en `sync_state` (una fila: número, identificador único, `lineage` con los identificadores de las versiones de las que viene, `session_open` y equipo). La fila viaja dentro de los backups, así que al restaurar la copia del otro equipo se sabe de qué versión vienen los datos.
 - **Candado** `caudal-sync.json` en la carpeta de Google Drive: estado (`open` / `closed`), equipo, versión, `lineage`, migración de Alembic del código que lo escribió, hora y la copia de esa versión (nombre, tamaño y SHA-256). Se escribe de golpe (temporal + renombrar) y se valida al leerlo: lo puede haber escrito el otro equipo.
@@ -667,6 +680,8 @@ Script **"Restaurar backup"**: enseña una lista numerada con las copias del pen
 - **Es la referencia visual oficial:** la app real debe parecerse a ella. Se puede mejorar, pero sin cambiar la estructura de las tres pestañas sin actualizar este documento.
 
 **Estilo:** fondo `#F3F4F1`, tarjetas blancas con borde `#E3E5E0` y radio de 14 px, texto `#15181C`, gris `#5B616B`, barra lateral `#15181C`. Acento verde `#0E6B58` (ingresos y positivo), naranja `#C2581B` (gastos), rojo `#B42318` (superado o negativo), azul `#3555A0` (inversiones), verde claro `#9DB8AE` (liquidez). Tipografías **Space Grotesk** (títulos y cifras) y **Manrope** (texto). Formato español: `1.234,56 €`.
+
+**Tema oscuro (Fase 5):** mismas variables con otros valores (fondo `#0F1215`, tarjetas `#171B20`, texto `#E8EAE6`, acento `#2A9D82`). Los colores se usan siempre por su variable (`--good`, `--warn`, `--info`, `--field`…), nunca escritos a mano en los componentes.
 
 **Qué elemento va en qué fase:**
 

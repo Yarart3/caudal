@@ -3,7 +3,7 @@
 **Tus finanzas personales y familiares en un solo panel: patrimonio, movimientos e inversiones.**
 Funciona en tu propio ordenador, con usuario y contraseña, sin publicar nada en internet y con copias de seguridad cifradas automáticas.
 
-> 🚧 **Estado: Fase 3 terminada; Fase R en curso** (uso real en el Mac y en el PC, sincronizados por Google Drive: la sincronización y los backups reales ya funcionan; falta cargar los datos reales). Además de importar y categorizar los extractos de imagin y Wise, presupuestos, avisos, recurrentes y copias cifradas, Caudal lleva tus **inversiones** (operaciones a mano o con plantilla, **precios automáticos**, FIFO, plusvalías, TIR, rentabilidad por año, peor caída y comparativa con un indexado) y la pestaña **Patrimonio** suma liquidez + inversiones. En paralelo: los extras de la Fase 5 que no dependen de los padres. Después: Fase 4 (los padres).
+> 🚧 **Estado: Fase 3 terminada; Fase R en curso** (uso real en el Mac y en el PC, sincronizados por Google Drive: la sincronización y los backups reales ya funcionan; falta cargar los datos reales). Además de importar y categorizar los extractos de imagin y Wise, presupuestos, avisos, recurrentes y copias cifradas, Caudal lleva tus **inversiones** (operaciones a mano o con plantilla, **precios automáticos**, FIFO, plusvalías, TIR, rentabilidad por año, peor caída y comparativa con un indexado) y la pestaña **Patrimonio** suma liquidez + inversiones. Ya están los extras de la Fase 5 que no dependen de los padres: notas y etiquetas, deshacer importación, exportar a Excel e imprimir, tema oscuro y «solo largo plazo». Después: Fase 4 (los padres).
 
 ![Pestaña Patrimonio (maqueta con datos inventados)](docs/capturas/01_patrimonio.png)
 
@@ -55,7 +55,9 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - Detección de **transferencias entre tus propias cuentas**, para que no cuenten como gasto.
 - Ingresos vs gastos, gasto por categoría y **selector de mes**.
 - Presupuestos por categoría (OK / Al límite / Superado), avisos y pagos recurrentes detectados automáticamente.
-- Alta, edición y borrado de movimientos a mano.
+- Alta, edición y borrado de movimientos a mano, con **notas y etiquetas**.
+- **Deshacer una importación** entera si te equivocas de archivo o de cuenta.
+- **Exportar a Excel** los movimientos filtrados.
 
 **3. Inversiones**
 - Posiciones con precio actual, plusvalía y peso en la cartera.
@@ -63,8 +65,9 @@ Cada usuario (por ejemplo, *Gerard* y *Padres*) entra con su contraseña y **sol
 - "¿Y si todo fuera a un indexado?" con tus mismas aportaciones.
 - Aportaciones mes a mes y racha, comisiones anuales (TER) y dividendos.
 - Precios con su etiqueta (~15 min, cierre, a mano o desactualizado) y botón para actualizarlos.
+- Filtro **«Solo largo plazo»**.
 
-**Además:** usuarios con contraseña, copias de seguridad cifradas en el pendrive y en Google Drive, y funcionamiento en Windows y Mac.
+**Además:** usuarios con contraseña, copias de seguridad cifradas en el pendrive y en Google Drive, funcionamiento en Windows y Mac, **tema oscuro** e **«Imprimir / PDF»** de cada pestaña.
 
 ## Lenguajes y tecnologías
 
@@ -208,7 +211,7 @@ code --install-extension esbenp.prettier-vscode
 code --install-extension ms-azuretools.vscode-docker
 ```
 
-**3. Clona el repositorio** en tu carpeta de usuario (`C:\Users\<tu usuario>\Proyectos\caudal`; en Mac, `~/Proyectos/caudal`). Así está en la misma ruta en todos los equipos y **fuera de OneDrive**: nunca lo pongas en Documentos ni en el Escritorio, que suelen sincronizarse con OneDrive y darían conflictos con `node_modules` y los entornos de Python. Hazlo en un PowerShell **normal**, no de administrador:
+**3. Clona el repositorio** en tu carpeta de usuario (`C:\Users\<tu usuario>\Proyectos\caudal`; en Mac, `~/Proyectos/caudal`). Así está en la misma ruta en todos los equipos y **fuera de OneDrive**: no lo pongas en Documentos ni en el Escritorio **si se sincronizan con OneDrive** (darían conflictos con `node_modules` y los entornos de Python). Para saberlo: `(Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').Desktop`; si sale una ruta de OneDrive, el Escritorio se sincroniza. En el PC de casa no se sincroniza, y el desarrollo está en `Desktop\proyectos\caudal`. Hazlo en un PowerShell **normal**, no de administrador:
 ```powershell
 mkdir $env:USERPROFILE\Proyectos -Force
 cd $env:USERPROFILE\Proyectos
@@ -366,7 +369,7 @@ caudal/
 
 - [`docs/DISENO.md`](docs/DISENO.md): **fuente de verdad**. Decisiones, cuentas y formatos de los bancos, modelo de datos, lógica, backups, seguridad y roadmap.
 - [`CLAUDE.md`](CLAUDE.md): cómo debe trabajar Claude cada fase, de la 0 al final.
-- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md), [Fase 3](docs/fases/FASE_3.md), [Fase R](docs/fases/FASE_R.md), en curso).
+- [`docs/fases/`](docs/fases/): resumen de cada fase terminada, con los comandos y apuntes para aprender ([Fase 0](docs/fases/FASE_0.md), [Fase 1a](docs/fases/FASE_1a.md), [Fase 1b](docs/fases/FASE_1b.md), [Fase 1c](docs/fases/FASE_1c.md), [Fase 1d](docs/fases/FASE_1d.md), [Fase 2](docs/fases/FASE_2.md), [Fase 3](docs/fases/FASE_3.md), [Fase R](docs/fases/FASE_R.md), en curso; [Fase 5](docs/fases/FASE_5.md), parte adelantada).
 - [`INSTRUCCIONES_PROYECTO_CLAUDE.md`](INSTRUCCIONES_PROYECTO_CLAUDE.md): cómo montar el proyecto en Claude.
 - [`maqueta/caudal-maqueta.html`](maqueta/caudal-maqueta.html): diseño de referencia (se abre con doble clic).
 

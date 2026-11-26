@@ -2,6 +2,25 @@
 
 Aquí se apunta qué se hace en cada fase. El formato está en `CLAUDE.md` (sección 9).
 
+## [Sin publicar] · Fase 5, parte adelantada (2026-11-26)
+### Añadido
+- **Notas y etiquetas** en los movimientos (migración `0009`): campos en el diálogo, etiquetas en la tabla, filtro «Etiqueta», el buscador mira también en la nota y `GET /api/transactions/tags`.
+- **Deshacer una importación** (migración `0010`, tabla `imports`): «Últimas importaciones» en la pantalla Importar, con `GET /api/imports` y `DELETE /api/imports/{id}`. Vuelve el saldo de referencia de antes y desmarca la otra pata de las transferencias internas.
+- **Exportar a Excel** los movimientos con los filtros de la lista (`GET /api/transactions/export`), con hoja «Resumen» de totales sin internas.
+- **Imprimir / PDF** en Patrimonio, Movimientos e Inversiones, con una hoja de estilos de impresión.
+- **Tema oscuro**: automático según el sistema o elegido en **Ajustes → Apariencia**.
+- **«Solo largo plazo»** en Inversiones (`?long_term=true` en summary, positions y benchmark).
+- 30 tests nuevos (723 en total), con aislamiento entre usuarios en cada endpoint nuevo.
+- `docs/fases/FASE_5.md`.
+### Cambiado
+- Los colores de los componentes son variables CSS (`--good`, `--warn`, `--info`…), con versión clara y oscura.
+- Los filtros de `GET /api/transactions` están en una función común (`transaction_filters`), que usa también la exportación.
+- `POST /api/imports` devuelve también `import_id`.
+- Dos tests de sincronización ya no tienen escrita la última migración.
+### Notas
+- Se adelanta a la Fase 4 por decisión de Gerard. La previsión del gasto, las ganancias por año, el modelo local y la multidivisa quedan para después de la 4. La versión `0.8.0` se pondrá al cerrar la Fase 5 entera.
+- Lo importado antes de la migración `0010` no se puede deshacer (no tiene `import_id`). Las importaciones del historial de inversiones tampoco.
+
 ## [Sin publicar] · Fase R (en curso)
 ### Añadido
 - **Sincronización entre el Mac y el PC** por los backups cifrados de Google Drive (`backend/app/sync/`, migración `0008`): versión de cada base con identificador y su historia, candado `caudal-sync.json` y `python -m app.sync open | close | status | adopt`. Al abrir restaura sola la última versión, espera a que baje de Drive, pregunta si los dos equipos tienen cambios (y guarda las dos en `conflictos/`), no abre si está abierto en el otro equipo y pide `git pull` si la copia es de un código más nuevo.
