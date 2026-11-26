@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, errorMessage, type Category, type CategoryKind, type Rule } from '../api';
 import { AppShell } from '../AppShell';
+import { AppearanceCard } from '../components/AppearanceCard';
 import { BackupCard } from '../components/BackupCard';
 import { CategorySelect } from '../components/CategorySelect';
 import { notifyDataChanged, onDataChanged } from '../events';
@@ -11,7 +12,7 @@ const KINDS: { value: CategoryKind; label: string }[] = [
 ];
 const NEW_COLOR = '#5B616B';
 
-/** Ajustes → Copias de seguridad (Fase 1d) y Categorías y reglas (Fase 1c).
+/** Ajustes → Copias de seguridad (Fase 1d), Apariencia (Fase 5) y Categorías y reglas (Fase 1c).
  * Usuarios y formatos llegan en la Fase 4. */
 export function SettingsPage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
@@ -54,6 +55,7 @@ export function SettingsPage() {
   return (
     <AppShell title="Ajustes" current="Ajustes">
       <BackupCard />
+      <AppearanceCard />
       {error && (
         <p className="err" role="alert">
           {error}
@@ -408,8 +410,8 @@ function RuleRow({ rule, categories, run }: { rule: Rule; categories: Category[]
           className="badge"
           style={
             rule.created_by === 'user'
-              ? { background: '#EEE6F0', color: '#62305F' }
-              : { background: '#EEF0EC', color: '#4A5059' }
+              ? { background: 'var(--purple-bg)', color: 'var(--purple)' }
+              : { background: 'var(--soft)', color: 'var(--neutral)' }
           }
         >
           {rule.created_by === 'user' ? 'Tuya' : 'Inicial'}

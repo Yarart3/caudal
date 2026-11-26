@@ -4,10 +4,10 @@ import { useDashboard } from '../hooks/useDashboard';
 const loadAlerts = (month?: string) => api.alerts(month);
 
 const COLORS: Record<AlertLevel, { background: string; color: string }> = {
-  danger: { background: '#FCEDEB', color: '#B42318' },
-  warning: { background: '#FBF3E9', color: '#8A3A0C' },
-  positive: { background: '#EEF5F2', color: '#0B5747' },
-  info: { background: '#EEF2FA', color: '#28437F' },
+  danger: { background: 'var(--danger-bg)', color: 'var(--bad)' },
+  warning: { background: 'var(--warn-bg)', color: 'var(--warn)' },
+  positive: { background: 'var(--good-bg2)', color: 'var(--good)' },
+  info: { background: 'var(--info-bg)', color: 'var(--info)' },
 };
 
 /** Avisos del mes (DISENO 9.5): presupuestos superados, gasto alto, cambios y recurrentes. */

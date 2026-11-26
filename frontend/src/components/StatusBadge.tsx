@@ -2,10 +2,10 @@ import type { Transaction } from '../api';
 
 // Colores de la maqueta (BADGES)
 const BADGES = {
-  auto: ['Auto', '#E3F0EA', '#0B5747'],
-  review: ['Revisar', '#FBEBDD', '#8A3A0C'],
-  manual: ['Manual', '#EEE6F0', '#62305F'],
-  internal: ['Interna', '#EEF0EC', '#4A5059'],
+  auto: ['Auto', 'var(--good-bg)', 'var(--good)'],
+  review: ['Revisar', 'var(--warn-bg)', 'var(--warn)'],
+  manual: ['Manual', 'var(--purple-bg)', 'var(--purple)'],
+  internal: ['Interna', 'var(--soft)', 'var(--neutral)'],
 } as const;
 
 function statusOf(tx: Transaction): keyof typeof BADGES {

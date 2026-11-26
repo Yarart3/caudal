@@ -14,6 +14,114 @@
   --liq: #9db8ae;
   --font-text: 'Manrope Variable', system-ui, sans-serif;
   --font-num: 'Space Grotesk Variable', system-ui, sans-serif;
+  /* Fase 5: colores con nombre, para el tema oscuro */
+  color-scheme: light;
+  --side: #15181c;
+  --field: #ffffff;
+  --row-hover: #fafbf9;
+  --tabs-bg: #e6e8e3;
+  --text2: #3f454d;
+  --good: #0b5747;
+  --good-bg: #e3f0ea;
+  --good-bg2: #eef5f2;
+  --good-line: #cfe3da;
+  --good-track: #d5e6df;
+  --warn: #8a3a0c;
+  --warn-bg: #fbf3e9;
+  --warn-line: #f0d9bf;
+  --info: #28437f;
+  --info-bg: #eef2fa;
+  --purple: #62305f;
+  --purple-bg: #eee6f0;
+  --neutral: #4a5059;
+  --danger-bg: #fcedeb;
+  --exp-text: #a84a15;
+  --note-bg: #fff8e6;
+  --note-line: #f0dda8;
+  --note-ink: #5c4a12;
+}
+
+/* Tema oscuro (Fase 5): automático según el sistema, o elegido en Ajustes → Apariencia
+   (atributo data-theme en <html>; theme.ts). El bloque se repite porque CSS no deja
+   compartirlo entre la media query y el atributo. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0f1215;
+    --card: #171b20;
+    --line: #2a3037;
+    --line2: #3a414a;
+    --soft: #22272d;
+    --ink: #e8eae6;
+    --muted: #9ba2ab;
+    --accent: #2a9d82;
+    --exp: #e07a3c;
+    --bad: #f07a6e;
+    --inv: #7b98e0;
+    --liq: #6f9488;
+    --side: #0a0c0e;
+    --field: #1d2228;
+    --row-hover: #1b2025;
+    --tabs-bg: #22272d;
+    --text2: #c4c8ce;
+    --good: #5fc4a8;
+    --good-bg: #173229;
+    --good-bg2: #142a24;
+    --good-line: #23453a;
+    --good-track: #23413a;
+    --warn: #f0a36b;
+    --warn-bg: #33241a;
+    --warn-line: #4d3522;
+    --info: #9db4ec;
+    --info-bg: #1b2540;
+    --purple: #d9a6d5;
+    --purple-bg: #33213a;
+    --neutral: #b5bac2;
+    --danger-bg: #3d1c1a;
+    --exp-text: #f0a36b;
+    --note-bg: #2e2914;
+    --note-line: #4a411d;
+    --note-ink: #e8d9a0;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f1215;
+  --card: #171b20;
+  --line: #2a3037;
+  --line2: #3a414a;
+  --soft: #22272d;
+  --ink: #e8eae6;
+  --muted: #9ba2ab;
+  --accent: #2a9d82;
+  --exp: #e07a3c;
+  --bad: #f07a6e;
+  --inv: #7b98e0;
+  --liq: #6f9488;
+  --side: #0a0c0e;
+  --field: #1d2228;
+  --row-hover: #1b2025;
+  --tabs-bg: #22272d;
+  --text2: #c4c8ce;
+  --good: #5fc4a8;
+  --good-bg: #173229;
+  --good-bg2: #142a24;
+  --good-line: #23453a;
+  --good-track: #23413a;
+  --warn: #f0a36b;
+  --warn-bg: #33241a;
+  --warn-line: #4d3522;
+  --info: #9db4ec;
+  --info-bg: #1b2540;
+  --purple: #d9a6d5;
+  --purple-bg: #33213a;
+  --neutral: #b5bac2;
+  --danger-bg: #3d1c1a;
+  --exp-text: #f0a36b;
+  --note-bg: #2e2914;
+  --note-line: #4a411d;
+  --note-ink: #e8d9a0;
 }
 
 * {
@@ -92,7 +200,7 @@ p {
 /* --- Botones y formularios --- */
 .btn {
   border: 1px solid var(--line2);
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   border-radius: 10px;
   padding: 10px 16px;
@@ -139,7 +247,7 @@ p {
   min-height: 44px;
   border: 1px solid var(--line2);
   border-radius: 8px;
-  background: #fff;
+  background: var(--field);
 }
 
 .field input:focus {
@@ -151,7 +259,7 @@ p {
   padding: 10px 12px;
   border: 1px solid var(--line2);
   border-radius: 8px;
-  background: #fff;
+  background: var(--field);
   font: inherit;
   resize: vertical;
 }
@@ -177,9 +285,9 @@ p {
 }
 
 .note {
-  background: #fff8e6;
-  border: 1px solid #f0dda8;
-  color: #5c4a12;
+  background: var(--note-bg);
+  border: 1px solid var(--note-line);
+  color: var(--note-ink);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 13px;
@@ -197,7 +305,7 @@ p {
 .login {
   width: 100%;
   max-width: 440px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 32px;
@@ -254,7 +362,7 @@ p {
   gap: 14px;
   width: 100%;
   text-align: left;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line2);
   border-radius: 14px;
   padding: 16px;
@@ -276,7 +384,7 @@ p {
 }
 
 .side {
-  background: var(--ink);
+  background: var(--side);
   color: #e9eae6;
   padding: 24px 16px;
   display: flex;
@@ -348,7 +456,7 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 99px;
   padding: 4px 6px 4px 4px;
@@ -441,7 +549,7 @@ p {
   min-height: 44px;
   border: 1px solid var(--line2);
   border-radius: 8px;
-  background: #fff;
+  background: var(--field);
 }
 
 .field select:focus {
@@ -465,13 +573,13 @@ p {
   gap: 8px;
   text-align: center;
   cursor: pointer;
-  background: #fafbf9;
+  background: var(--row-hover);
 }
 
 .drop.over,
 .drop:focus-within {
   border-color: var(--accent);
-  background: #eef5f2;
+  background: var(--good-bg2);
 }
 
 .drop.busy {
@@ -485,7 +593,7 @@ p {
   gap: 8px;
   padding: 14px;
   border-radius: 10px;
-  background: #eef5f2;
+  background: var(--good-bg2);
   font-size: 14px;
 }
 
@@ -508,17 +616,17 @@ p {
   cursor: pointer;
   font-weight: 600;
   border: 1px solid var(--line2);
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
 }
 
 .toggle.on-g {
-  background: #fbebdd;
+  background: var(--warn-bg);
   border-color: var(--exp);
 }
 
 .toggle.on-i {
-  background: #e3f0ea;
+  background: var(--good-bg);
   border-color: var(--accent);
 }
 
@@ -587,7 +695,7 @@ td {
 .tabs {
   display: flex;
   gap: 4px;
-  background: #e6e8e3;
+  background: var(--tabs-bg);
   padding: 4px;
   border-radius: 12px;
   align-self: flex-start;
@@ -603,11 +711,11 @@ td {
   min-height: 44px;
   border-radius: 9px;
   background: transparent;
-  color: #4a5059;
+  color: var(--neutral);
 }
 
 .tabs button.on {
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
 }
 
@@ -623,7 +731,7 @@ td {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
-  background: #eaeef7;
+  background: var(--info-bg);
   color: var(--inv);
   white-space: nowrap;
 }
@@ -661,8 +769,8 @@ button.tag {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: #fbf3e9;
-  border: 1px solid #f0d9bf;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 14px;
@@ -670,9 +778,9 @@ button.tag {
 }
 
 .ok {
-  background: #eef5f2;
-  border: 1px solid #cfe3da;
-  color: #0b5747;
+  background: var(--good-bg2);
+  border: 1px solid var(--good-line);
+  color: var(--good);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 14px;
@@ -700,7 +808,7 @@ button.tag {
   min-height: 44px;
   border: 1px solid var(--line2);
   border-radius: 8px;
-  background: #fff;
+  background: var(--field);
 }
 
 .input:focus {
@@ -755,7 +863,7 @@ button.tag {
   gap: 10px;
   padding: 14px;
   border-radius: 10px;
-  background: #eef5f2;
+  background: var(--good-bg2);
   font-size: 14px;
 }
 
@@ -805,7 +913,7 @@ button.tag {
   padding: 2px;
   border: 1px solid var(--line2);
   border-radius: 8px;
-  background: #fff;
+  background: var(--card);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -975,7 +1083,7 @@ button.tag {
 
 .donut-in {
   border-radius: 50%;
-  background: #fff;
+  background: var(--card);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1158,7 +1266,7 @@ button.tag {
   text-align: left;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card);
   padding: 8px 12px;
   font: inherit;
   font-size: 14px;

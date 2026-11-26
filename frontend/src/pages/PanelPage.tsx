@@ -64,7 +64,7 @@ export function PanelPage() {
               label="Liquidez"
               value={formatEurRounded(data.liquidity)}
               hint={liquidityHint(data)}
-              color="#0B5747"
+              color="var(--good)"
             />
             <Kpi
               label="Inversiones"
@@ -74,13 +74,13 @@ export function PanelPage() {
                   ? `${formatSignedRounded(data.investments_gain)} de plusvalía`
                   : 'Sin inversiones todavía'
               }
-              color="#28437F"
+              color="var(--info)"
             />
             <Kpi
               label="Ahorro este mes"
               value={formatSignedRounded(data.savings)}
               hint={`Ingresos − gastos de ${monthName(data.month)}`}
-              color={Number(data.savings) >= 0 ? '#0B5747' : 'var(--bad)'}
+              color={Number(data.savings) >= 0 ? 'var(--good)' : 'var(--bad)'}
             />
           </section>
 

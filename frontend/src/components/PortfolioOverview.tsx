@@ -13,13 +13,13 @@ import {
 import { kindLabel } from '../investmentLabels';
 import { Kpi } from './Kpi';
 
-const GOOD = '#0B5747';
-const WARN = '#8A3A0C';
+const GOOD = 'var(--good)';
+const WARN = 'var(--warn)';
 const TAGS = {
-  delay: { text: '~15 min', background: '#EEF0EC', color: '#4A5059' },
-  close: { text: 'Cierre', background: '#E4E9F5', color: '#28437F' },
-  manual: { text: 'A mano', background: '#EEF0EC', color: '#4A5059' },
-  stale: { text: 'Desactualizado', background: '#FBE6D4', color: WARN },
+  delay: { text: '~15 min', background: 'var(--soft)', color: 'var(--neutral)' },
+  close: { text: 'Cierre', background: 'var(--info-bg)', color: 'var(--info)' },
+  manual: { text: 'A mano', background: 'var(--soft)', color: 'var(--neutral)' },
+  stale: { text: 'Desactualizado', background: 'var(--warn-bg)', color: WARN },
 };
 
 const signColor = (amount: string) => (Number(amount) >= 0 ? GOOD : 'var(--bad)');

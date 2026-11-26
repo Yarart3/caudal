@@ -136,7 +136,7 @@ export function ReviewPage() {
                       className="tnum"
                       style={{
                         whiteSpace: 'nowrap',
-                        color: Number(tx.amount) > 0 ? '#0B5747' : 'var(--ink)',
+                        color: Number(tx.amount) > 0 ? 'var(--good)' : 'var(--ink)',
                       }}
                     >
                       {formatSigned(tx.amount)}

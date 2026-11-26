@@ -43,7 +43,7 @@ export function MovementsSummary({
           label="Ingresos del mes"
           value={formatEurRounded(data.income)}
           hint={`Ingresos de ${monthName(data.month)}`}
-          color="#0B5747"
+          color="var(--good)"
         />
         <Kpi
           label="Gastos del mes"
@@ -53,7 +53,7 @@ export function MovementsSummary({
               ? `Sin gastos en ${previous}`
               : `${change > 0 ? '+' : ''}${change} % vs ${previous}`
           }
-          color="#A84A15"
+          color="var(--exp-text)"
         />
         <Kpi
           label="Tasa de ahorro"

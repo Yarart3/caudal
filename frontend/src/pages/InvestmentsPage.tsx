@@ -35,7 +35,7 @@ type Dialog =
   | { kind: 'product'; product: Product | null }
   | { kind: 'operation'; mode: OperationMode };
 
-const STALE_BADGE = { background: '#FBE6D4', color: '#8A3A0C' };
+const STALE_BADGE = { background: 'var(--warn-bg)', color: 'var(--warn)' };
 
 /**
  * Pestaña Inversiones (Fase 3). Arriba, la cartera como en la maqueta (parte 3.5): indicadores,

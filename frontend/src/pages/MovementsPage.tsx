@@ -344,7 +344,7 @@ export function MovementsPage() {
                         color: tx.is_internal_transfer
                           ? 'var(--muted)'
                           : Number(tx.amount) > 0
-                            ? '#0B5747'
+                            ? 'var(--good)'
                             : 'var(--ink)',
                       }}
                     >

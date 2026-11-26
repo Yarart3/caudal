@@ -168,7 +168,8 @@ function ImportCard({
           height="28"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#5B616B"
+          stroke="currentColor"
+          style={{ color: 'var(--muted)' }}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -239,10 +240,10 @@ function ImportSummary({
           {last.accountName} · {data.read}{' '}
           {data.read === 1 ? 'movimiento leído' : 'movimientos leídos'}
         </strong>
-        <div className="track" style={{ background: '#D5E6DF' }}>
+        <div className="track" style={{ background: 'var(--good-track)' }}>
           <div style={{ width: `${newShare}%`, background: 'var(--accent)' }} />
         </div>
-        <span style={{ color: '#3F454D' }}>{parts.join(' · ')}</span>
+        <span style={{ color: 'var(--text2)' }}>{parts.join(' · ')}</span>
         {data.closing_balance !== null && data.closing_date !== null && (
           <span className="muted" style={{ fontSize: 13 }}>
             Saldo según el extracto: {formatEur(data.closing_balance)} a{' '}

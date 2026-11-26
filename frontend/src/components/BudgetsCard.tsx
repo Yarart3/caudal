@@ -8,8 +8,8 @@ import { Modal } from './Modal';
 const loadBudgets = (month?: string) => api.budgets(month);
 
 const STATUS: Record<BudgetStatus, { label: string; text: string; bar: string }> = {
-  ok: { label: 'OK', text: '#0B5747', bar: 'var(--accent)' },
-  near: { label: 'Al límite', text: '#8A3A0C', bar: '#C98A1B' },
+  ok: { label: 'OK', text: 'var(--good)', bar: 'var(--accent)' },
+  near: { label: 'Al límite', text: 'var(--warn)', bar: '#C98A1B' },
   over: { label: 'Superado', text: 'var(--bad)', bar: 'var(--bad)' },
 };
 

@@ -38,7 +38,10 @@ export function RecurringCard({ month }: { month?: string }) {
           <span>
             <strong>{item.description}</strong>{' '}
             {item.is_new && (
-              <span className="badge" style={{ background: '#EEF2FA', color: '#28437F' }}>
+              <span
+                className="badge"
+                style={{ background: 'var(--info-bg)', color: 'var(--info)' }}
+              >
                 Nuevo
               </span>
             )}{' '}
