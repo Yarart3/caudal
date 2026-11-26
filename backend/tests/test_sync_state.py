@@ -49,8 +49,9 @@ def test_extend_lineage_sin_repetir_y_con_limite() -> None:
 
 
 def test_revisiones_conocidas() -> None:
-    assert head_revision() == "0008"
-    assert {"0001", "0007", "0008"} <= known_revisions()
+    # La cabeza es siempre la última migración (las revisiones se numeran 0001, 0002…)
+    assert head_revision() == max(known_revisions())
+    assert {"0001", "0007", "0008", "0009"} <= known_revisions()
 
 
 def test_migracion_marca_como_sin_copia_una_base_con_datos(make_user) -> None:

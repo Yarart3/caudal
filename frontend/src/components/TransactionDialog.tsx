@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   api,
   errorMessage,
   type Account,
   type Category,
+  type TagCount,
   type Transaction,
   type TransactionUpdate,
 } from '../api';
@@ -15,6 +16,17 @@ import { CategorySelect } from './CategorySelect';
 import { Modal } from './Modal';
 
 type Step = 'form' | 'confirm-delete' | { applyFor: Transaction; categoryId: number };
+
+/** «viaje japón, regalos» → ["viaje japón", "regalos"] (el servidor quita repetidas). */
+function parseTags(text: string): string[] {
+  return text
+    .split(',')
+    .map((t) => t.trim().replace(/\s+/g, ' '))
+    .filter((t) => t !== '');
+}
+
+const sameList = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((value, i) => value === b[i]);
 
 /**
  * Alta y edición de un movimiento (y borrado). Si se le pone una categoría a mano, después
@@ -46,9 +58,29 @@ export function TransactionDialog({
   );
   const [categoryId, setCategoryId] = useState<number | null>(tx?.category_id ?? null);
   const [internal, setInternal] = useState(tx?.is_internal_transfer ?? false);
+  const [note, setNote] = useState(tx?.note ?? '');
+  const [tagsText, setTagsText] = useState((tx?.tags ?? []).join(', '));
+  const [knownTags, setKnownTags] = useState<TagCount[]>([]);
   const [step, setStep] = useState<Step>('form');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .transactionTags()
+      .then((tags) => alive && setKnownTags(tags))
+      .catch(() => undefined); // sin sugerencias no pasa nada
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const tags = parseTags(tagsText);
+  const suggestions = knownTags
+    .filter((k) => !tags.some((t) => t.toLowerCase() === k.name.toLowerCase()))
+    .slice(0, 8);
+  const addTag = (name: string) => setTagsText([...tags, name].join(', '));
 
   const title = tx ? 'Editar movimiento' : 'Añadir movimiento';
   const categoryName = (id: number) => categories.find((c) => c.id === id)?.name ?? '';
@@ -72,6 +104,8 @@ export function TransactionDialog({
           date,
           description: description.trim(),
           amount: signed,
+          note: note.trim() || null,
+          tags,
         });
       } else {
         const changes: TransactionUpdate = {};
@@ -79,6 +113,8 @@ export function TransactionDialog({
         if (date !== tx.date) changes.date = date;
         if (description.trim() !== tx.description) changes.description = description.trim();
         if (Number(signed) !== Number(tx.amount)) changes.amount = signed;
+        if (note.trim() !== (tx.note ?? '')) changes.note = note.trim() || null;
+        if (!sameList(tags, tx.tags)) changes.tags = tags;
         saved = Object.keys(changes).length ? await api.updateTransaction(tx.id, changes) : tx;
       }
 
@@ -237,6 +273,41 @@ export function TransactionDialog({
               onChange={setCategoryId}
               emptyLabel={tx ? 'Sin categoría (por revisar)' : 'Automática (según las reglas)'}
               disabled={internal}
+            />
+          </div>
+          <div className="field span2">
+            <label htmlFor="tx-etiquetas">Etiquetas (opcional)</label>
+            <input
+              id="tx-etiquetas"
+              type="text"
+              placeholder="Separadas por comas: viaje japón, regalos…"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+            />
+            {suggestions.length > 0 && (
+              <div className="tag-list" aria-label="Etiquetas que ya usas">
+                {suggestions.map((k) => (
+                  <button
+                    key={k.name}
+                    type="button"
+                    className="tag tag-add"
+                    onClick={() => addTag(k.name)}
+                  >
+                    + {k.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="field span2">
+            <label htmlFor="tx-nota">Nota (opcional)</label>
+            <textarea
+              id="tx-nota"
+              rows={2}
+              maxLength={500}
+              placeholder="Ej. Cena del cumpleaños de Ana"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
         </div>

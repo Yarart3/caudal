@@ -15,6 +15,7 @@ from sqlalchemy import (
     false,
     func,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -29,6 +30,7 @@ class Transaction(Base):
         UniqueConstraint("account_id", "fingerprint"),
         CheckConstraint("category_status IN ('auto', 'manual', 'review')", name="category_status"),
         Index("ix_transactions_account_id_date", "account_id", "date"),
+        Index("ix_transactions_tags", "tags", postgresql_using="gin"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -46,4 +48,7 @@ class Transaction(Base):
         Boolean, default=False, server_default=false()
     )
     fingerprint: Mapped[str | None] = mapped_column(String(64))
+    # Fase 5: nota libre y etiquetas del usuario
+    note: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String(30)), default=list, server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

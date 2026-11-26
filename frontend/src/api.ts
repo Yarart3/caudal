@@ -61,7 +61,11 @@ export type Transaction = {
   category_id: number | null;
   category_status: 'auto' | 'manual' | 'review';
   is_internal_transfer: boolean;
+  note: string | null;
+  tags: string[];
 };
+
+export type TagCount = { name: string; transactions: number };
 
 export type StatusFilter = 'review' | 'auto' | 'manual' | 'internal';
 
@@ -69,6 +73,7 @@ export type TransactionFilters = {
   month?: string; // "AAAA-MM"
   q?: string;
   category?: number;
+  tag?: string;
   status?: StatusFilter;
   account?: number;
   limit?: number;
@@ -84,6 +89,8 @@ export type TransactionUpdate = Partial<{
   amount: string;
   category_id: number | null; // null = sin categoría (por revisar)
   is_internal_transfer: boolean;
+  note: string | null; // vacía o null = sin nota
+  tags: string[]; // sustituye la lista entera
 }>;
 
 export type CategoryKind = 'expense' | 'income';
@@ -116,6 +123,8 @@ export type TransactionCreate = {
   date: string;
   description: string;
   amount: string;
+  note?: string | null;
+  tags?: string[];
 };
 
 // Backups (Fase 1d). Son de la BD entera: todos los usuarios ven el mismo estado.
@@ -524,6 +533,7 @@ export const api = {
     request<Transaction>('/api/transactions', { method: 'POST', body: tx }),
   transactions: (filters: TransactionFilters = {}) =>
     request<TransactionPage>(`/api/transactions${queryString(filters)}`),
+  transactionTags: () => request<TagCount[]>('/api/transactions/tags'),
   updateTransaction: (id: number, changes: TransactionUpdate) =>
     request<Transaction>(`/api/transactions/${id}`, { method: 'PATCH', body: changes }),
   deleteTransaction: (id: number) => request<void>(`/api/transactions/${id}`, { method: 'DELETE' }),

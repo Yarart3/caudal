@@ -1,4 +1,8 @@
-"""Movimientos del usuario de la sesión: listar con filtros, alta, edición y borrado."""
+"""Movimientos del usuario de la sesión: listar con filtros, alta, edición y borrado.
+
+Fase 5: cada movimiento puede llevar una nota y etiquetas (`GET /api/transactions/tags` da las
+del usuario con cuántos movimientos tiene cada una).
+"""
 
 import datetime as dt
 import re
@@ -30,6 +34,12 @@ StatusFilter = Literal["auto", "manual", "review", "internal"]
 NOT_FOUND = "Movimiento no encontrado"
 MONTH_RE = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
 MAX_LIMIT = 1000
+MAX_TAGS = 10
+TAG_MAX_LENGTH = 30
+NOTE_MAX_LENGTH = 500
+
+Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=NOTE_MAX_LENGTH)]
+Tags = Annotated[list[str], Field(max_length=MAX_TAGS)]
 
 
 class TransactionCreate(BaseModel):
@@ -37,6 +47,8 @@ class TransactionCreate(BaseModel):
     date: date
     description: Description
     amount: Money  # negativo = gasto, positivo = ingreso
+    note: Note | None = None
+    tags: Tags = []
 
 
 class TransactionUpdate(BaseModel):
@@ -44,6 +56,7 @@ class TransactionUpdate(BaseModel):
 
     - `category_id` con un id → categoría puesta a mano (`manual`); con null → por revisar.
     - `is_internal_transfer` marca o desmarca la transferencia interna a mano.
+    - `note` vacía o null → sin nota. `tags` sustituye la lista entera ([] = sin etiquetas).
     """
 
     account_id: int | None = None
@@ -53,6 +66,8 @@ class TransactionUpdate(BaseModel):
     amount: Money | None = None
     category_id: int | None = None
     is_internal_transfer: bool | None = None
+    note: Note | None = None
+    tags: Tags | None = None
 
 
 class TransactionOut(BaseModel):
@@ -64,6 +79,13 @@ class TransactionOut(BaseModel):
     category_id: int | None
     category_status: str
     is_internal_transfer: bool
+    note: str | None
+    tags: list[str]
+
+
+class TagCount(BaseModel):
+    name: str
+    transactions: int
 
 
 class TransactionPage(BaseModel):
@@ -99,6 +121,50 @@ def _month_range(month: str) -> tuple[date, date]:
     return start, end
 
 
+def _user_tags(db: Session, user: User) -> list[tuple[str, int]]:
+    """Etiquetas del usuario con cuántos movimientos tiene cada una, por orden alfabético."""
+    tag = func.unnest(Transaction.tags).label("tag")
+    inner = (
+        select(tag)
+        .join(Account, Account.id == Transaction.account_id)
+        .where(Account.user_id == user.id)
+        .subquery()
+    )
+    rows = db.execute(
+        select(inner.c.tag, func.count())
+        .group_by(inner.c.tag)
+        .order_by(func.lower(inner.c.tag), inner.c.tag)
+    )
+    return [(name, count) for name, count in rows]
+
+
+def _clean_note(note: str | None) -> str | None:
+    return note or None  # ya viene sin espacios a los lados; vacía = sin nota
+
+
+def _clean_tags(db: Session, user: User, tags: list[str]) -> list[str]:
+    """Quita espacios de más y repetidas (sin mirar mayúsculas) y, si el usuario ya tiene la
+    etiqueta escrita de otra forma («Viaje» / «viaje»), usa la que ya tiene."""
+    known = {name.lower(): name for name, _ in _user_tags(db, user)}
+    result: list[str] = []
+    seen: set[str] = set()
+    for raw in tags:
+        name = " ".join(raw.split())
+        if not name:
+            continue
+        if len(name) > TAG_MAX_LENGTH:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Una etiqueta puede tener como mucho {TAG_MAX_LENGTH} caracteres",
+            )
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(known.get(key, name))
+    return result
+
+
 def _escape_like(text: str) -> str:
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
@@ -108,6 +174,7 @@ def list_transactions(
     month: str | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
     category: int | None = None,
+    tag: Annotated[str | None, Query(max_length=TAG_MAX_LENGTH)] = None,
     status_: Annotated[StatusFilter | None, Query(alias="status")] = None,
     account: int | None = None,
     limit: Annotated[int, Query(ge=0, le=MAX_LIMIT)] = 200,
@@ -117,8 +184,9 @@ def list_transactions(
 ) -> TransactionPage:
     """Movimientos del usuario, del más reciente al más antiguo.
 
-    - `month=2026-09`: solo ese mes. `q`: busca en el concepto y en el nombre de la categoría
-      (sin distinguir mayúsculas; los acentos sí cuentan). `category`, `account`: por id.
+    - `month=2026-09`: solo ese mes. `q`: busca en el concepto, en la nota y en el nombre de la
+      categoría (sin distinguir mayúsculas; los acentos sí cuentan). `category`, `account`: por
+      id. `tag`: los que llevan esa etiqueta.
     - `status`: `review` (por revisar), `auto`, `manual` o `internal` (transferencias internas,
       que no salen en los otros tres).
     - `limit=0` devuelve solo el total (para el contador de «por revisar»).
@@ -137,6 +205,7 @@ def list_transactions(
         query = query.where(
             or_(
                 Transaction.description.ilike(pattern, escape="\\"),
+                Transaction.note.ilike(pattern, escape="\\"),
                 Category.name.ilike(pattern, escape="\\"),
             )
         )
@@ -144,6 +213,8 @@ def list_transactions(
         query = query.where(Transaction.category_id == category)
     if account is not None:
         query = query.where(Transaction.account_id == account)
+    if tag is not None and tag.strip():
+        query = query.where(Transaction.tags.contains([" ".join(tag.split())]))
     if status_ == "internal":
         query = query.where(Transaction.is_internal_transfer.is_(True))
     elif status_ is not None:
@@ -164,6 +235,12 @@ def list_transactions(
     return TransactionPage(items=[_out(tx) for tx in items], total=total)
 
 
+@router.get("/tags")
+def list_tags(user: User = Depends(current_user), db: Session = Depends(get_db)) -> list[TagCount]:
+    """Etiquetas del usuario (para sugerirlas y para el filtro), con su número de movimientos."""
+    return [TagCount(name=name, transactions=count) for name, count in _user_tags(db, user)]
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_transaction(
     body: TransactionCreate, user: User = Depends(current_user), db: Session = Depends(get_db)
@@ -174,6 +251,8 @@ def create_transaction(
         date=body.date,
         description=body.description,
         amount=body.amount,
+        note=_clean_note(body.note),
+        tags=_clean_tags(db, user, body.tags),
         category_status="review",
         fingerprint=None,  # a mano: sin huella (los NULL no chocan con la restricción única)
     )
@@ -203,6 +282,11 @@ def update_transaction(
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"El campo {field} no puede ir vacío"
             )
+
+    if "note" in changes:
+        tx.note = _clean_note(changes["note"])
+    if "tags" in changes:
+        tx.tags = _clean_tags(db, user, changes["tags"] or [])
 
     if "account_id" in changes:
         tx.account_id = get_own_account(db, user, changes["account_id"]).id

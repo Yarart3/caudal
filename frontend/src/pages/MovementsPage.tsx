@@ -4,6 +4,7 @@ import {
   api,
   errorMessage,
   type StatusFilter,
+  type TagCount,
   type Transaction,
   type TransactionFilters,
 } from '../api';
@@ -36,8 +37,16 @@ type Filters = {
   category: number | null;
   status: StatusFilter | '';
   account: number | null;
+  tag: string;
 };
-const NO_FILTERS: Filters = { q: '', month: '', category: null, status: '', account: null };
+const NO_FILTERS: Filters = {
+  q: '',
+  month: '',
+  category: null,
+  status: '',
+  account: null,
+  tag: '',
+};
 
 type Loaded = { key: string; items: Transaction[]; total: number };
 /** null = cerrado · 'new' = alta · Transaction = edición */
@@ -60,6 +69,7 @@ export function MovementsPage() {
   const [editing, setEditing] = useState<Editing>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [tags, setTags] = useState<TagCount[]>([]);
 
   const query: TransactionFilters = useMemo(
     () => ({
@@ -68,8 +78,9 @@ export function MovementsPage() {
       category: filters.category ?? undefined,
       status: filters.status || undefined,
       account: filters.account ?? undefined,
+      tag: filters.tag || undefined,
     }),
-    [q, filters.month, filters.category, filters.status, filters.account],
+    [q, filters.month, filters.category, filters.status, filters.account, filters.tag],
   );
   const key = JSON.stringify(query);
 
@@ -87,6 +98,10 @@ export function MovementsPage() {
     api
       .transactions({ status: 'review', limit: 0 })
       .then((page) => alive && setReviewCount(page.total))
+      .catch(() => undefined);
+    api
+      .transactionTags()
+      .then((list) => alive && setTags(list))
       .catch(() => undefined);
     return () => {
       alive = false;
@@ -174,7 +189,7 @@ export function MovementsPage() {
             <input
               id="f-buscar"
               type="search"
-              placeholder="Concepto o categoría…"
+              placeholder="Concepto, categoría o nota…"
               value={filters.q}
               onChange={(e) => set({ q: e.target.value })}
             />
@@ -234,6 +249,23 @@ export function MovementsPage() {
               ))}
             </select>
           </div>
+          {(tags.length > 0 || filters.tag) && (
+            <div className="field">
+              <label htmlFor="f-etiqueta">Etiqueta</label>
+              <select
+                id="f-etiqueta"
+                value={filters.tag}
+                onChange={(e) => set({ tag: e.target.value })}
+              >
+                <option value="">Todas</option>
+                {tags.map((t) => (
+                  <option key={t.name} value={t.name}>
+                    {t.name} ({t.transactions})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="between muted" style={{ fontSize: 13 }}>
@@ -277,7 +309,19 @@ export function MovementsPage() {
                       {formatDate(tx.date)}
                     </td>
                     <td className="muted">{accountName(tx.account_id)}</td>
-                    <td style={{ fontWeight: 600 }}>{tx.description}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      {tx.description}
+                      {tx.tags.length > 0 && (
+                        <span className="tag-list" style={{ marginTop: 4 }}>
+                          {tx.tags.map((t) => (
+                            <span key={t} className="tag">
+                              {t}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                      {tx.note && <span className="tx-note">{tx.note}</span>}
+                    </td>
                     <td>
                       <span className="row" style={{ gap: 6, display: 'inline-flex' }}>
                         {categoryName(tx.category_id) ??

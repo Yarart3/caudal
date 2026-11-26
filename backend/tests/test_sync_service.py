@@ -28,6 +28,7 @@ from app.backup.service import MARKER
 from app.config import Settings, get_settings
 from app.models import User
 from app.sync.lock import LOCK_FILENAME, read_lock, sha256_file, write_lock
+from app.sync.schema import head_revision
 from app.sync.service import (
     BLOCKED,
     CANCELLED,
@@ -184,7 +185,7 @@ def test_cerrar_escribe_la_version_y_el_candado(make_device, cloud: Path) -> Non
     assert lock.version_id == local.version_id
     assert lock.lineage == local.lineage == (local.version_id,)
     assert lock.sha256 == sha256_file(cloud / lock.file)
-    assert lock.schema == "0008"
+    assert lock.schema == head_revision()
     assert not local.session_open
     assert "Versión 1 guardada" in mac.text
 
