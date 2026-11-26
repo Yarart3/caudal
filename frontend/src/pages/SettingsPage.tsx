@@ -4,6 +4,8 @@ import { AppShell } from '../AppShell';
 import { AppearanceCard } from '../components/AppearanceCard';
 import { BackupCard } from '../components/BackupCard';
 import { CategorySelect } from '../components/CategorySelect';
+import { UsersCard } from '../components/UsersCard';
+import { useAuth } from '../auth/AuthContext';
 import { notifyDataChanged, onDataChanged } from '../events';
 
 const KINDS: { value: CategoryKind; label: string }[] = [
@@ -12,9 +14,10 @@ const KINDS: { value: CategoryKind; label: string }[] = [
 ];
 const NEW_COLOR = '#5B616B';
 
-/** Ajustes → Copias de seguridad (Fase 1d), Apariencia (Fase 5) y Categorías y reglas (Fase 1c).
- * Usuarios y formatos llegan en la Fase 4. */
+/** Ajustes → Copias de seguridad (Fase 1d), Usuarios (Fase 4, solo el administrador),
+ * Apariencia (Fase 5) y Categorías y reglas (Fase 1c). */
 export function SettingsPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [rules, setRules] = useState<Rule[] | null>(null);
   const [reload, setReload] = useState(0);
@@ -55,6 +58,7 @@ export function SettingsPage() {
   return (
     <AppShell title="Ajustes" current="Ajustes">
       <BackupCard />
+      {user?.is_admin && <UsersCard />}
       <AppearanceCard />
       {error && (
         <p className="err" role="alert">

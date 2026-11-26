@@ -37,7 +37,7 @@ def get_user_by_token(db: Session, token: str) -> User | None:
     if session is None:
         return None
     now = datetime.now(UTC)
-    if now - session.last_seen_at > _timeout():
+    if now - session.last_seen_at > _timeout() or not session.user.is_active:
         db.delete(session)
         db.commit()
         return None

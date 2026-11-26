@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import (
     accounts,
+    admin,
     alerts,
     auth,
     backups,
@@ -61,6 +62,7 @@ app = FastAPI(
 # Los routers de la API van ANTES de la ruta del frontend, que lo captura todo
 app.include_router(setup.router)
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(accounts.router)
 app.include_router(imports.router)
 app.include_router(transactions.router)

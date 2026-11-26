@@ -11,6 +11,27 @@ export type UserCard = {
 
 export type Me = UserCard & { is_admin: boolean };
 
+// Ajustes → Usuarios (Fase 4, solo el administrador)
+export type AdminUser = UserCard & {
+  id: number;
+  is_admin: boolean;
+  is_active: boolean;
+  locked: boolean; // bloqueado ahora por intentos fallidos
+  created_at: string;
+};
+
+export type AdminUserCreate = {
+  username: string;
+  display_name: string;
+  color: string;
+  password: string;
+  is_admin: boolean;
+};
+
+export type AdminUserUpdate = Partial<
+  Pick<AdminUser, 'display_name' | 'color' | 'is_admin' | 'is_active'>
+>;
+
 // Dinero: viaja como texto ("-14.50") para no perder céntimos con los float de JavaScript
 export type Account = {
   id: number;
@@ -534,6 +555,16 @@ export const api = {
     request<Me>('/api/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
   me: () => request<Me>('/api/auth/me'),
+  adminUsers: () => request<AdminUser[]>('/api/admin/users'),
+  createUser: (user: AdminUserCreate) =>
+    request<AdminUser>('/api/admin/users', { method: 'POST', body: user }),
+  updateUser: (id: number, changes: AdminUserUpdate) =>
+    request<AdminUser>(`/api/admin/users/${id}`, { method: 'PATCH', body: changes }),
+  resetUserPassword: (id: number, password: string) =>
+    request<AdminUser>(`/api/admin/users/${id}/reset-password`, {
+      method: 'POST',
+      body: { password },
+    }),
   accounts: () => request<Account[]>('/api/accounts'),
   createAccount: (account: AccountCreate) =>
     request<Account>('/api/accounts', { method: 'POST', body: account }),

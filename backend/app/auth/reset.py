@@ -3,9 +3,9 @@
     python -m app.auth.reset              pregunta el usuario y la contraseña nueva
     python -m app.auth.reset padres       pregunta solo la contraseña nueva
 
-Es la salida si alguien olvida su contraseña (la gestión de usuarios en Ajustes llega en la
-Fase 4). Quien puede ejecutar esto ya tiene acceso al ordenador y al .env, así que no da más
-poder del que ya tiene. Además del cambio, desbloquea el usuario y cierra sus sesiones abiertas.
+Es la salida si el administrador olvida su contraseña (las de los demás se cambian desde
+Ajustes → Usuarios, Fase 4). Quien puede ejecutar esto ya tiene acceso al ordenador y al .env,
+así que no da más poder del que ya tiene. Además del cambio, desbloquea el usuario y cierra sus sesiones abiertas.
 
 Códigos de salida: 0 bien, 1 error, 2 cancelado.
 """

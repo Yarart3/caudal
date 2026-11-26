@@ -72,7 +72,8 @@ def _locked_error(locked_until: datetime, now: datetime) -> HTTPException:
 
 @router.get("/users")
 def list_users(db: Session = Depends(get_db)) -> list[UserCard]:
-    return [_card(u) for u in db.scalars(select(User).order_by(User.id))]
+    users = db.scalars(select(User).where(User.is_active).order_by(User.id))
+    return [_card(u) for u in users]
 
 
 @router.post("/login")
@@ -81,7 +82,8 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
     now = datetime.now(UTC)
     user = db.scalar(select(User).where(User.username == body.username))
 
-    if user is None:
+    # Un usuario desactivado responde igual que uno que no existe
+    if user is None or not user.is_active:
         verify_password(_DUMMY_HASH, body.password)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=WRONG_CREDENTIALS)
 
