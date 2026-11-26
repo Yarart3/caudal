@@ -9,6 +9,7 @@ import {
   type Transaction,
 } from '../api';
 import { AppShell } from '../AppShell';
+import { ImportHistoryCard } from '../components/ImportHistoryCard';
 import { notifyDataChanged } from '../events';
 import { formatDate, formatEur, parseEsAmount, todayIso } from '../format';
 
@@ -54,6 +55,7 @@ export function ImportPage() {
           <ManualCard key={pending?.key ?? 0} accounts={accounts} pending={pending} />
         </section>
       )}
+      {accounts !== null && <ImportHistoryCard accounts={accounts} />}
     </AppShell>
   );
 }

@@ -50,6 +50,7 @@ export type ImportResult = {
   warnings: string[];
   closing_balance: string | null;
   closing_date: string | null;
+  import_id: number | null; // para deshacerla; null si no ha entrado nada nuevo
 };
 
 export type Transaction = {
@@ -66,6 +67,19 @@ export type Transaction = {
 };
 
 export type TagCount = { name: string; transactions: number };
+
+// Fase 5: importaciones que se pueden deshacer
+export type ImportRecord = {
+  id: number;
+  account_id: number;
+  created_at: string;
+  first_date: string | null;
+  last_date: string | null;
+  new: number;
+  remaining: number;
+};
+
+export type ImportUndone = { deleted: number; unpaired: number; balance_restored: boolean };
 
 export type StatusFilter = 'review' | 'auto' | 'manual' | 'internal';
 
@@ -529,6 +543,8 @@ export const api = {
     form.append('file', file);
     return request<ImportResult>('/api/imports', { method: 'POST', body: form });
   },
+  imports: () => request<ImportRecord[]>('/api/imports'),
+  undoImport: (id: number) => request<ImportUndone>(`/api/imports/${id}`, { method: 'DELETE' }),
   createTransaction: (tx: TransactionCreate) =>
     request<Transaction>('/api/transactions', { method: 'POST', body: tx }),
   transactions: (filters: TransactionFilters = {}) =>

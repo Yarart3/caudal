@@ -3,6 +3,9 @@
 Se usa desde POST /api/imports. Después de guardar, busca las transferencias internas entre
 los movimientos nuevos y los que ya había (app/transfers) y, a los que no lo son, les aplica
 las reglas de categorización (app/categories).
+
+Fase 5: si entra algún movimiento nuevo, la importación queda registrada en `imports` para
+poder deshacerla (app/importers/undo.py).
 """
 
 from dataclasses import dataclass, field
@@ -17,7 +20,7 @@ from app.categories import apply_rules
 from app.importers import check_format
 from app.importers.base import ImportFormatError, RowError, open_workbook
 from app.importers.fingerprint import fingerprint
-from app.models import Account, Transaction
+from app.models import Account, Import, Transaction
 from app.transfers import match_internal_transfers
 from app.transfers.matcher import mark_internal
 
@@ -36,6 +39,7 @@ class ImportSummary:
     warnings: list[str] = field(default_factory=list)
     closing_balance: Decimal | None = None
     closing_date: date | None = None
+    import_id: int | None = None  # para deshacerla; None si no entró nada nuevo
 
 
 def import_statement(db: Session, account: Account, data: bytes) -> ImportSummary:
@@ -60,6 +64,13 @@ def import_statement(db: Session, account: Account, data: bytes) -> ImportSummar
         closing_date=parsed.closing_date,
     )
     by_fingerprint = {fingerprint(account.id, tx): tx for tx in parsed.transactions}
+    batch = Import(
+        account_id=account.id,
+        previous_balance=account.reference_balance,
+        previous_balance_date=account.reference_balance_date,
+    )
+    db.add(batch)
+    db.flush()
     rows = [
         {
             "account_id": account.id,
@@ -68,6 +79,7 @@ def import_statement(db: Session, account: Account, data: bytes) -> ImportSummar
             "amount": tx.amount,
             "category_status": "review",
             "fingerprint": fp,
+            "import_id": batch.id,
         }
         for fp, tx in by_fingerprint.items()
     ]
@@ -104,6 +116,15 @@ def import_statement(db: Session, account: Account, data: bytes) -> ImportSummar
     summary.review = summary.new - summary.internal - summary.categorized
 
     _update_reference_balance(account, parsed.closing_balance, parsed.closing_date)
+    if inserted:
+        dates = [by_fingerprint[fp].date for _, fp in inserted]
+        batch.first_date, batch.last_date = min(dates), max(dates)
+        batch.new_count = len(inserted)
+        batch.set_balance = account.reference_balance
+        batch.set_balance_date = account.reference_balance_date
+        summary.import_id = batch.id
+    else:
+        db.delete(batch)  # nada que deshacer
     db.commit()
     return summary
 

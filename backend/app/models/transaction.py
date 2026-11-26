@@ -50,5 +50,9 @@ class Transaction(Base):
     fingerprint: Mapped[str | None] = mapped_column(String(64))
     # Fase 5: nota libre y etiquetas del usuario
     note: Mapped[str | None] = mapped_column(Text)
+    # Fase 5: importación de la que viene (para deshacerla). Vacío = a mano o anterior a la 0010
+    import_id: Mapped[int | None] = mapped_column(
+        ForeignKey("imports.id", ondelete="SET NULL"), index=True
+    )
     tags: Mapped[list[str]] = mapped_column(ARRAY(String(30)), default=list, server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

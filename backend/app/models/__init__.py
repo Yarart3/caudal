@@ -6,6 +6,7 @@ from app.models.benchmark_price import BenchmarkPrice
 from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal
+from app.models.import_batch import Import
 from app.models.investment_operation import InvestmentOperation
 from app.models.manual_valuation import ManualValuation
 from app.models.price import Price
@@ -23,6 +24,7 @@ __all__ = [
     "Category",
     "ExchangeRate",
     "Goal",
+    "Import",
     "InvestmentOperation",
     "ManualValuation",
     "Price",
